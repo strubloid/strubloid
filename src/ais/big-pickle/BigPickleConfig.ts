@@ -4,19 +4,28 @@
 export interface BigPickleConfig {
   apiUrl: string;
   apiKey: string;
+  model: string;
   timeoutMs: number;
 }
 
+function stripQuotes(value: string): string {
+  return value.replace(/^["']|["']$/g, '');
+}
+
 export function buildBigPickleConfig(): BigPickleConfig | null {
-  const apiUrl = process.env.BIGPICKLE_API_URL?.trim();
-  if (!apiUrl) return null;
+  const rawUrl = process.env.BIGPICKLE_API_URL?.trim();
+  if (!rawUrl) return null;
 
+  const apiUrl = stripQuotes(rawUrl).replace(/\/+$/, ''); // strip trailing slash
+  const rawKey = process.env.BIGPICKLE_API_KEY?.trim() ?? '';
+  const apiKey = stripQuotes(rawKey);
+  const model = stripQuotes(process.env.BIGPICKLE_MODEL?.trim() ?? 'big-pickle');
   const timeoutMs = Number(process.env.BIGPICKLE_TIMEOUT_MS ?? '30000');
-  const apiKey = process.env.BIGPICKLE_API_KEY?.trim() ?? '';
 
-  return { apiUrl, apiKey, timeoutMs };
+  return { apiUrl, apiKey, model, timeoutMs };
 }
 
 export function isBigPickleConfigured(): boolean {
-  return Boolean(process.env.BIGPICKLE_API_URL?.trim());
+  const rawUrl = process.env.BIGPICKLE_API_URL?.trim();
+  return Boolean(rawUrl && stripQuotes(rawUrl));
 }

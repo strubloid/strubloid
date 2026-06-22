@@ -7,11 +7,6 @@ export interface SendMessageOptions {
   brainMemories?: string[];
 }
 
-interface BigPickleMessage {
-  role: string;
-  content: string;
-}
-
 export class BigPickleClient {
   private readonly config: BigPickleConfig | null;
   private readonly isConfigured: boolean;
@@ -44,12 +39,12 @@ export class BigPickleClient {
       throw AIProviderError.missingConfig('BIGPICKLE_API_URL');
     }
 
-    const { apiUrl, apiKey, timeoutMs } = this.config;
+    const { apiUrl, apiKey, model, timeoutMs } = this.config;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const body = this.buildRequestBody(messages, options);
+      const body = this.buildChatBody(messages, model, options);
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -57,7 +52,7 @@ export class BigPickleClient {
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
 
-      const response = await fetch(`${apiUrl}/chat`, {
+      const response = await fetch(`${apiUrl}/chat/completions`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
@@ -71,7 +66,7 @@ export class BigPickleClient {
       }
 
       const data = await response.json();
-      return this.parseResponse(data);
+      return this.parseChatResponse(data);
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof AIProviderError) throw error;
@@ -93,13 +88,13 @@ export class BigPickleClient {
       throw AIProviderError.missingConfig('BIGPICKLE_API_URL');
     }
 
-    const { apiUrl, apiKey, timeoutMs } = this.config;
+    const { apiUrl, apiKey, model, timeoutMs } = this.config;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const formattedMessages = chatMessages.map((m) => ({
-        role: m.role,
+      const formattedMessages: AIMessage[] = chatMessages.map((m) => ({
+        role: m.role as 'user' | 'assistant' | 'system',
         content: m.content,
       }));
 
@@ -110,10 +105,33 @@ export class BigPickleClient {
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
 
-      const response = await fetch(`${apiUrl}/compact`, {
+      // Route compaction through chat completions with a structured prompt
+      const body = {
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a memory compaction assistant. Your task is to analyze the following conversation and extract:
+1. title: A short descriptive title for this memory (max 80 chars)
+2. summary: A 2-3 sentence summary of the key points discussed
+3. facts: Bullet points of concrete facts extracted from the conversation
+4. preferences: Any user preferences or settings mentioned (or null if none)
+
+Respond ONLY with a valid JSON object containing "title", "summary", "facts", and "preferences" (preferences can be null) fields. Do not include any other text.`,
+          },
+          ...formattedMessages,
+          {
+            role: 'user',
+            content: 'Please compact the above conversation into a memory entry as instructed.',
+          },
+        ],
+        max_tokens: 2000,
+      } as Record<string, unknown>;
+
+      const response = await fetch(`${apiUrl}/chat/completions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ messages: formattedMessages }),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
 
@@ -124,12 +142,7 @@ export class BigPickleClient {
       }
 
       const data = await response.json();
-      return {
-        title: data.title ?? 'Untitled Memory',
-        summary: data.summary ?? '',
-        facts: data.facts ?? '',
-        preferences: data.preferences ?? null,
-      };
+      return this.parseCompactResponse(data);
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof AIProviderError) throw error;
@@ -140,56 +153,113 @@ export class BigPickleClient {
     }
   }
 
-  private buildRequestBody(messages: AIMessage[], options: SendMessageOptions): Record<string, unknown> {
-    const body: Record<string, unknown> = { messages };
+  private buildChatBody(messages: AIMessage[], model: string, options: SendMessageOptions): Record<string, unknown> {
+    const apiMessages: AIMessage[] = [];
 
+    // Add system prompt with brain memories if enabled
     if (options.useAiBrain && options.brainMemories && options.brainMemories.length > 0) {
-      body.system = `You have access to the following memories from past conversations:\n${options.brainMemories.map((m, i) => `[Memory ${i + 1}]: ${m}`).join('\n')}`;
+      apiMessages.push({
+        role: 'system',
+        content: `You have access to the following memories from past conversations:\n${options.brainMemories.map((m, i) => `[Memory ${i + 1}]: ${m}`).join('\n')}`,
+      });
     }
 
-    return body;
+    // Add conversation messages
+    apiMessages.push(...messages);
+
+    return {
+      model,
+      messages: apiMessages,
+    };
   }
 
-  private parseResponse(data: unknown): { content: string; model: string; usage?: { promptTokens: number; completionTokens: number; totalTokens: number } } {
+  private parseChatResponse(data: unknown): { content: string; model: string; usage?: { promptTokens: number; completionTokens: number; totalTokens: number } } {
     if (!data || typeof data !== 'object') {
       throw AIProviderError.invalidResponse('Response is not an object');
     }
 
     const d = data as Record<string, unknown>;
+    const choices = d.choices;
 
-    if (typeof d.content !== 'string') {
-      throw AIProviderError.invalidResponse('Response missing content string');
+    if (!Array.isArray(choices) || choices.length === 0) {
+      throw AIProviderError.invalidResponse('Response missing choices array');
+    }
+
+    const firstChoice = choices[0] as Record<string, unknown> | undefined;
+    const message = firstChoice?.message as Record<string, unknown> | undefined;
+
+    if (!message || typeof message.content !== 'string') {
+      throw AIProviderError.invalidResponse('Response missing message content in choices[0]');
     }
 
     return {
-      content: d.content,
+      content: message.content,
       model: typeof d.model === 'string' ? d.model : 'unknown',
       usage: d.usage && typeof d.usage === 'object'
         ? {
-            promptTokens: Number((d.usage as Record<string, unknown>).promptTokens) || 0,
-            completionTokens: Number((d.usage as Record<string, unknown>).completionTokens) || 0,
-            totalTokens: Number((d.usage as Record<string, unknown>).totalTokens) || 0,
+            promptTokens: Number((d.usage as Record<string, unknown>).prompt_tokens ?? (d.usage as Record<string, unknown>).promptTokens) || 0,
+            completionTokens: Number((d.usage as Record<string, unknown>).completion_tokens ?? (d.usage as Record<string, unknown>).completionTokens) || 0,
+            totalTokens: Number((d.usage as Record<string, unknown>).total_tokens ?? (d.usage as Record<string, unknown>).totalTokens) || 0,
           }
         : undefined,
     };
   }
 
+  private parseCompactResponse(data: unknown): { title: string; summary: string; facts: string; preferences: string | null } {
+    if (!data || typeof data !== 'object') {
+      throw AIProviderError.invalidResponse('Response is not an object');
+    }
+
+    const d = data as Record<string, unknown>;
+    const choices = d.choices;
+
+    if (!Array.isArray(choices) || choices.length === 0) {
+      throw AIProviderError.invalidResponse('Response missing choices array');
+    }
+
+    const firstChoice = choices[0] as Record<string, unknown> | undefined;
+    const message = firstChoice?.message as Record<string, unknown> | undefined;
+
+    if (!message || typeof message.content !== 'string') {
+      throw AIProviderError.invalidResponse('Response missing message content in choices[0]');
+    }
+
+    // Try to parse the JSON response
+    try {
+      const parsed = JSON.parse(message.content);
+      return {
+        title: typeof parsed.title === 'string' ? parsed.title : 'Untitled Memory',
+        summary: typeof parsed.summary === 'string' ? parsed.summary : '',
+        facts: typeof parsed.facts === 'string' ? parsed.facts : '',
+        preferences: typeof parsed.preferences === 'string' ? parsed.preferences : null,
+      };
+    } catch {
+      // If JSON parsing fails, treat the raw content as a summary
+      return {
+        title: 'Memory Compaction',
+        summary: message.content.slice(0, 500),
+        facts: '',
+        preferences: null,
+      };
+    }
+  }
+
   private getDevModeResponse(
-    messages: AIMessage[],
+    _messages: AIMessage[],
     _options: SendMessageOptions = {}
   ): { content: string; model: string; usage?: { promptTokens: number; completionTokens: number; totalTokens: number } } {
-    const lastMessage = messages[messages.length - 1];
+    const lastMessage = _messages[_messages.length - 1];
     const userContent = lastMessage?.content ?? '';
 
-    const response = `[DEV MODE] This is a simulated response because BIGPICKLE_API_URL is not configured.\n\nYou said: "${userContent.slice(0, 100)}${userContent.length > 100 ? '...' : ''}"\n\nTo enable real AI responses:\n1. Copy .env.example to .env\n2. Set BIGPICKLE_API_URL to your BigPickle endpoint\n3. Optionally set BIGPICKLE_API_KEY\n4. Restart the dev server`;
+    const content = `[DEV MODE] This is a simulated response because BIGPICKLE_API_URL is not configured.\n\nYou said: "${userContent.slice(0, 100)}${userContent.length > 100 ? '...' : ''}"\n\nTo enable real AI responses:\n1. Copy .env.example to .env\n2. Set BIGPICKLE_API_URL to your BigPickle endpoint\n3. Optionally set BIGPICKLE_API_KEY\n4. Set BIGPICKLE_MODEL to your preferred model\n5. Restart the dev server`;
 
     return {
-      content: response,
+      content,
       model: 'dev-mode',
       usage: {
         promptTokens: 10,
-        completionTokens: response.length / 4,
-        totalTokens: 10 + response.length / 4,
+        completionTokens: Math.ceil(content.length / 4),
+        totalTokens: 10 + Math.ceil(content.length / 4),
       },
     };
   }
