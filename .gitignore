@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+
+# env files
+.env
+.env*
+!.env.example
+
+# Next.js
+.next/
+out/
+build/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma / SQLite local database
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+prisma/*.db-shm
+
+# tests
+coverage/
+test-results/
+playwright-report/
+
+# cache
+.cache/
+.turbo/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

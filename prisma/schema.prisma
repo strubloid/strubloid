@@ -1,0 +1,68 @@
+// Strubloid Prisma schema
+// Phase 1 uses SQLite for simple local development.
+// Switch the datasource `provider` to "postgresql" and update DATABASE_URL
+// to migrate to Postgres without changing application code.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String   @default("#9ad933")
+  isStarred   Boolean  @default(false)
+  chats       Chat[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isStarred])
+  @@index([updatedAt])
+}
+
+model Chat {
+  id          String    @id @default(cuid())
+  title       String
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  isRandom    Boolean   @default(false)
+  useAiBrain  Boolean   @default(false)
+  messages    Message[]
+  compactedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([isRandom, createdAt])
+  @@index([compactedAt])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([chatId, createdAt])
+}
+
+model MemoryEntry {
+  id            String   @id @default(cuid())
+  title         String
+  summary       String
+  facts         String
+  preferences   String?
+  sourceChatIds String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([updatedAt])
+}
