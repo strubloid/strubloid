@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { MessageList, Message } from '@/components/MessageList';
 import { ChatComposer } from '@/components/ChatComposer';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface Chat {
   id: string;
@@ -21,6 +22,7 @@ interface AiStatus {
 
 export default function ChatByIdPage() {
   const params = useParams();
+  const router = useRouter();
   const chatId = params.chatId as string;
 
   const [chat, setChat] = useState<Chat | null>(null);
@@ -29,6 +31,7 @@ export default function ChatByIdPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     checkAiStatus();
@@ -109,6 +112,27 @@ export default function ChatByIdPage() {
     }
   }
 
+  async function handleDeleteChat() {
+    if (!chat) return;
+    try {
+      const res = await fetch(`/api/chats/${chat.id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to delete chat');
+      router.push('/chat');
+    } catch (err) {
+      setError('Failed to delete chat');
+      console.error(err);
+    } finally {
+      setShowDeleteConfirm(false);
+    }
+  }
+
+  // Extract user messages for keyboard history recall
+  const userMessages = chat?.messages
+    ?.filter((m) => m.role === 'user')
+    .map((m) => m.content) ?? [];
+
   if (isLoading) {
     return (
       <div className="flex h-screen">
@@ -151,13 +175,24 @@ export default function ChatByIdPage() {
       <Sidebar />
 
       <main className="flex-1 flex flex-col bg-[--color-bg]">
-        <header className="border-b border-[--color-border] px-4 py-3">
+        <header className="border-b border-[--color-border] px-4 py-3 flex items-center justify-between">
           <div>
             <h1 className="font-semibold">{chat.title}</h1>
             <p className="text-xs text-[--color-text-dim]">
               {chat.isRandom ? 'Random Chat' : 'Project Chat'}
             </p>
           </div>
+
+          {/* Delete chat button */}
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="p-2 rounded-lg hover:bg-red-500/10 text-[--color-text-dim] hover:text-red-400 transition-colors"
+            title="Delete chat"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </header>
 
         <MessageList messages={chat.messages} devMode={devMode} />
@@ -172,8 +207,20 @@ export default function ChatByIdPage() {
           useAiBrain={useAiBrain}
           onToggleBrain={handleToggleBrain}
           devMode={devMode}
+          previousMessages={userMessages}
         />
       </main>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Chat"
+        message={`Are you sure you want to delete "${chat.title}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteChat}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

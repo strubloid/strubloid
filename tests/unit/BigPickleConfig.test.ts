@@ -10,6 +10,7 @@ describe('BigPickleConfig', () => {
   beforeEach(() => {
     delete process.env.BIGPICKLE_API_URL;
     delete process.env.BIGPICKLE_API_KEY;
+    delete process.env.BIGPICKLE_MODEL;
     delete process.env.BIGPICKLE_TIMEOUT_MS;
   });
 
@@ -28,13 +29,30 @@ describe('BigPickleConfig', () => {
     const cfg = buildBigPickleConfig();
     expect(cfg?.apiUrl).toBe('https://example.test/v1');
     expect(cfg?.apiKey).toBe('');
-    expect(cfg?.timeoutMs).toBe(30000);
+    expect(cfg?.model).toBe('big-pickle'); // default
+    expect(cfg?.timeoutMs).toBe(30000); // default
   });
 
   it('respects BIGPICKLE_TIMEOUT_MS override', () => {
     process.env.BIGPICKLE_API_URL = 'https://example.test/v1';
     process.env.BIGPICKLE_TIMEOUT_MS = '12345';
     expect(buildBigPickleConfig()?.timeoutMs).toBe(12345);
+  });
+
+  it('respects BIGPICKLE_MODEL override', () => {
+    process.env.BIGPICKLE_API_URL = 'https://example.test/v1';
+    process.env.BIGPICKLE_MODEL = 'big-pickle-large';
+    expect(buildBigPickleConfig()?.model).toBe('big-pickle-large');
+  });
+
+  it('strips trailing slash from URL', () => {
+    process.env.BIGPICKLE_API_URL = 'https://example.test/v1/';
+    expect(buildBigPickleConfig()?.apiUrl).toBe('https://example.test/v1');
+  });
+
+  it('strips surrounding quotes from API URL', () => {
+    process.env.BIGPICKLE_API_URL = '"https://example.test/v1"';
+    expect(buildBigPickleConfig()?.apiUrl).toBe('https://example.test/v1');
   });
 
   it('trims whitespace around URL', () => {

@@ -8,6 +8,8 @@ interface ChatComposerProps {
   useAiBrain: boolean;
   onToggleBrain: (enabled: boolean) => void;
   devMode?: boolean;
+  /** Previous user messages for ArrowUp recall */
+  previousMessages?: string[];
 }
 
 export function ChatComposer({
@@ -16,10 +18,18 @@ export function ChatComposer({
   useAiBrain,
   onToggleBrain,
   devMode = false,
+  previousMessages = [],
 }: ChatComposerProps) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [requestCount, setRequestCount] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reset history index when new messages arrive
+  useEffect(() => {
+    setHistoryIndex(-1);
+  }, [previousMessages.length]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -34,6 +44,8 @@ export function ChatComposer({
     const messageToSend = message.trim();
     setMessage('');
     setIsSending(true);
+    setHistoryIndex(-1);
+    setRequestCount((c) => c + 1);
 
     try {
       await onSend(messageToSend);
@@ -49,6 +61,40 @@ export function ChatComposer({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+      return;
+    }
+
+    // ArrowUp / ArrowDown for message history recall
+    if (e.key === 'ArrowUp' && !message && previousMessages.length > 0) {
+      e.preventDefault();
+      // Go to the most recent message
+      const lastIdx = previousMessages.length - 1;
+      setMessage(previousMessages[lastIdx]);
+      setHistoryIndex(lastIdx);
+      return;
+    }
+
+    if (e.key === 'ArrowUp' && historyIndex > 0) {
+      e.preventDefault();
+      const newIdx = historyIndex - 1;
+      setMessage(previousMessages[newIdx]);
+      setHistoryIndex(newIdx);
+      return;
+    }
+
+    if (e.key === 'ArrowDown' && historyIndex >= 0 && historyIndex < previousMessages.length - 1) {
+      e.preventDefault();
+      const newIdx = historyIndex + 1;
+      setMessage(previousMessages[newIdx]);
+      setHistoryIndex(newIdx);
+      return;
+    }
+
+    if (e.key === 'ArrowDown' && historyIndex === previousMessages.length - 1) {
+      e.preventDefault();
+      setMessage('');
+      setHistoryIndex(-1);
+      return;
     }
   }
 
@@ -130,6 +176,18 @@ export function ChatComposer({
           AI Brain is active — relevant memories will be included
         </div>
       )}
+
+      {/* Request counter */}
+      <div className="mt-1.5 flex items-center justify-between text-[10px] text-[--color-text-dim]">
+        <span>
+          Messages sent: {requestCount}
+        </span>
+        {historyIndex >= 0 && (
+          <span>
+            Recalling message {historyIndex + 1} of {previousMessages.length}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

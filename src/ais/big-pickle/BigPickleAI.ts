@@ -6,8 +6,8 @@ import { BigPickleClient } from './BigPickleClient';
 export class BigPickleAI implements AI {
   private readonly client: BigPickleClient;
 
-  constructor() {
-    this.client = new BigPickleClient();
+  constructor(client?: BigPickleClient) {
+    this.client = client ?? new BigPickleClient();
   }
 
   async sendMessage(input: SendMessageInput): Promise<AIResponse> {

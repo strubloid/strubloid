@@ -16,6 +16,7 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:push": "prisma db push",
     "memory:compact": "tsx scripts/compact-memory.ts",
+    "dev:playwright": "next dev -p 3100",
     "scan:artifacts": "tsx scripts/scan-artifacts.ts"
   },
   "dependencies": {
