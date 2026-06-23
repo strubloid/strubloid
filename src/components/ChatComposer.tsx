@@ -27,7 +27,7 @@ export function ChatComposer({
   devMode,
   selectedModelId,
   onModelChange,
-  previousMessages = [],
+  previousMessages = []
 }: ChatComposerProps) {
   const [input, setInput] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -124,7 +124,7 @@ export function ChatComposer({
 
   return (
     <div className="border-t border-[--color-border] bg-[--color-bg-secondary] p-4">
-      <div className="mx-auto flex max-w-3xl flex-col gap-2">
+      <div className="mx-auto flex flex-col gap-2">
         {/* Model selector + brain toggle row */}
         <div className="flex items-center gap-2">
           {/* Model selector */}
@@ -134,9 +134,7 @@ export function ChatComposer({
             className="rounded border border-[--color-border] bg-[--color-bg] px-2 py-1 text-xs outline-none"
             title="Select AI model"
           >
-            {models.length === 0 && (
-              <option value="">Loading models...</option>
-            )}
+            {models.length === 0 && <option value="">Loading models...</option>}
             {models.map((model) => (
               <option key={model.modelId} value={model.modelId}>
                 {model.name} {model.isFree ? '(Free)' : ''}
@@ -158,14 +156,10 @@ export function ChatComposer({
           </button>
 
           {useAiBrain && (
-            <span className="text-xs text-purple-400">
-              AI remembers past conversations
-            </span>
+            <span className="text-xs text-purple-400">AI remembers past conversations</span>
           )}
 
-          <span className="ml-auto text-xs text-[--color-text-dim]">
-            Sent: {requestCount}
-          </span>
+          <span className="ml-auto text-xs text-[--color-text-dim]">Sent: {requestCount}</span>
         </div>
 
         {/* Dev mode banner */}

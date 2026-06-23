@@ -19,13 +19,6 @@ interface AiModel {
   outputPrice: number | null;
 }
 
-interface NvidiaApiModel {
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
-}
-
 const PROVIDER_INFO: Record<ProviderTab, {
   label: string;
   configKey: string;
@@ -64,21 +57,9 @@ const PROVIDER_INFO: Record<ProviderTab, {
   },
 };
 
-/** Format a model ID like "meta/llama-3.3-70b-instruct" into a display name. */
-function formatNvidiaModelName(id: string): string {
-  const parts = id.split('/');
-  const name = parts.length > 1 ? parts[1] : id;
-  return name
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-}
-
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<ProviderTab>('zen');
-  const [dbModels, setDbModels] = useState<AiModel[]>([]);
-  const [nvidiaLiveModels, setNvidiaLiveModels] = useState<NvidiaApiModel[]>([]);
-  const [nvidiaModelsLoading, setNvidiaModelsLoading] = useState(false);
+  const [allModels, setAllModels] = useState<AiModel[]>([]);
   const [configs, setConfigs] = useState<Record<string, string>>({});
   const [apiKey, setApiKey] = useState('');
   const [defaultModel, setDefaultModel] = useState('');
@@ -87,24 +68,29 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [collapsedFree, setCollapsedFree] = useState(false);
+  const [collapsedPaid, setCollapsedPaid] = useState(false);
+  const [refreshingModels, setRefreshingModels] = useState(false);
+  const [refreshResult, setRefreshResult] = useState<string | null>(null);
 
   const info = PROVIDER_INFO[activeTab];
   const activeApiUrl = configs[info.configBaseUrlKey] || info.defaultApiUrl;
 
-  // For Zen: models come from DB
-  const zenModels = dbModels.filter((m) => m.modelSource === 'zen');
-  const nvidiaModels = nvidiaLiveModels;
+  // Models for the active provider
+  const providerModels = allModels.filter((m) => m.modelSource === activeTab);
+  const freeModels = providerModels.filter((m) => m.isFree);
+  const paidModels = providerModels.filter((m) => !m.isFree);
 
   const loadData = useCallback(async () => {
     try {
       const [modelsRes, configRes] = await Promise.all([
-        fetch('/api/ai/models'),
+        fetch('/api/ai/models?all=true'),
         fetch('/api/ai/config'),
       ]);
 
       if (modelsRes.ok) {
         const data = await modelsRes.json();
-        setDbModels(data.models);
+        setAllModels(data.models);
       }
       if (configRes.ok) {
         const data = await configRes.json();
@@ -119,32 +105,9 @@ export default function SettingsPage() {
     }
   }, []);
 
-  // Fetch NVIDIA models through our server proxy (avoids CORS)
-  const fetchNvidiaModels = useCallback(async () => {
-    setNvidiaModelsLoading(true);
-    try {
-      const res = await fetch('/api/ai/nvidia-models');
-      if (res.ok) {
-        const data = await res.json();
-        setNvidiaLiveModels(data.data || []);
-      }
-    } catch {
-      // If fetch fails, models stay empty
-    } finally {
-      setNvidiaModelsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  // When switching to NVIDIA tab, fetch live models
-  useEffect(() => {
-    if (activeTab === 'nvidia' && nvidiaLiveModels.length === 0 && !nvidiaModelsLoading) {
-      fetchNvidiaModels();
-    }
-  }, [activeTab, nvidiaLiveModels.length, nvidiaModelsLoading, fetchNvidiaModels]);
 
   // Sync form fields when switching tabs
   useEffect(() => {
@@ -160,16 +123,11 @@ export default function SettingsPage() {
       const res = await fetch('/api/ai/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          configs: [{ key, value }],
-        }),
+        body: JSON.stringify({ configs: [{ key, value }] }),
       });
-
       if (!res.ok) throw new Error('Failed to save');
-
       setConfigs((prev) => ({ ...prev, [key]: value }));
       setSaveMsg('Saved successfully');
-
       setTimeout(() => setSaveMsg(null), 3000);
     } catch (err) {
       setSaveMsg('Failed to save');
@@ -193,17 +151,156 @@ export default function SettingsPage() {
     const value = prompt(`Base URL for ${info.label}:`, current);
     if (value !== null && value.trim()) {
       await saveConfig(info.configBaseUrlKey, value.trim());
-      // Refresh NVIDIA models when URL changes
-      if (activeTab === 'nvidia') {
-        setNvidiaLiveModels([]);
-      }
     }
   }
 
-  const currentModels = activeTab === 'zen' ? zenModels : nvidiaModels;
-  const currentModelsCount = activeTab === 'zen'
-    ? zenModels.length
-    : nvidiaModels.length;
+  async function handleRefreshModels() {
+    setRefreshingModels(true);
+    setRefreshResult(null);
+    try {
+      const res = await fetch(`/api/ai/models/refresh?provider=${activeTab}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.models) setAllModels(data.models);
+
+      const r = data.results?.[activeTab];
+      if (r) {
+        const parts: string[] = [];
+        if (r.added > 0) parts.push(`${r.added} new`);
+        if (r.updated > 0) parts.push(`${r.updated} updated`);
+        parts.push(`${r.total} total from API`);
+        setRefreshResult(`✓ ${parts.join(', ')}`);
+      } else if (data.results && Object.keys(data.results).length === 0) {
+        setRefreshResult('No models refreshed — check API key is set');
+      } else if (data.errors?.[activeTab]) {
+        setRefreshResult(`✗ ${data.errors[activeTab]}`);
+      }
+      if (res.ok && data.errors?.[activeTab]) {
+        setRefreshResult(`⚠ Partially failed: ${data.errors[activeTab]}`);
+      }
+    } catch (err) {
+      setRefreshResult(`✗ ${err instanceof Error ? err.message : 'Request failed'}`);
+    } finally {
+      setRefreshingModels(false);
+      setTimeout(() => setRefreshResult(null), 6000);
+    }
+  }
+
+  async function toggleModelEnabled(modelId: string, enabled: boolean) {
+    const model = allModels.find((m) => m.modelId === modelId);
+    if (!model) return;
+
+    try {
+      const res = await fetch('/api/ai/models', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates: [{ id: model.id, isEnabled: enabled }] }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAllModels(data.models);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  async function toggleSectionEnabled(models: AiModel[], enabled: boolean) {
+    const updates = models
+      .filter((m) => m.isEnabled !== enabled)
+      .map((m) => ({ id: m.id, isEnabled: enabled }));
+
+    if (updates.length === 0) return;
+
+    try {
+      const res = await fetch('/api/ai/models', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAllModels(data.models);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  function renderModelSection(title: string, models: AiModel[], collapsed: boolean, onToggleCollapse: () => void, emoji: string) {
+    const allEnabled = models.length > 0 && models.every((m) => m.isEnabled);
+    const noneEnabled = models.every((m) => !m.isEnabled);
+
+    return (
+      <div className="mb-3 rounded-lg border border-[--color-border]">
+        {/* Section header — clickable to collapse/expand */}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="flex w-full items-center gap-2 rounded-t-lg bg-[--color-bg-secondary] px-4 py-3 text-left text-sm font-medium hover:bg-[--color-bg]"
+        >
+          <span className="text-base">{collapsed ? '▶' : '▼'}</span>
+          <span>{emoji}</span>
+          <span>{title}</span>
+          <span className="text-xs text-[--color-text-dim]">
+            ({models.filter((m) => m.isEnabled).length}/{models.length} selected)
+          </span>
+        </button>
+
+        {!collapsed && (
+          <div className="border-t border-[--color-border] px-4 py-2">
+            {/* Select All / None */}
+            <label className="flex items-center gap-2 py-1 text-xs text-[--color-text-dim] hover:text-white cursor-pointer">
+              <input
+                type="checkbox"
+                checked={allEnabled}
+                ref={(el) => {
+                  if (el) el.indeterminate = !allEnabled && !noneEnabled;
+                }}
+                onChange={() => toggleSectionEnabled(models, !allEnabled)}
+                className="h-4 w-4 rounded border-[--color-border] bg-[--color-bg]"
+              />
+              {allEnabled ? 'Deselect all' : 'Select all'}
+            </label>
+
+            <div className="mt-1 space-y-1">
+              {models.map((model) => (
+                <label
+                  key={model.modelId}
+                  className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 text-sm hover:bg-[--color-bg]"
+                >
+                  <input
+                    type="checkbox"
+                    checked={model.isEnabled}
+                    onChange={() => toggleModelEnabled(model.modelId, !model.isEnabled)}
+                    className="h-4 w-4 rounded border-[--color-border] bg-[--color-bg]"
+                  />
+                  <span className="font-medium">{model.name}</span>
+                  <span className="font-mono text-xs text-[--color-text-dim]">{model.modelId}</span>
+                  {model.description && (
+                    <span className="hidden truncate text-xs text-[--color-text-dim] sm:inline">
+                      — {model.description}
+                    </span>
+                  )}
+                  {model.inputPrice != null && (
+                    <span className="ml-auto text-xs text-[--color-text-dim]">
+                      ${model.inputPrice.toFixed(2)} / ${model.outputPrice?.toFixed(2)} /1M tok
+                    </span>
+                  )}
+                </label>
+              ))}
+              {models.length === 0 && (
+                <div className="py-4 text-center text-xs text-[--color-text-dim]">
+                  No models in this category
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen">
@@ -349,17 +446,12 @@ export default function SettingsPage() {
                     onChange={(e) => setDefaultModel(e.target.value)}
                     className="flex-1 rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-2 text-sm outline-none focus:border-blue-500"
                   >
-                    {currentModelsCount === 0 && (
+                    {providerModels.length === 0 && (
                       <option value="">No models available</option>
                     )}
-                    {activeTab === 'zen' && (zenModels as AiModel[]).map((m) => (
+                    {providerModels.map((m) => (
                       <option key={m.modelId} value={m.modelId}>
-                        {m.name} {m.isFree ? '(Free)' : ''}
-                      </option>
-                    ))}
-                    {activeTab === 'nvidia' && (nvidiaModels as NvidiaApiModel[]).map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {formatNvidiaModelName(m.id)}
+                        {m.name} {m.isFree ? '(Free)' : ''} {!m.isEnabled ? '(disabled)' : ''}
                       </option>
                     ))}
                   </select>
@@ -373,95 +465,68 @@ export default function SettingsPage() {
                 </div>
               </section>
 
-              {/* All Models for this Provider */}
+              {/* Available Models - collapsible free / paid sections */}
               <section className="rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-6">
-                <h2 className="mb-4 text-lg font-semibold">Available Models</h2>
-
-                {activeTab === 'zen' && (
-                  <>
-                    <p className="mb-4 text-sm text-[--color-text-dim]">
-                      All {zenModels.length} {info.label} models seeded from OpenCode Zen.
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">Available Models</h2>
+                    <p className="mt-1 text-sm text-[--color-text-dim]">
+                      Check which models appear in the chat model selector. Unchecked models are hidden.
                     </p>
-                    <div className="space-y-2">
-                      {(zenModels as AiModel[]).map((model) => (
-                        <div
-                          key={model.modelId}
-                          className="flex items-center gap-3 rounded-lg border border-green-800/40 bg-green-900/10 px-4 py-3 text-sm"
-                        >
-                          <span className="text-lg text-green-400">✓</span>
-                          <div className="flex-1">
-                            <span className="font-medium">{model.name}</span>
-                            <span className="ml-2 font-mono text-xs text-[--color-text-dim]">
-                              {model.modelId}
-                            </span>
-                            {model.description && (
-                              <span className="ml-2 text-xs text-[--color-text-dim]">
-                                — {model.description}
-                              </span>
-                            )}
-                          </div>
-                          {model.isFree && (
-                            <span className="rounded bg-green-900/40 px-2 py-0.5 text-xs text-green-300">FREE</span>
-                          )}
-                        </div>
-                      ))}
-                      {zenModels.length === 0 && (
-                        <div className="py-8 text-center text-sm text-[--color-text-dim]">
-                          No Zen models seeded. Run the seed script.
-                        </div>
-                      )}
-                    </div>
-                  </>
+                  </div>
+                  <button
+                    onClick={handleRefreshModels}
+                    disabled={refreshingModels}
+                    className="flex items-center gap-2 rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-600 disabled:opacity-50"
+                    title={`Fetch latest ${info.label} models from the API`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={refreshingModels ? 'animate-spin' : ''}
+                    >
+                      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                      <path d="M3 3v5h5" />
+                      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                      <path d="M16 21h5v-5" />
+                    </svg>
+                    {refreshingModels ? 'Refreshing...' : 'Refresh Models'}
+                  </button>
+                </div>
+
+                {refreshResult && (
+                  <div className={`mb-3 rounded px-3 py-2 text-sm ${
+                    refreshResult.startsWith('✓')
+                      ? 'bg-green-900/30 text-green-300'
+                      : refreshResult.startsWith('⚠')
+                        ? 'bg-yellow-900/30 text-yellow-300'
+                        : 'bg-red-900/30 text-red-300'
+                  }`}>
+                    {refreshResult}
+                  </div>
                 )}
 
-                {activeTab === 'nvidia' && (
-                  <>
-                    <p className="mb-4 text-sm text-[--color-text-dim]">
-                      {nvidiaModelsLoading
-                        ? 'Loading models from NVIDIA...'
-                        : nvidiaModels.length > 0
-                        ? `${nvidiaModels.length} models available via NVIDIA NIM at ${activeApiUrl}`
-                        : `No models loaded. Try fetching from the base URL above. Click "reload" to try again.`
-                      }
-                      {!nvidiaModelsLoading && (
-                        <button
-                          onClick={() => { setNvidiaLiveModels([]); fetchNvidiaModels(); }}
-                          className="ml-2 text-blue-400 underline hover:text-blue-300"
-                        >
-                          reload
-                        </button>
-                      )}
-                    </p>
-                    <div className="space-y-2">
-                      {(nvidiaModels as NvidiaApiModel[]).map((model) => (
-                        <div
-                          key={model.id}
-                          className="flex items-center gap-3 rounded-lg border border-green-800/40 bg-green-900/10 px-4 py-3 text-sm"
-                        >
-                          <span className="text-lg text-green-400">✓</span>
-                          <div className="flex-1">
-                            <span className="font-medium">{formatNvidiaModelName(model.id)}</span>
-                            <span className="ml-2 font-mono text-xs text-[--color-text-dim]">
-                              {model.id}
-                            </span>
-                          </div>
-                          <span className="rounded bg-[--color-bg] px-2 py-0.5 text-xs text-[--color-text-dim]">
-                            {model.owned_by}
-                          </span>
-                        </div>
-                      ))}
-                      {nvidiaModels.length === 0 && !nvidiaModelsLoading && (
-                        <div className="py-8 text-center text-sm text-[--color-text-dim]">
-                          No models loaded from NVIDIA API.
-                        </div>
-                      )}
-                      {nvidiaModelsLoading && (
-                        <div className="py-8 text-center text-sm text-[--color-text-dim]">
-                          Loading...
-                        </div>
-                      )}
-                    </div>
-                  </>
+                {renderModelSection(
+                  `Free Models`,
+                  freeModels,
+                  collapsedFree,
+                  () => setCollapsedFree((v) => !v),
+                  '🆓'
+                )}
+
+                {renderModelSection(
+                  `Paid Models`,
+                  paidModels,
+                  collapsedPaid,
+                  () => setCollapsedPaid((v) => !v),
+                  '💳'
                 )}
               </section>
             </>

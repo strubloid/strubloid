@@ -36,7 +36,7 @@ export function Sidebar() {
     try {
       const [chatsRes, projectsRes] = await Promise.all([
         fetch('/api/chats?isRandom=true&limit=20'),
-        fetch('/api/projects?limit=50'),
+        fetch('/api/projects?limit=50')
       ]);
 
       const chatsData = await chatsRes.json();
@@ -57,7 +57,7 @@ export function Sidebar() {
       const res = await fetch('/api/chats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'New Chat' }),
+        body: JSON.stringify({ title: 'New Chat' })
       });
       const chat = await res.json();
       window.location.href = `/chat/${chat.id}`;
@@ -95,40 +95,50 @@ export function Sidebar() {
     <>
       {/* Mobile toggle */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#12121a] border border-[#2a2a3a]"
+        className="fixed left-4 top-4 z-50 rounded-lg border border-[#2a2a3a] bg-[#12121a] p-2 md:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle sidebar"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d={mobileOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
+          />
         </svg>
       </button>
 
       {/* Overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
-        <div className="p-4 flex flex-col h-full">
-          {/* Logo/Title */}
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-xl font-bold glow-text" style={{ color: 'var(--color-accent)' }}>
+        <div className="flex h-full flex-col p-4">
+          <div className="mb-6 flex w-full items-center justify-center gap-2">
+            <span className="glow-text text-xl font-bold" style={{ color: 'var(--color-accent)' }}>
               Strubloid
             </span>
           </div>
+          {/* Logo/Title */}
 
           {/* New Chat Button */}
           <button
             onClick={createNewChat}
-            className="btn-primary w-full py-2 px-4 rounded-lg mb-6 flex items-center justify-center gap-2"
+            className="btn-primary mb-6 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             New Chat
           </button>
@@ -163,7 +173,12 @@ export function Sidebar() {
                         title="Delete chat"
                         aria-label="Delete chat"
                       >
-                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -180,12 +195,11 @@ export function Sidebar() {
 
             {/* Projects */}
             <div className="mb-6">
-              <div className="flex items-center justify-between px-3 mb-2">
-                <span className="section-header" style={{ padding: '0 0 8px 0' }}>Projects</span>
-                <Link
-                  href="/projects"
-                  className="text-xs text-[--color-accent] hover:underline"
-                >
+              <div className="mb-2 flex items-center justify-between px-3">
+                <span className="section-header" style={{ padding: '0 0 8px 0' }}>
+                  Projects
+                </span>
+                <Link href="/projects" className="text-xs text-[--color-accent] hover:underline">
                   View all
                 </Link>
               </div>
@@ -203,7 +217,7 @@ export function Sidebar() {
                       onClick={() => setMobileOpen(false)}
                     >
                       <span
-                        className="inline-block w-2 h-2 rounded-full mr-2"
+                        className="mr-2 inline-block h-2 w-2 rounded-full"
                         style={{ backgroundColor: project.color }}
                       />
                       {project.name}
@@ -217,7 +231,7 @@ export function Sidebar() {
             {starredProjects.length > 0 && (
               <div className="mb-6">
                 <div className="section-header flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="#fbbf24" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4" fill="#fbbf24" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                   Starred
@@ -231,7 +245,7 @@ export function Sidebar() {
                       onClick={() => setMobileOpen(false)}
                     >
                       <span
-                        className="inline-block w-2 h-2 rounded-full mr-2"
+                        className="mr-2 inline-block h-2 w-2 rounded-full"
                         style={{ backgroundColor: project.color }}
                       />
                       {project.name}
@@ -243,15 +257,25 @@ export function Sidebar() {
           </nav>
 
           {/* Footer links */}
-          <div className="pt-4 border-t border-[--color-border] space-y-2">
+          <div className="space-y-2 border-t border-[--color-border] pt-4">
             <Link
               href="/settings"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[--color-bg-tertiary] transition-colors"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[--color-bg-tertiary]"
               onClick={() => setMobileOpen(false)}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               Settings
             </Link>
