@@ -306,12 +306,12 @@ export function Sidebar() {
                   projects.slice(0, 10).map((project) => {
                     const isExpanded = expandedProjectId === project.id;
                     return (
-                      <div key={project.id}>
+                      <div key={project.id} className="project-item-container">
                         {/* Project header: link + expand toggle */}
-                        <div className="flex items-center gap-1">
+                        <div className={`project-item relative ${isActiveProject(project.id) || isExpanded ? 'active' : ''}`}>
                           <Link
                             href={`/projects/${project.id}`}
-                            className={`chat-item flex-1 truncate ${isActiveProject(project.id) || isExpanded ? 'active' : ''}`}
+                            className="block truncate pr-10"
                             onClick={() => setMobileOpen(false)}
                           >
                             <span
@@ -326,7 +326,7 @@ export function Sidebar() {
                               e.preventDefault();
                               toggleProjectExpand(project.id);
                             }}
-                            className={`flex-shrink-0 rounded p-1.5 transition-colors hover:bg-[--color-bg-tertiary] ${
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-[--color-bg-tertiary] ${
                               isExpanded ? 'text-[--color-accent]' : 'text-[--color-text-dim]'
                             }`}
                             title={isExpanded ? 'Collapse chats' : 'Show chats'}
@@ -437,7 +437,7 @@ export function Sidebar() {
                     <Link
                       key={project.id}
                       href={`/projects/${project.id}`}
-                      className={`chat-item block ${isActiveProject(project.id) ? 'active' : ''}`}
+                      className={`project-item block ${isActiveProject(project.id) ? 'active' : ''}`}
                       onClick={() => setMobileOpen(false)}
                     >
                       <span
