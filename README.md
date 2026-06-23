@@ -1,4 +1,3 @@
-
 <pre align="center">
          __             __    __      _     __
    _____/ /________  __/ /_  / /___  (_)___/ /
@@ -25,71 +24,51 @@
 
 I'm a senior software engineer based in Cork, Ireland with 15+ years shipping production software. Started in Brazil writing Java for a government supercomputer, moved through PHP consulting shops, found my home in the JavaScript ecosystem, and never looked back. I've shipped for Liverpool FC and the Central Bank of Ireland, built no-code platforms from scratch, migrated monorepos, and automated enough of my workflow that bash is practically a reflex.
 
-<br>
-
 ---
-
-<br>
 
 <h3 align="center">📦 projects</h3>
 
-<br>
-
-|  |  |  |
-|--|--|--|
+|                                                                                                                                   |                                                                                                                          |                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | 🧠 **[Strubloid](https://github.com/strubloid/strubloid)**<br><sub>multi-provider AI chat, brain system, terminal aesthetic</sub> | 📺 **[py-stremio](https://github.com/strubloid/py-stremio)**<br><sub>python bindings for stremio addon development</sub> | ⚡ **[frontend-hero](https://github.com/strubloid/frontend-hero)**<br><sub>next.js + drizzle full-stack starter</sub> |
-| 🐚 **[.bash_aliases](https://git.strubloid.com/bashaliases)**<br><sub>shell automation framework, since 2013</sub> | ⚽ **[Futebol](https://github.com/strubloid/futebol)**<br><sub>football data & analytics</sub> | 🇧🇷 **[Brazucas](https://github.com/strubloid/brazucas)**<br><sub>brazilian community platform</sub> |
-| 🖼️ **[Exibitions](https://github.com/strubloid/exibitions)**<br><sub>showcase / gallery</sub> | 🃏 **[Cardgame](https://github.com/strubloid/cardgame)**<br><sub>card game implementation</sub> | 🎵 **[Py-Music](https://github.com/strubloid/py-music)**<br><sub>music theory engine, llm explanations</sub> |
-
-<br>
+| 🐚 **[.bash_aliases](https://git.strubloid.com/bashaliases)**<br><sub>shell automation framework, since 2013</sub>                | ⚽ **[Futebol](https://github.com/strubloid/futebol)**<br><sub>football data & analytics</sub>                           | 🇧🇷 **[Brazucas](https://github.com/strubloid/brazucas)**<br><sub>brazilian community platform</sub>                   |
+| 🖼️ **[Exibitions](https://github.com/strubloid/exibitions)**<br><sub>showcase / gallery</sub>                                     | 🃏 **[Cardgame](https://github.com/strubloid/cardgame)**<br><sub>card game implementation</sub>                          | 🎵 **[Py-Music](https://github.com/strubloid/py-music)**<br><sub>music theory engine, llm explanations</sub>          |
 
 ---
-
-<br>
 
 <h3 align="center">🧰 toolbox</h3>
 
-<br>
-
-| area | tech |
-|------|------|
-| 🗣️ **languages** | TypeScript, JavaScript (ES6+), Python, Java, PHP, Bash |
-| 🎨 **frontend** | React, Next.js, Angular, React Native, Redux, Context API, React Query, React Hook Form, D3.js, Chart.js, styled-components |
-| ⚙️ **backend** | Node.js, Express, FastAPI, Laravel, Flask, GraphQL, REST APIs, OAuth 2.0, OpenAI API, LangChain |
-| 🗄️ **database** | PostgreSQL, MySQL, MongoDB, SQL Server, Redis, Firebase |
-| ☁️ **infra** | Docker, AWS, Linux, Debian/Ubuntu, CI/CD, Fly.io, Webpack, Turborepo |
-| 🧪 **testing** | Jest, Puppeteer, Unit, Integration, Performance Profiling |
-| 🧰 **frameworks** | Magento 1 & 2, Zend 1 & 2, YII, Ext JS |
-| 🔗 **protocols** | REST, GraphQL, OAuth 2.0, SSH, ERC-20 / ERC-721 |
-| 🧠 **practices** | Software Architecture, OOP, Design Patterns, TDD, Agile, Scrum |
-| 🛠️ **toolchain** | Git, Jira, ESLint, Prettier, Webpack, Turborepo |
-
-<br>
+| area              | tech                                                                                                                        |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 🗣️ **languages**  | TypeScript, JavaScript (ES6+), Python, Java, PHP, Bash                                                                      |
+| 🎨 **frontend**   | React, Next.js, Angular, React Native, Redux, Context API, React Query, React Hook Form, D3.js, Chart.js, styled-components |
+| ⚙️ **backend**    | Node.js, Express, FastAPI, Laravel, Flask, GraphQL, REST APIs, OAuth 2.0, OpenAI API, LangChain                             |
+| 🗄️ **database**   | PostgreSQL, MySQL, MongoDB, SQL Server, Redis, Firebase                                                                     |
+| ☁️ **infra**      | Docker, AWS, Linux, Debian/Ubuntu, CI/CD, Fly.io, Webpack, Turborepo                                                        |
+| 🧪 **testing**    | Jest, Puppeteer, Unit, Integration, Performance Profiling                                                                   |
+| 🧰 **frameworks** | Magento 1 & 2, Zend 1 & 2, YII, Ext JS                                                                                      |
+| 🔗 **protocols**  | REST, GraphQL, OAuth 2.0, SSH, ERC-20 / ERC-721                                                                             |
+| 🧠 **practices**  | Software Architecture, OOP, Design Patterns, TDD, Agile, Scrum                                                              |
+| 🛠️ **toolchain**  | Git, Jira, ESLint, Prettier, Webpack, Turborepo                                                                             |
 
 ---
-
-<br>
 
 <h3 align="center">💼 career</h3>
 
-<br>
-
-| where | what |
-|-------|------|
-| **Konvi** · Dublin | monorepo migration (@neo→@eip, 40+ packages, zero regressions) · cross-platform wallet features (React/RN/Next.js, GraphQL, Firebase) · tokenised assets (ERC-20/ERC-721) · OAuth 2.0 (Google/MS/Yahoo) · styled-components → enterprise design system |
-| **Blocworx** · Cork | architected no-code platform (Angular/React/Laravel/Node.js) for enterprise clients · JS→TypeScript migration across entire codebase · Docker CI/CD standardisation · automated frontend testing (Jest/Puppeteer) · backend automation (Bash/Python for AWS scripting) · reusable npm packages + Chart.js dashboards · mentorship |
-| **Monsoon Consulting** · Dublin | Magento 1&2 e-commerce optimisation across multiple client projects · custom modules + REST APIs for scalability · performance audits & bottleneck resolution · Docker + Git Flow enforcement · collaborated with QA/DevOps/UI-UX for production deployments · mentorship |
-| **StudioForty9** · Cork | Magento architecture redesign for promotional campaigns · backend cross-sell logic & product relationships · SEO & image asset optimisation tooling · CI/CD pipelines + Docker workflows · mentorship |
-| **Captura.Me** · Brazil | legacy→React SPA migration · reusable component architecture + client-side routing + code-splitting · REST APIs via Axios with clean separation · Zend Framework core PR #3017 merged · performance optimisation (memoisation, lazy loading) |
-| **Vox Technology** · Brazil | Zend Framework 1 migration from legacy systems · automated REGEX template transform (200+ templates) · improved documentation & onboarding processes · pair programming mentorship |
-| **Dantel** · Brazil | e-procurement platform backend (YII) · Ext JS frontend integration · custom JS runtime importer for dev acceleration · customer support system refactor for maintainability |
-| **Dataprev** · Brazil | 1000× batch optimisation (0.01s→0.00001s) · supercomputer-scale Java (BGSD) · legacy academic model→production system refactor · frontend components with in-house Java framework |
-
-<br>
+| where                           | what                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Konvi** · Dublin              | monorepo migration (@neo→@eip, 40+ packages, zero regressions) · cross-platform wallet features (React/RN/Next.js, GraphQL, Firebase) · tokenised assets (ERC-20/ERC-721) · OAuth 2.0 (Google/MS/Yahoo) · styled-components → enterprise design system                                                                            |
+| **Blocworx** · Cork             | architected no-code platform (Angular/React/Laravel/Node.js) for enterprise clients · JS→TypeScript migration across entire codebase · Docker CI/CD standardisation · automated frontend testing (Jest/Puppeteer) · backend automation (Bash/Python for AWS scripting) · reusable npm packages + Chart.js dashboards · mentorship |
+| **Monsoon Consulting** · Dublin | Magento 1&2 e-commerce optimisation across multiple client projects · custom modules + REST APIs for scalability · performance audits & bottleneck resolution · Docker + Git Flow enforcement · collaborated with QA/DevOps/UI-UX for production deployments · mentorship                                                         |
+| **StudioForty9** · Cork         | Magento architecture redesign for promotional campaigns · backend cross-sell logic & product relationships · SEO & image asset optimisation tooling · CI/CD pipelines + Docker workflows · mentorship                                                                                                                             |
+| **Captura.Me** · Brazil         | legacy→React SPA migration · reusable component architecture + client-side routing + code-splitting · REST APIs via Axios with clean separation · Zend Framework core PR #3017 merged · performance optimisation (memoisation, lazy loading)                                                                                      |
+| **Vox Technology** · Brazil     | Zend Framework 1 migration from legacy systems · automated REGEX template transform (200+ templates) · improved documentation & onboarding processes · pair programming mentorship                                                                                                                                                |
+| **Dantel** · Brazil             | e-procurement platform backend (YII) · Ext JS frontend integration · custom JS runtime importer for dev acceleration · customer support system refactor for maintainability                                                                                                                                                       |
+| **Dataprev** · Brazil           | 1000× batch optimisation (0.01s→0.00001s) · supercomputer-scale Java (BGSD) · legacy academic model→production system refactor · frontend components with in-house Java framework                                                                                                                                                 |
 
 ---
 
-<br>
+<br />
 
 <p align="center">
   <code>rafael ≈ (curiosity + innovation + creativity) × persistence</code>
@@ -111,6 +90,4 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 
 <p align="center">
   <b><a href="./project.md">technical docs → project.md</a></b>
-  <br>
-  <sub>setup, architecture, api routes, all the boring stuff</sub>
 </p>
