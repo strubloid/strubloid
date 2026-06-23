@@ -1,65 +1,47 @@
-# Strubloid
+# strubloid
 
-An AI-powered chat application built with Next.js 14, Prisma + SQLite, and
-OpenCode Zen AI.
+> `0x73747275626C6F6964` — a.k.a. the person behind this repo.
 
-## Quick Start
+Hey. I'm Strubloid.
 
-```bash
-# Install dependencies
-npm install
+This is my GitHub face — the place where I ship things, break things, and occasionally write code that compiles on the first try (rare, but it happens). I build full-stack apps, talk to AI APIs way too much, and have a soft spot for dark UIs with green glow effects.
 
-# Generate Prisma client & push schema
-npm run prisma:generate && npm run prisma:push
+If you're looking for the **project docs** — setup, architecture, how to run this thing — head over to [project.md](./project.md). This README is just the introduction.
 
-# Start dev server
-npm run dev
-```
+---
 
-Open **http://localhost:3000/chat** in your browser.
+### What's in here
 
-## Configuration
+This repo is my AI-powered chat playground. It talks to multiple backends (OpenCode Zen, NVIDIA NIM), remembers stuff across conversations via an "AI Brain", and comes styled like a terminal that escaped into the browser. Think Matrix meets your IDE.
 
-Copy `.env.example` to `.env` and fill in:
+Current status: **working and in active use**. Not production-ready, not trying to be. It's my sandbox.
 
-| Variable | Purpose | Example |
-|----------|---------|--------|
-| `DATABASE_URL` | SQLite database path | `file:./dev.db` |
-| `BIGPICKLE_API_URL` | OpenCode Zen endpoint | `https://opencode.ai/zen/v1` |
-| `BIGPICKLE_API_KEY` | API key (from [OpenCode Zen](https://opencode.ai/zen)) | `sk-...` |
-| `BIGPICKLE_MODEL` | Model name ([see docs](https://opencode.ai/docs/zen)) | `big-pickle` |
-| `COMPACTION_WINDOW_DAYS` | Chat age (days) before memory compaction | `30` |
+---
 
-Restart the dev server after changing `.env`.
+### The Vibes
 
-## Scripts
+- Dark. `#0a0a0f` dark.
+- Accent: `#9ad933` — a green that borderlines radioactive.
+- Terminal cursor blinks at you while you wait for the AI to finish thinking.
+- Keyboard-driven where it counts. Mouse optional.
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start dev server on port 3000 |
-| `npm run build` | Production build |
-| `npm run test` | Run unit tests (Vitest) |
-| `npm run lint` | ESLint check |
-| `npm run typecheck` | TypeScript check |
-| `npm run scan:artifacts` | Scan for incomplete / placeholder code |
-| `npm run memory:compact` | Compact old chats into AI Brain memories |
-| `npm run test:all` | lint + typecheck + test + scan:artifacts |
+---
 
-## Features
+### Philosophy
 
-- **Random Chats** — Start a new ad-hoc conversation from the sidebar
-- **Project Chats** — Organise conversations into projects with colour labels
-- **AI Brain** — Toggle memory injection for context-aware responses
-- **Delete Chats** — Remove chats with a confirmation dialog
-- **Keyboard History** — ArrowUp / ArrowDown to recall previously sent messages
-- **Memory Compaction** — Old chats are automatically condensed into "AI Brain"
-  memory entries, which can fuel future conversations
-- **Starred Projects** — Pin important projects for quick access
+- **Tests must break when the system breaks.** No fake repos, no mocks that lie to you. Real DB integration or bust.
+- **DB-stored config over `.env`.** API keys, model selection, everything lives in the database. Swap providers without restarting the server.
+- **Don't tolerate silence.** Every error has a banner. Every action has feedback. If something fails, you'll know why.
 
-## Tech Stack
+---
 
-- **Framework** — Next.js 14 (App Router)
-- **Database** — SQLite via Prisma ORM
-- **Styling** — Tailwind CSS
-- **Tests** — Vitest (unit), Playwright (E2E, planned)
-- **AI** — OpenCode Zen (OpenAI-compatible `/chat/completions` API)
+### Contact
+
+- GitHub: [github.com/strubloid](https://github.com/strubloid) (you're already here)
+- Project README? This is it. The one with the actual docs is [project.md](./project.md).
+
+---
+
+<p align="center">
+  <code>strubloid ≈ (enthusiasm / experience) × caffeine</code>
+</p>

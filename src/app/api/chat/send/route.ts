@@ -81,10 +81,14 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: 'asc' },
     });
 
-    // Get brain memories if enabled
+    // Get brain memories if enabled — scoped to project when available
     let brainMemories: string[] = [];
     if (useAiBrain) {
+      const memoryWhere = chat.projectId
+        ? { projectId: chat.projectId }
+        : {};
       const memories = await db.memoryEntry.findMany({
+        where: memoryWhere,
         orderBy: { updatedAt: 'desc' },
         take: 10,
       });
@@ -140,14 +144,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Auto-save brain memory from this exchange when brain is on
-    if (useAiBrain) {
+    // Auto-save brain memory from this exchange for project chats
+    // (saved regardless of brain toggle so brain can be turned ON later)
+    if (chat.projectId) {
       const title = message.length > 80 ? message.slice(0, 77) + '...' : message;
       const summary = aiResponse.content.length > 300
         ? aiResponse.content.slice(0, 297) + '...'
         : aiResponse.content;
       await db.memoryEntry.create({
         data: {
+          projectId: chat.projectId,
           title,
           summary,
           facts: message,

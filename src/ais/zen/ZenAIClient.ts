@@ -132,16 +132,32 @@ export class ZenAIClient {
       let content = '';
       let modelName = model.modelId;
 
-      if (data.choices?.[0]?.message?.content) {
-        content = data.choices[0].message.content;
+      // Try standard OpenAI-format: data.choices[0].message.content
+      const rawContent = data.choices?.[0]?.message?.content;
+      if (rawContent !== undefined && rawContent !== null && rawContent !== '') {
+        content = rawContent;
         modelName = data.model || model.modelId;
       } else if (data.choices?.[0]?.text) {
+        // Completion endpoint (non-chat)
         content = data.choices[0].text;
       } else if (typeof data === 'string') {
         content = data;
       } else if (data.content?.[0]?.text) {
+        // Google-style response
         content = data.content[0].text;
-      } else {
+      } else if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        // Gemini-style (full)
+        content = data.candidates[0].content.parts[0].text;
+      }
+
+      if (!content) {
+        // Log a warning and fall back — the response format may have changed
+        console.warn(
+          '[/ai/zen] callOpenAIEndpoint: could not extract content from response,',
+          'model=%s status=200 keys=%s',
+          model.modelId,
+          Object.keys(data).join(',')
+        );
         content = JSON.stringify(data);
       }
 

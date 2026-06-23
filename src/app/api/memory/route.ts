@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 
 const CreateMemorySchema = z.object({
+  projectId: z.string().optional(),
   title: z.string().min(1).max(200),
   summary: z.string().min(1).max(2000),
   facts: z.string().max(5000).optional().default(''),
@@ -15,8 +16,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(Number(searchParams.get('limit') ?? '50'), 100);
     const cursor = searchParams.get('cursor');
+    const projectId = searchParams.get('projectId');
+
+    const where = projectId ? { projectId } : {};
 
     const memories = await db.memoryEntry.findMany({
+      where,
       orderBy: { updatedAt: 'desc' },
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -49,10 +54,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, summary, facts, preferences, sourceChatIds } = parsed.data;
+    const { projectId, title, summary, facts, preferences, sourceChatIds } = parsed.data;
 
     const memory = await db.memoryEntry.create({
       data: {
+        projectId: projectId ?? null,
         title,
         summary,
         facts: facts || '',

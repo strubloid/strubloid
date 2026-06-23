@@ -80,6 +80,7 @@ async function compactMemory() {
         // Save the memory entry
         const memoryEntry = await db.memoryEntry.create({
           data: {
+            projectId: chat.projectId ?? null,
             title: result.title,
             summary: result.summary,
             facts: result.facts,

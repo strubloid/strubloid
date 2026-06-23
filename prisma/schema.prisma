@@ -58,6 +58,7 @@ model Message {
 
 model MemoryEntry {
   id            String   @id @default(cuid())
+  projectId     String?  // project scoping for brain retrieval
   title         String
   summary       String
   facts         String
@@ -66,6 +67,7 @@ model MemoryEntry {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@index([projectId, updatedAt])
   @@index([updatedAt])
 }
 
