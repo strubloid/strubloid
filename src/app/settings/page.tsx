@@ -89,10 +89,14 @@ export default function SettingsPage() {
   const info = activeTab !== 'chat' ? PROVIDER_INFO[activeTab] : null;
   const activeApiUrl = info ? configs[info.configBaseUrlKey] || info.defaultApiUrl : '';
 
-  // Models for the active provider
+  // Models for the active provider — enabled models always sort first within their section
+  const byEnabledThenName = (a: AiModel, b: AiModel) => {
+    if (a.isEnabled !== b.isEnabled) return a.isEnabled ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  };
   const providerModels = activeTab !== 'chat' ? allModels.filter((m) => m.modelSource === activeTab) : [];
-  const freeModels = providerModels.filter((m) => m.isFree);
-  const paidModels = providerModels.filter((m) => !m.isFree);
+  const freeModels = providerModels.filter((m) => m.isFree).sort(byEnabledThenName);
+  const paidModels = providerModels.filter((m) => !m.isFree).sort(byEnabledThenName);
 
   // All enabled models across providers for the Chat tab's default model selector
   const chatModels = allModels.filter((m) => m.isEnabled);

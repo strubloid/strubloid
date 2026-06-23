@@ -212,14 +212,22 @@ export async function POST(request: NextRequest) {
             fetched.source,
           );
         } else if (p === 'nvidia') {
-          // NVIDIA free: models with 1-8B params (single-digit size before 'b')
+          // NVIDIA free: models with 1-8B params
+          // Patterns: integer sizes (-8b), decimal sizes (-6.7b), minimax naming (-m3, -m2.7)
+          const freeClause = `
+            WHEN modelId GLOB '*[-/][1-8]b*'
+              OR modelId GLOB '*[-/][1-8].[0-9]b*'
+              OR modelId GLOB '*[-/]m[1-8]'
+              OR modelId GLOB '*[-/]m[1-8].[0-9]*'
+            THEN 1
+          `;
           fixed = await db.$executeRawUnsafe(
             `UPDATE AiModel SET isFree = CASE
-              WHEN modelId GLOB '*[-/][1-8]b[-/]*' OR modelId GLOB '*[-/][1-8]b' THEN 1
+              ${freeClause}
               ELSE 0
             END
             WHERE modelSource = ? AND isFree <> CASE
-              WHEN modelId GLOB '*[-/][1-8]b[-/]*' OR modelId GLOB '*[-/][1-8]b' THEN 1
+              ${freeClause}
               ELSE 0
             END`,
             fetched.source,
