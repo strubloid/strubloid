@@ -37,9 +37,9 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 
 |  |  |  |
 |--|--|--|
-| 🧠 **Strubloid**<br><sub>multi-provider AI chat, brain system, terminal aesthetic</sub> | 📺 **py-stremio**<br><sub>python bindings for stremio addon development</sub> | ⚡ **frontend-hero**<br><sub>next.js + drizzle full-stack starter</sub> |
-| 🐚 **.bash_aliases**<br><sub>shell automation framework, since 2013</sub> | ⚽ **Futebol**<br><sub>football data & analytics</sub> | 🇧🇷 **Brazucas**<br><sub>brazilian community platform</sub> |
-| 🖼️ **Exibitions**<br><sub>showcase / gallery</sub> | 🃏 **Cardgame**<br><sub>card game implementation</sub> | 🎵 **Py-Music**<br><sub>music theory engine, llm explanations</sub> |
+| 🧠 **[Strubloid](https://github.com/strubloid/strubloid)**<br><sub>multi-provider AI chat, brain system, terminal aesthetic</sub> | 📺 **[py-stremio](https://github.com/strubloid/py-stremio)**<br><sub>python bindings for stremio addon development</sub> | ⚡ **[frontend-hero](https://github.com/strubloid/frontend-hero)**<br><sub>next.js + drizzle full-stack starter</sub> |
+| 🐚 **[.bash_aliases](https://git.strubloid.com/bashaliases)**<br><sub>shell automation framework, since 2013</sub> | ⚽ **[Futebol](https://github.com/strubloid/futebol)**<br><sub>football data & analytics</sub> | 🇧🇷 **[Brazucas](https://github.com/strubloid/brazucas)**<br><sub>brazilian community platform</sub> |
+| 🖼️ **[Exibitions](https://github.com/strubloid/exibitions)**<br><sub>showcase / gallery</sub> | 🃏 **[Cardgame](https://github.com/strubloid/cardgame)**<br><sub>card game implementation</sub> | 🎵 **[Py-Music](https://github.com/strubloid/py-music)**<br><sub>music theory engine, llm explanations</sub> |
 
 <br>
 
