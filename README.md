@@ -24,9 +24,7 @@
 
 I'm a senior software engineer based in Cork, Ireland with 15+ years shipping production software. Started in Brazil writing Java for a government supercomputer, moved through PHP consulting shops, found my home in the JavaScript ecosystem, and never looked back. I've shipped for Liverpool FC and the Central Bank of Ireland, built no-code platforms from scratch, migrated monorepos, and automated enough of my workflow that bash is practically a reflex.
 
----
-
-<h3 align="center">📦 projects</h3>
+<h3 align="center">📦 Projects</h3>
 
 |                                                                                                                                   |                                                                                                                          |                                                                                                                       |
 | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
@@ -34,9 +32,7 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 | 🐚 **[.bash_aliases](https://git.strubloid.com/bashaliases)**<br><sub>shell automation framework, since 2013</sub>                | ⚽ **[Futebol](https://github.com/strubloid/futebol)**<br><sub>football data & analytics</sub>                           | 🇧🇷 **[Brazucas](https://github.com/strubloid/brazucas)**<br><sub>brazilian community platform</sub>                   |
 | 🖼️ **[Exibitions](https://github.com/strubloid/exibitions)**<br><sub>showcase / gallery</sub>                                     | 🃏 **[Cardgame](https://github.com/strubloid/cardgame)**<br><sub>card game implementation</sub>                          | 🎵 **[Py-Music](https://github.com/strubloid/py-music)**<br><sub>music theory engine, llm explanations</sub>          |
 
----
-
-<h3 align="center">🧰 toolbox</h3>
+<h3 align="center">🧰 Toolbox</h3>
 
 | area              | tech                                                                                                                        |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -51,9 +47,7 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 | 🧠 **practices**  | Software Architecture, OOP, Design Patterns, TDD, Agile, Scrum                                                              |
 | 🛠️ **toolchain**  | Git, Jira, ESLint, Prettier, Webpack, Turborepo                                                                             |
 
----
-
-<h3 align="center">💼 career</h3>
+<h3 align="center">💼 Career</h3>
 
 | where                           | what                                                                                                                                                                                                                                                                                                                              |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -65,8 +59,6 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 | **Vox Technology** · Brazil     | Zend Framework 1 migration from legacy systems · automated REGEX template transform (200+ templates) · improved documentation & onboarding processes · pair programming mentorship                                                                                                                                                |
 | **Dantel** · Brazil             | e-procurement platform backend (YII) · Ext JS frontend integration · custom JS runtime importer for dev acceleration · customer support system refactor for maintainability                                                                                                                                                       |
 | **Dataprev** · Brazil           | 1000× batch optimisation (0.01s→0.00001s) · supercomputer-scale Java (BGSD) · legacy academic model→production system refactor · frontend components with in-house Java framework                                                                                                                                                 |
-
----
 
 <br />
 
