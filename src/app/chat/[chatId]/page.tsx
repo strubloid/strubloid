@@ -122,6 +122,40 @@ export default function ChatByIdPage() {
     }
   }
 
+  async function handleDeleteMessage(messageId: string) {
+    if (!chat) return;
+    setError(null);
+    try {
+      const res = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete message');
+      setChat((prev) =>
+        prev
+          ? { ...prev, messages: prev.messages.filter((m) => m.id !== messageId) }
+          : prev
+      );
+    } catch (err) {
+      console.error(err);
+      setError('Failed to delete message');
+    }
+  }
+
+  async function handleRefreshMessage(messageId: string) {
+    if (!chat) return;
+    setError(null);
+
+    // Find the user message that preceded this assistant message
+    const msgIndex = chat.messages.findIndex((m) => m.id === messageId);
+    if (msgIndex < 1) return;
+    const prevMsg = chat.messages[msgIndex - 1];
+    if (prevMsg.role !== 'user') return;
+
+    try {
+      await handleSend(prevMsg.content);
+    } catch {
+      // Error is already set by handleSend via setError
+    }
+  }
+
   async function handleToggleBrain(enabled: boolean) {
     setUseAiBrain(enabled);
     if (chat) {
@@ -338,7 +372,12 @@ export default function ChatByIdPage() {
           </button>
         </header>
 
-        <MessageList messages={chat.messages} devMode={devMode} />
+        <MessageList
+          messages={chat.messages}
+          devMode={devMode}
+          onDelete={handleDeleteMessage}
+          onRefresh={handleRefreshMessage}
+        />
 
         <ErrorBanner error={error} onRetry={() => setError(null)} />
 

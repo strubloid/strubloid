@@ -140,6 +140,25 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Auto-save brain memory from this exchange when brain is on
+    if (useAiBrain) {
+      const title = message.length > 80 ? message.slice(0, 77) + '...' : message;
+      const summary = aiResponse.content.length > 300
+        ? aiResponse.content.slice(0, 297) + '...'
+        : aiResponse.content;
+      await db.memoryEntry.create({
+        data: {
+          title,
+          summary,
+          facts: message,
+          preferences: null,
+          sourceChatIds: JSON.stringify([chat.id]),
+        },
+      }).catch((err) => {
+        console.error('[/api/chat/send] Failed to save brain memory:', err);
+      });
+    }
+
     // Return full chat object (same shape as GET /api/chats/[id])
     const fullChat = await db.chat.findUnique({
       where: { id: chat.id },
