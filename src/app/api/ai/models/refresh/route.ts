@@ -12,6 +12,17 @@ function isZenModelFree(modelId: string): boolean {
   return false;
 }
 
+/** Classify an NVIDIA model as free or paid based on naming convention.
+ *  NVIDIA NIM free models are typically small/community models (1-8B params). */
+function isNvidiaModelFree(modelId: string): boolean {
+  // Pattern 1: explicit integer or decimal size — -8b-, /8b, -6.7b-, -2b, etc.
+  if (/[-/][1-8](\.[0-9]+)?b/i.test(modelId)) return true;
+  // Pattern 2: minimax naming where mN or mN.N means N billion params
+  // e.g. minimax-m3 (3B), minimax-m2.7 (2.7B) — never has 'b' suffix
+  if (/[-/]m[1-8](\.[0-9]+)?$/i.test(modelId)) return true;
+  return false;
+}
+
 /** Generate a human-readable model name from a model ID. */
 function makeModelName(modelId: string): string {
   const segments = modelId.split(/[/-]/);
@@ -68,8 +79,8 @@ async function fetchNvidiaModels(): Promise<{ models: RawModel[]; source: string
     throw new Error('NVIDIA API key is not configured');
   }
 
-  const baseUrl = config.apiBaseUrl || 'https://integrate.api.nvidia.com/v1';
-  const res = await fetch(`${baseUrl}/models`, {
+  const baseUrl = config.apiBaseUrl || 'https://integrate.api.nvidia.com';
+  const res = await fetch(`${baseUrl}/v1/models`, {
     headers: { Authorization: `Bearer ${config.apiKey}` },
     signal: AbortSignal.timeout(15000),
   });
@@ -105,7 +116,9 @@ async function upsertModels(
     const modelId = apiModel.id;
 
     // Determine free/paid
-    const isFree = source === 'zen' ? isZenModelFree(modelId) : false;
+    const isFree = source === 'zen'
+      ? isZenModelFree(modelId)
+      : isNvidiaModelFree(modelId);
 
     // Generate a readable name (better than raw modelId in the dropdown)
     const name = makeModelName(modelId);
@@ -183,19 +196,35 @@ export async function POST(request: NextRequest) {
         // naming conventions, including models that exist in the DB but
         // were NOT returned by the API (e.g. removed/renamed by provider).
         // Using raw SQL to avoid any ORM update-batching issue.
-        const fixed = await db.$executeRawUnsafe(
-          `UPDATE AiModel SET isFree = CASE
-            WHEN modelId = 'big-pickle' THEN 1
-            WHEN modelId LIKE '%-free' THEN 1
-            ELSE 0
-          END
-          WHERE modelSource = ? AND isFree <> CASE
-            WHEN modelId = 'big-pickle' THEN 1
-            WHEN modelId LIKE '%-free' THEN 1
-            ELSE 0
-          END`,
-          fetched.source,
-        );
+        let fixed = 0;
+        if (p === 'zen') {
+          fixed = await db.$executeRawUnsafe(
+            `UPDATE AiModel SET isFree = CASE
+              WHEN modelId = 'big-pickle' THEN 1
+              WHEN modelId LIKE '%-free' THEN 1
+              ELSE 0
+            END
+            WHERE modelSource = ? AND isFree <> CASE
+              WHEN modelId = 'big-pickle' THEN 1
+              WHEN modelId LIKE '%-free' THEN 1
+              ELSE 0
+            END`,
+            fetched.source,
+          );
+        } else if (p === 'nvidia') {
+          // NVIDIA free: models with 1-8B params (single-digit size before 'b')
+          fixed = await db.$executeRawUnsafe(
+            `UPDATE AiModel SET isFree = CASE
+              WHEN modelId GLOB '*[-/][1-8]b[-/]*' OR modelId GLOB '*[-/][1-8]b' THEN 1
+              ELSE 0
+            END
+            WHERE modelSource = ? AND isFree <> CASE
+              WHEN modelId GLOB '*[-/][1-8]b[-/]*' OR modelId GLOB '*[-/][1-8]b' THEN 1
+              ELSE 0
+            END`,
+            fetched.source,
+          );
+        }
         results[p].updated += fixed;
       } catch (err) {
         errors[p] = err instanceof Error ? err.message : 'Unknown error';

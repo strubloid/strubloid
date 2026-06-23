@@ -9,7 +9,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { getBigPickleAI } from '../src/ais/big-pickle/BigPickleAI';
+import { getZenAI } from '../src/ais/zen/ZenAI';
 
 const db = new PrismaClient();
 
@@ -50,7 +50,7 @@ async function compactMemory() {
 
     console.log(`[memory:compact] Found ${chatsToCompact.length} chats to compact`);
 
-    const ai = getBigPickleAI();
+    const ai = getZenAI();
     const results = [];
 
     for (const chat of chatsToCompact) {

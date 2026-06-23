@@ -125,6 +125,15 @@ export default function ChatByIdPage() {
   async function handleDeleteMessage(messageId: string) {
     if (!chat) return;
     setError(null);
+
+    // Temp IDs are client-generated optimistically — no API call needed
+    if (messageId.startsWith('temp-')) {
+      setChat((prev) =>
+        prev ? { ...prev, messages: prev.messages.filter((m) => m.id !== messageId) } : prev
+      );
+      return;
+    }
+
     try {
       const res = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete message');

@@ -10,7 +10,7 @@ export interface ProviderConfig {
   defaultModel: string;
 }
 
-const DEFAULT_BASE_URL = 'https://integrate.api.nvidia.com/v1';
+const DEFAULT_BASE_URL = 'https://integrate.api.nvidia.com';
 const DEFAULT_MODEL = 'meta/llama-3.3-70b-instruct';
 
 export async function loadNvidiaConfig(): Promise<ProviderConfig | null> {
@@ -28,7 +28,7 @@ export async function loadNvidiaConfig(): Promise<ProviderConfig | null> {
 
     if (!apiKey) return null;
 
-    const apiBaseUrl: string = configMap.get('nvidia_api_base_url') || DEFAULT_BASE_URL;
+    const apiBaseUrl: string = (configMap.get('nvidia_api_base_url') || DEFAULT_BASE_URL).replace(/\/v1\/?$/, '');
     const defaultModel: string = configMap.get('nvidia_default_model') || DEFAULT_MODEL;
 
     return {
