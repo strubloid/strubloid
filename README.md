@@ -24,11 +24,23 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 
 <h3 align="center">📦 Projects</h3>
 
-|                                                                                                                                                               |                                                                                                                                                           |                                                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 🧠 **[Strubloid](https://github.com/strubloid/strubloid)**<br><sub>multi-provider AI chat with cross-chat memory, brain system, dark terminal aesthetic</sub> | 📺 **[py-stremio](https://github.com/strubloid/py-stremio)**<br><sub>python SDK for building stremio addons with catalog, meta, and stream handlers</sub> | ⚡ **[frontend-hero](https://github.com/strubloid/frontend-hero)**<br><sub>next.js + drizzle full-stack starter with authentication, ORM, and tailwind</sub> |
-| 🐚 **[.bash_aliases](https://git.strubloid.com/bashaliases)**<br><sub>cross-platform shell automation framework for linux, macOS, and WSL since 2013</sub>    | ⚽ **[Futebol](https://github.com/strubloid/futebol)**<br><sub>football match data, statistics, and analytics platform</sub>                              | 🇧🇷 **[Brazucas](https://github.com/strubloid/brazucas)**<br><sub>brazilian community platform with social features and content sharing</sub>                 |
-| 🖼️ **[Exibitions](https://github.com/strubloid/exibitions)**<br><sub>portfolio showcase and project gallery with curated collections</sub>                    | 🃏 **[Cardgame](https://github.com/strubloid/cardgame)**<br><sub>multiplayer card game engine with rule system and game logic</sub>                       | 🎵 **[Py-Music](https://github.com/strubloid/py-music)**<br><sub>music theory engine with interactive visualization and LLM explanations</sub>               |
+<table>
+  <tr>
+    <td width="33%">🧠 <b><a href="https://github.com/strubloid/strubloid">Strubloid</a></b><br><sub>multi-provider AI chat with cross-chat memory, brain system, dark terminal aesthetic</sub></td>
+    <td width="33%">📺 <b><a href="https://github.com/strubloid/py-stremio">py-stremio</a></b><br><sub>python SDK for building stremio addons with catalog, meta, and stream handlers</sub></td>
+    <td width="33%">⚡ <b><a href="https://github.com/strubloid/frontend-hero">frontend-hero</a></b><br><sub>next.js + drizzle full-stack starter with authentication, ORM, and tailwind</sub></td>
+  </tr>
+  <tr>
+    <td>🐚 <b><a href="https://git.strubloid.com/bashaliases">.bash_aliases</a></b><br><sub>cross-platform shell automation framework for linux, macOS, and WSL since 2013</sub></td>
+    <td>⚽ <b><a href="https://github.com/strubloid/futebol">Futebol</a></b><br><sub>football match data, statistics, and analytics platform</sub></td>
+    <td>🇧🇷 <b><a href="https://github.com/strubloid/brazucas">Brazucas</a></b><br><sub>brazilian community platform with social features and content sharing</sub></td>
+  </tr>
+  <tr>
+    <td>🖼️ <b><a href="https://github.com/strubloid/exibitions">Exibitions</a></b><br><sub>portfolio showcase and project gallery with curated collections</sub></td>
+    <td>🃏 <b><a href="https://github.com/strubloid/cardgame">Cardgame</a></b><br><sub>multiplayer card game engine with rule system and game logic</sub></td>
+    <td>🎵 <b><a href="https://github.com/strubloid/py-music">Py-Music</a></b><br><sub>music theory engine with interactive visualization and LLM explanations</sub></td>
+  </tr>
+</table>
 
 <h3 align="center">🧰 Toolbox</h3>
 
