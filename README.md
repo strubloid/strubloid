@@ -1,80 +1,104 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/status-building-9ad933?style=flat-square" alt="status">
-  <img src="https://img.shields.io/badge/role-senior%20engineer-4a90d9?style=flat-square" alt="role">
-  <img src="https://img.shields.io/badge/location-cork%2C%20ireland-f4a261?style=flat-square" alt="location">
-  <img src="https://img.shields.io/badge/coffee-powered-brown?style=flat-square" alt="coffee">
 
+<pre align="center">
+         __             __    __      _     __
+   _____/ /________  __/ /_  / /___  (_)___/ /
+  / ___/ __/ ___/ / / / __ \/ / __ \/ / __  / 
+ (__  ) /_/ /  / /_/ / /_/ / / /_/ / / /_/ /  
+/____/\__/_/   \__,_/_.___/_/\____/_/\__,_/   
+</pre>
+
+<p align="center">
+  <b>rafael mendes</b> · <code>senior software engineer</code>
+  <br>
+  <sub>react · next.js · typescript · python · distributed systems</sub>
 </p>
 
-<h1 align="center">Strubloid</h1>
-
 <p align="center">
-  <b><code>Rafael Mendes · Senior Software Engineer</code></b>
+  <img src="https://img.shields.io/badge/status-building-9ad933?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/role-senior%20engineer-4a90d9?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/location-cork%2C%20ireland-f4a261?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/coffee-powered-8B5E3C?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/since-2009-9b59b6?style=flat-square" alt="">
 </p>
 
+<br>
+
+I'm a senior software engineer based in Cork, Ireland with 15+ years shipping production software. Started in Brazil writing Java for a government supercomputer, moved through PHP consulting shops, found my home in the JavaScript ecosystem, and never looked back. I've shipped for Liverpool FC and the Central Bank of Ireland, built no-code platforms from scratch, migrated monorepos, and automated enough of my workflow that bash is practically a reflex.
+
+<br>
+
+---
+
+<br>
+
+<h3 align="center">📦 projects</h3>
+
+<br>
+
+|  |  |  |
+|--|--|--|
+| 🧠 **Strubloid**<br><sub>multi-provider AI chat, brain system, terminal aesthetic</sub> | 📺 **py-stremio**<br><sub>python bindings for stremio addon development</sub> | ⚡ **frontend-hero**<br><sub>next.js + drizzle full-stack starter</sub> |
+| 🐚 **.bash_aliases**<br><sub>shell automation framework, since 2013</sub> | ⚽ **Futebol**<br><sub>football data & analytics</sub> | 🇧🇷 **Brazucas**<br><sub>brazilian community platform</sub> |
+| 🖼️ **Exibitions**<br><sub>showcase / gallery</sub> | 🃏 **Cardgame**<br><sub>card game implementation</sub> | 🎵 **Py-Music**<br><sub>music theory engine, llm explanations</sub> |
+
+<br>
+
+---
+
+<br>
+
+<h3 align="center">🧰 toolbox</h3>
+
+<br>
+
+| area | |
+|------|-|
+| 🗣️ **languages** | TypeScript, JavaScript (ES6+), Python, Java, PHP, Bash |
+| 🎨 **frontend** | React, Next.js, Angular, React Native, Redux, Context API, React Query, React Hook Form, D3.js, Chart.js, styled-components |
+| ⚙️ **backend** | Node.js, Express, FastAPI, Laravel, Flask, GraphQL, REST APIs, OAuth 2.0, OpenAI API, LangChain |
+| 🗄️ **database** | PostgreSQL, MySQL, MongoDB, SQL Server, Redis, Firebase |
+| ☁️ **infra** | Docker, AWS, Linux, Debian/Ubuntu, CI/CD, Fly.io, Webpack, Turborepo |
+| 🧪 **testing** | Jest, Puppeteer, Unit, Integration, Performance Profiling |
+| 🧰 **frameworks** | Magento 1 & 2, Zend 1 & 2, YII, Ext JS |
+| 🔗 **protocols** | REST, GraphQL, OAuth 2.0, SSH, ERC-20 / ERC-721 |
+| 🧠 **practices** | Software Architecture, OOP, Design Patterns, TDD, Agile, Scrum |
+| 🛠️ **toolchain** | Git, Jira, ESLint, Prettier, Webpack, Turborepo |
+
+<br>
+
+---
+
+<br>
+
+<h3 align="center">💼 career</h3>
+
+<br>
+
+| where | what |
+|-------|------|
+| **Konvi** · Dublin | cross-platform react/native/next.js, tokenised assets (ERC-20/ERC-721), monorepo migration |
+| **Blocworx** · Cork | no-code platform architect, JS→TypeScript migration, Docker CI/CD |
+| **Monsoon Consulting** · Dublin | Magento e-commerce optimisation, REST APIs, performance audits |
+| **StudioForty9** · Cork | Magento architecture redesign, promotional campaign engine, SEO tooling |
+| **Captura.Me** · Brazil | legacy → React migration, component architecture, Zend core PR merged |
+| **Vox Technology** · Brazil | backend Zend migration, automated regex template transform |
+| **Dantel** · Brazil | e-procurement platform (YII), Ext JS, custom JS runtime tooling |
+| **Dataprev** · Brazil | 1000× batch performance gain, supercomputer-scale Java |
+
+<br>
+
+---
+
+<br>
+
 <p align="center">
-  <i>react · next.js · typescript · python · distributed systems · 15+ years shipping</i>
-</p>
-
-<br>
-
-i'm a senior software engineer based in cork, ireland. been doing this since 2007 started in brazil writing java for a government supercomputer, moved through php shops, found my home in the javascript ecosystem, and never looked back.
-
-**what i do:** react, next.js, typescript, node.js. architecture, performance, and making codebases less painful to work in. i've shipped e-commerce platforms for liverpool fc and the central bank of ireland, built no-code platforms, migrated monorepos, and written enough bash to automate my way out of any repetitive task.
-
-**current projects:**
-
-- **[Strubloid](https://github.com/strubloid/strubloid)** : multi-provider AI chat with cross-chat memory, brain system, dark/green terminal aesthetic
-- **[py-stremio](https://github.com/strubloid/py-stremio)** : python bindings for stremio addon development
-- **[frontend-hero](https://github.com/strubloid/frontend-hero)** : next.js + drizzle full-stack starter
-- **[.bash_aliases](https://git.strubloid.com/bashaliases)** : cross-platform shell automation framework since 2013
-- **[Futebol](https://github.com/strubloid/futebol)** : football data & analytics
-- **[Brazucas](https://github.com/strubloid/brazucas)** : brazilian community platform
-- **[Exibitions](https://github.com/strubloid/exibitions)** : showcase / gallery
-- **[Cardgame](https://github.com/strubloid/cardgame)** : card game implementation
-- **[Py-Music](https://github.com/strubloid/py-music)** : music theory engine + interactive visualisation with llm explanations
-
-<br>
-
-**the toolbox:**
-
-| area              | tech                                                                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| 🗣️ languages      | TypeScript, JavaScript (ES6+), Python, Java, PHP, Bash                                                                      |
-| 🎨 frontend       | React, Next.js, Angular, React Native, Redux, Context API, React Query, React Hook Form, D3.js, Chart.js, styled-components |
-| ⚙️ backend        | Node.js, Express, FastAPI, Laravel, Flask, GraphQL, REST APIs, OAuth 2.0, OpenAI API, LangChain                             |
-| 🗄️ database       | PostgreSQL, MySQL, MongoDB, SQL Server, Redis, Firebase                                                                     |
-| ☁️ infra & devops | Docker, AWS, Linux, Debian/Ubuntu, CI/CD Pipelines, Fly.io, Webpack, Turborepo                                              |
-| 🧪 testing        | Jest, Puppeteer, Unit Testing, Integration Testing, Performance Profiling                                                   |
-| 🧰 frameworks     | Magento 1 & 2, Zend Framework 1 & 2, YII, Ext JS                                                                            |
-| 🔗 protocols      | REST, GraphQL, OAuth 2.0, SSH, ERC-20 / ERC-721                                                                             |
-| 🧠 practices      | Software Architecture, OOP, Design Patterns, Performance Optimisation, Refactoring, TDD, Agile, Scrum                       |
-| 🛠️ toolchain      | Git, Jira, ESLint, Prettier, Webpack, Turborepo                                                                             |
-
-<br>
-
-**career:**
-
-| where                           | what                                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Konvi** · Dublin              | cross-platform react/react native/next.js, tokenised assets (ERC-20/ERC-721), monorepo migration |
-| **Blocworx** · Cork             | no-code platform architect, JS→TypeScript migration, Docker CI/CD standardisation                |
-| **Monsoon Consulting** · Dublin | Magento e-commerce optimisation, REST API integration, performance audits                        |
-| **StudioForty9** · Cork         | Magento architecture redesign, promotional campaign engine, SEO/internal tooling                 |
-| **Captura.Me** · Brazil         | legacy views → React migration, component architecture, Zend core PR merged                      |
-| **Vox Technology** · Brazil     | backend Zend migration, automated regex template transform (200+ templates)                      |
-| **Dantel** · Brazil             | e-procurement platform (YII), Ext JS integration, custom JS runtime tooling                      |
-| **Dataprev** · Brazil           | 1000× batch performance gain, supercomputer-scale Java, legacy→production refactor               |
-
-<br>
-
-<p align="center">
-  <code>Strubloid ≈ (curiosity + innovation + creativity) × persistence</code>
+  <code>rafael ≈ (curiosity + innovation + creativity) × persistence</code>
   <br><br>
   <a href="https://work.strubloid.com">work.strubloid.com</a>
   ·
   <a href="https://git.strubloid.com/bashaliases">bashaliases</a>
-
+  ·
+  <a href="mailto:joserafaelmb@gmail.com">joserafaelmb@gmail.com</a>
 </p>
 
 <p align="center">
@@ -82,7 +106,9 @@ i'm a senior software engineer based in cork, ireland. been doing this since 200
 </p>
 
 <br>
+
 <hr>
+
 <p align="center">
   <b><a href="./project.md">technical docs → project.md</a></b>
   <br>
