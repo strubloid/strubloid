@@ -51,8 +51,8 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 
 <br>
 
-| area | |
-|------|-|
+| area | tech |
+|------|------|
 | 🗣️ **languages** | TypeScript, JavaScript (ES6+), Python, Java, PHP, Bash |
 | 🎨 **frontend** | React, Next.js, Angular, React Native, Redux, Context API, React Query, React Hook Form, D3.js, Chart.js, styled-components |
 | ⚙️ **backend** | Node.js, Express, FastAPI, Laravel, Flask, GraphQL, REST APIs, OAuth 2.0, OpenAI API, LangChain |
@@ -76,14 +76,14 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 
 | where | what |
 |-------|------|
-| **Konvi** · Dublin | cross-platform react/native/next.js, tokenised assets (ERC-20/ERC-721), monorepo migration |
-| **Blocworx** · Cork | no-code platform architect, JS→TypeScript migration, Docker CI/CD |
-| **Monsoon Consulting** · Dublin | Magento e-commerce optimisation, REST APIs, performance audits |
-| **StudioForty9** · Cork | Magento architecture redesign, promotional campaign engine, SEO tooling |
-| **Captura.Me** · Brazil | legacy → React migration, component architecture, Zend core PR merged |
-| **Vox Technology** · Brazil | backend Zend migration, automated regex template transform |
-| **Dantel** · Brazil | e-procurement platform (YII), Ext JS, custom JS runtime tooling |
-| **Dataprev** · Brazil | 1000× batch performance gain, supercomputer-scale Java |
+| **Konvi** · Dublin | monorepo migration (@neo→@eip, 40+ packages, zero regressions) · cross-platform wallet features (React/RN/Next.js) · tokenised assets (ERC-20/ERC-721) · OAuth 2.0 (Google/MS/Yahoo) |
+| **Blocworx** · Cork | architected no-code platform (Angular/React/Laravel) · JS→TypeScript migration · Docker CI/CD standardisation · automated testing (Jest/Puppeteer) · mentorship |
+| **Monsoon Consulting** · Dublin | Magento 1&2 e-commerce optimisation · custom modules + REST APIs · performance audits & bottleneck resolution · Docker + Git Flow |
+| **StudioForty9** · Cork | Magento architecture redesign · promotional campaign engine & cross-sell logic · SEO tooling · CI/CD pipelines |
+| **Captura.Me** · Brazil | legacy→React SPA migration · component architecture + code-splitting · Zend Framework core PR #3017 merged |
+| **Vox Technology** · Brazil | Zend Framework 1 migration · automated REGEX template transform (200+ templates) · pair programming mentorship |
+| **Dantel** · Brazil | e-procurement platform (YII) · Ext JS integration · custom JS runtime importer |
+| **Dataprev** · Brazil | 1000× batch optimisation (0.01s→0.00001s) · supercomputer-scale Java (BGSD) · legacy→production refactor |
 
 <br>
 
