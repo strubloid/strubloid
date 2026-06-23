@@ -13,11 +13,11 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-building-9ad933?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/status-hacking-9ad933?style=flat-square" alt="">
   <img src="https://img.shields.io/badge/role-senior%20engineer-4a90d9?style=flat-square" alt="">
   <img src="https://img.shields.io/badge/location-cork%2C%20ireland-f4a261?style=flat-square" alt="">
   <img src="https://img.shields.io/badge/coffee-powered-8B5E3C?style=flat-square" alt="">
-  <img src="https://img.shields.io/badge/since-2009-9b59b6?style=flat-square" alt="">
+  <img src="https://img.shields.io/badge/since-2007-9b59b6?style=flat-square" alt="">
 </p>
 
 <br>
