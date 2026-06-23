@@ -26,26 +26,31 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 
 <h3 align="center">📦 Projects</h3>
 
-|                                                                                                                                   |                                                                                                                          |                                                                                                                       |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| 🧠 **[Strubloid](https://github.com/strubloid/strubloid)**<br><sub>multi-provider AI chat, brain system, terminal aesthetic</sub> | 📺 **[py-stremio](https://github.com/strubloid/py-stremio)**<br><sub>python bindings for stremio addon development</sub> | ⚡ **[frontend-hero](https://github.com/strubloid/frontend-hero)**<br><sub>next.js + drizzle full-stack starter</sub> |
-| 🐚 **[.bash_aliases](https://git.strubloid.com/bashaliases)**<br><sub>shell automation framework, since 2013</sub>                | ⚽ **[Futebol](https://github.com/strubloid/futebol)**<br><sub>football data & analytics</sub>                           | 🇧🇷 **[Brazucas](https://github.com/strubloid/brazucas)**<br><sub>brazilian community platform</sub>                   |
-| 🖼️ **[Exibitions](https://github.com/strubloid/exibitions)**<br><sub>showcase / gallery</sub>                                     | 🃏 **[Cardgame](https://github.com/strubloid/cardgame)**<br><sub>card game implementation</sub>                          | 🎵 **[Py-Music](https://github.com/strubloid/py-music)**<br><sub>music theory engine, llm explanations</sub>          |
+|                                                                                                                                                               |                                                                                                                                                           |                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 🧠 **[Strubloid](https://github.com/strubloid/strubloid)**<br><sub>multi-provider AI chat with cross-chat memory, brain system, dark terminal aesthetic</sub> | 📺 **[py-stremio](https://github.com/strubloid/py-stremio)**<br><sub>python SDK for building stremio addons with catalog, meta, and stream handlers</sub> | ⚡ **[frontend-hero](https://github.com/strubloid/frontend-hero)**<br><sub>next.js + drizzle full-stack starter with authentication, ORM, and tailwind</sub> |
+| 🐚 **[.bash_aliases](https://git.strubloid.com/bashaliases)**<br><sub>cross-platform shell automation framework for linux, macOS, and WSL since 2013</sub>    | ⚽ **[Futebol](https://github.com/strubloid/futebol)**<br><sub>football match data, statistics, and analytics platform</sub>                              | 🇧🇷 **[Brazucas](https://github.com/strubloid/brazucas)**<br><sub>brazilian community platform with social features and content sharing</sub>                 |
+| 🖼️ **[Exibitions](https://github.com/strubloid/exibitions)**<br><sub>portfolio showcase and project gallery with curated collections</sub>                    | 🃏 **[Cardgame](https://github.com/strubloid/cardgame)**<br><sub>multiplayer card game engine with rule system and game logic</sub>                       | 🎵 **[Py-Music](https://github.com/strubloid/py-music)**<br><sub>music theory engine with interactive visualization and LLM explanations</sub>               |
 
 <h3 align="center">🧰 Toolbox</h3>
 
-| area              | tech                                                                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| 🗣️ **languages**  | TypeScript, JavaScript (ES6+), Python, Java, PHP, Bash                                                                      |
-| 🎨 **frontend**   | React, Next.js, Angular, React Native, Redux, Context API, React Query, React Hook Form, D3.js, Chart.js, styled-components |
-| ⚙️ **backend**    | Node.js, Express, FastAPI, Laravel, Flask, GraphQL, REST APIs, OAuth 2.0, OpenAI API, LangChain                             |
-| 🗄️ **database**   | PostgreSQL, MySQL, MongoDB, SQL Server, Redis, Firebase                                                                     |
-| ☁️ **infra**      | Docker, AWS, Linux, Debian/Ubuntu, CI/CD, Fly.io, Webpack, Turborepo                                                        |
-| 🧪 **testing**    | Jest, Puppeteer, Unit, Integration, Performance Profiling                                                                   |
-| 🧰 **frameworks** | Magento 1 & 2, Zend 1 & 2, YII, Ext JS                                                                                      |
-| 🔗 **protocols**  | REST, GraphQL, OAuth 2.0, SSH, ERC-20 / ERC-721                                                                             |
-| 🧠 **practices**  | Software Architecture, OOP, Design Patterns, TDD, Agile, Scrum                                                              |
-| 🛠️ **toolchain**  | Git, Jira, ESLint, Prettier, Webpack, Turborepo                                                                             |
+<table>
+  <thead>
+    <tr><th width="120">area</th><th>tech</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>🗣️ <b>languages</b></td><td>TypeScript, JavaScript (ES6+), Python, Java, PHP, Bash</td></tr>
+    <tr><td>🎨 <b>frontend</b></td><td>React, Next.js, Angular, React Native, Redux, Context API, React Query, React Hook Form, D3.js, Chart.js, styled-components</td></tr>
+    <tr><td>⚙️ <b>backend</b></td><td>Node.js, Express, FastAPI, Laravel, Flask, GraphQL, REST APIs, OAuth 2.0, OpenAI API, LangChain</td></tr>
+    <tr><td>🗄️ <b>database</b></td><td>PostgreSQL, MySQL, MongoDB, SQL Server, Redis, Firebase</td></tr>
+    <tr><td>☁️ <b>infra</b></td><td>Docker, AWS, Linux, Debian/Ubuntu, CI/CD, Fly.io, Webpack, Turborepo</td></tr>
+    <tr><td>🧪 <b>testing</b></td><td>Jest, Puppeteer, Unit, Integration, Performance Profiling</td></tr>
+    <tr><td>🧰 <b>frameworks</b></td><td>Magento 1 & 2, Zend 1 & 2, YII, Ext JS</td></tr>
+    <tr><td>🔗 <b>protocols</b></td><td>REST, GraphQL, OAuth 2.0, SSH, ERC-20 / ERC-721</td></tr>
+    <tr><td>🧠 <b>practices</b></td><td>Software Architecture, OOP, Design Patterns, TDD, Agile, Scrum</td></tr>
+    <tr><td>🛠️ <b>toolchain</b></td><td>Git, Jira, ESLint, Prettier, Webpack, Turborepo</td></tr>
+  </tbody>
+</table>
 
 <h3 align="center">💼 Career</h3>
 
