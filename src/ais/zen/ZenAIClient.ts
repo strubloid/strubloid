@@ -59,6 +59,7 @@ export class ZenAIClient {
         name: activeModelId,
         endpoint: '/v1/chat/completions',
         provider: 'openai',
+        modelSource: 'zen',
         description: null,
         isEnabled: true,
         isFree: false,

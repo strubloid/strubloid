@@ -69,13 +69,14 @@ model MemoryEntry {
   @@index([updatedAt])
 }
 
-// Zen AI models available via the OpenCode Zen API
+// AI models available via various providers (Zen, NVIDIA, etc.)
 model AiModel {
   id             Int      @id @default(autoincrement())
   modelId        String   @unique          // e.g. "deepseek-v4-flash"
   name           String                    // e.g. "DeepSeek V4 Flash"
   endpoint       String   @default("/v1/chat/completions") // API endpoint path
   provider       String   @default("openai") // openai, anthropic, google
+  modelSource    String   @default("zen")  // source provider: "zen", "nvidia"
   description    String?
   isEnabled      Boolean  @default(true)
   isFree         Boolean  @default(false)
@@ -88,6 +89,7 @@ model AiModel {
 
   @@index([isEnabled])
   @@index([modelId])
+  @@index([modelSource])
 }
 
 // Key-value configuration for app settings (API keys, preferences)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getZenAI } from '@/ais/zen/ZenAI';
+import { getClientForModel } from '@/ais/getProviderClient';
 import { AIProviderError } from '@/ais/AIProviderError';
 
 const SendMessageSchema = z.object({
@@ -102,9 +103,8 @@ export async function POST(request: NextRequest) {
     // Call AI
     let aiResponse;
     try {
-      // Send with model selection
-      const config = await import('@/ais/zen/ZenConfig').then(m => m.loadZenConfig());
-      const client = new (await import('@/ais/zen/ZenAIClient')).ZenAIClient(config);
+      // Send with model selection — use provider dispatcher
+      const { client } = await getClientForModel(activeModelId);
       aiResponse = await client.sendMessage({
         messages: aiMessages,
         useAiBrain,
@@ -140,18 +140,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Reload messages
-    const messages = await db.message.findMany({
-      where: { chatId: chat.id },
-      orderBy: { createdAt: 'asc' },
+    // Return full chat object (same shape as GET /api/chats/[id])
+    const fullChat = await db.chat.findUnique({
+      where: { id: chat.id },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
     });
 
-    return NextResponse.json({
-      response: aiResponse,
-      chatId: chat.id,
-      messages,
-      model: aiResponse.model,
-    });
+    return NextResponse.json(fullChat);
   } catch (error) {
     console.error('[/api/chat/send] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
