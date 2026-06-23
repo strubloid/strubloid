@@ -54,16 +54,21 @@ I'm a senior software engineer based in Cork, Ireland with 15+ years shipping pr
 
 <h3 align="center">💼 Career</h3>
 
-| where                           | what                                                                                                                                                                                                                                                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Konvi** · Dublin              | monorepo migration (@neo→@eip, 40+ packages, zero regressions) · cross-platform wallet features (React/RN/Next.js, GraphQL, Firebase) · tokenised assets (ERC-20/ERC-721) · OAuth 2.0 (Google/MS/Yahoo) · styled-components → enterprise design system                                                                            |
-| **Blocworx** · Cork             | architected no-code platform (Angular/React/Laravel/Node.js) for enterprise clients · JS→TypeScript migration across entire codebase · Docker CI/CD standardisation · automated frontend testing (Jest/Puppeteer) · backend automation (Bash/Python for AWS scripting) · reusable npm packages + Chart.js dashboards · mentorship |
-| **Monsoon Consulting** · Dublin | Magento 1&2 e-commerce optimisation across multiple client projects · custom modules + REST APIs for scalability · performance audits & bottleneck resolution · Docker + Git Flow enforcement · collaborated with QA/DevOps/UI-UX for production deployments · mentorship                                                         |
-| **StudioForty9** · Cork         | Magento architecture redesign for promotional campaigns · backend cross-sell logic & product relationships · SEO & image asset optimisation tooling · CI/CD pipelines + Docker workflows · mentorship                                                                                                                             |
-| **Captura.Me** · Brazil         | legacy→React SPA migration · reusable component architecture + client-side routing + code-splitting · REST APIs via Axios with clean separation · Zend Framework core PR #3017 merged · performance optimisation (memoisation, lazy loading)                                                                                      |
-| **Vox Technology** · Brazil     | Zend Framework 1 migration from legacy systems · automated REGEX template transform (200+ templates) · improved documentation & onboarding processes · pair programming mentorship                                                                                                                                                |
-| **Dantel** · Brazil             | e-procurement platform backend (YII) · Ext JS frontend integration · custom JS runtime importer for dev acceleration · customer support system refactor for maintainability                                                                                                                                                       |
-| **Dataprev** · Brazil           | 1000× batch optimisation (0.01s→0.00001s) · supercomputer-scale Java (BGSD) · legacy academic model→production system refactor · frontend components with in-house Java framework                                                                                                                                                 |
+<table>
+  <thead>
+    <tr><th width="120">where</th><th>what</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>Konvi</b> · Dublin</td><td>monorepo migration (@neo→@eip, 40+ packages, zero regressions) · cross-platform wallet features (React/RN/Next.js, GraphQL, Firebase) · tokenised assets (ERC-20/ERC-721) · OAuth 2.0 (Google/MS/Yahoo) · styled-components → enterprise design system</td></tr>
+    <tr><td><b>Blocworx</b> · Cork</td><td>architected no-code platform (Angular/React/Laravel/Node.js) for enterprise clients · JS→TypeScript migration across entire codebase · Docker CI/CD standardisation · automated frontend testing (Jest/Puppeteer) · backend automation (Bash/Python for AWS scripting) · reusable npm packages + Chart.js dashboards · mentorship</td></tr>
+    <tr><td><b>Monsoon Consulting</b> · Dublin</td><td>Magento 1&2 e-commerce optimisation across multiple client projects · custom modules + REST APIs for scalability · performance audits & bottleneck resolution · Docker + Git Flow enforcement · collaborated with QA/DevOps/UI-UX for production deployments · mentorship</td></tr>
+    <tr><td><b>StudioForty9</b> · Cork</td><td>Magento architecture redesign for promotional campaigns · backend cross-sell logic & product relationships · SEO & image asset optimisation tooling · CI/CD pipelines + Docker workflows · mentorship</td></tr>
+    <tr><td><b>Captura.Me</b> · Brazil</td><td>legacy→React SPA migration · reusable component architecture + client-side routing + code-splitting · REST APIs via Axios with clean separation · Zend Framework core PR #3017 merged · performance optimisation (memoisation, lazy loading)</td></tr>
+    <tr><td><b>Vox Technology</b> · Brazil</td><td>Zend Framework 1 migration from legacy systems · automated REGEX template transform (200+ templates) · improved documentation & onboarding processes · pair programming mentorship</td></tr>
+    <tr><td><b>Dantel</b> · Brazil</td><td>e-procurement platform backend (YII) · Ext JS frontend integration · custom JS runtime importer for dev acceleration · customer support system refactor for maintainability</td></tr>
+    <tr><td><b>Dataprev</b> · Brazil</td><td>1000× batch optimisation (0.01s→0.00001s) · supercomputer-scale Java (BGSD) · legacy academic model→production system refactor · frontend components with in-house Java framework</td></tr>
+  </tbody>
+</table>
 
 <br />
 
