@@ -18,6 +18,12 @@ interface ProjectPreview {
   isStarred: boolean;
 }
 
+interface ProjectChat {
+  id: string;
+  title: string;
+  messages: { id: string }[];
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -28,9 +34,52 @@ export function Sidebar() {
   const [isLoading, setIsLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<ChatPreview | null>(null);
 
+  // Project accordion state
+  const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
+  const [expandedProjectChats, setExpandedProjectChats] = useState<ProjectChat[]>([]);
+  const [loadingProjectChats, setLoadingProjectChats] = useState(false);
+
   useEffect(() => {
     loadData();
   }, []);
+
+  // Auto-expand project based on current pathname
+  useEffect(() => {
+    // /chat/[chatId] — fetch chat to find its project
+    const chatMatch = pathname.match(/^\/chat\/([^/]+)$/);
+    if (chatMatch) {
+      const chatId = chatMatch[1];
+      fetch(`/api/chats/${chatId}`)
+        .then((res) => res.json())
+        .then((chat) => {
+          if (chat?.project?.id) {
+            expandProjectById(chat.project.id);
+          }
+        })
+        .catch(() => {});
+      return;
+    }
+
+    // /projects/[projectId] — expand that project directly
+    const projectMatch = pathname.match(/^\/projects\/([^/]+)$/);
+    if (projectMatch) {
+      expandProjectById(projectMatch[1]);
+    }
+  }, [pathname]);
+
+  function expandProjectById(projectId: string) {
+    // Don't re-fetch if already expanded with data for this project
+    if (expandedProjectId === projectId && expandedProjectChats.length > 0) return;
+
+    setExpandedProjectId(projectId);
+    setLoadingProjectChats(true);
+    setExpandedProjectChats([]);
+    fetch(`/api/projects/${projectId}`)
+      .then((r) => r.json())
+      .then((data) => setExpandedProjectChats(data.chats ?? []))
+      .catch(() => setExpandedProjectId(null))
+      .finally(() => setLoadingProjectChats(false));
+  }
 
   async function loadData() {
     try {
@@ -88,6 +137,51 @@ export function Sidebar() {
       console.error('Sidebar: Failed to delete chat', err);
     } finally {
       setPendingDelete(null);
+    }
+  }
+
+  async function toggleProjectExpand(projectId: string) {
+    if (expandedProjectId === projectId) {
+      // Collapse
+      setExpandedProjectId(null);
+      setExpandedProjectChats([]);
+      return;
+    }
+    expandProjectById(projectId);
+  }
+
+  async function deleteProjectChat(chatId: string, projectId: string) {
+    try {
+      const res = await fetch(`/api/chats/${chatId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete chat');
+      setExpandedProjectChats((prev) => prev.filter((c) => c.id !== chatId));
+      setRandomChats((prev) => prev.filter((c) => c.id !== chatId));
+      if (pathname === `/chat/${chatId}`) {
+        router.push('/chat');
+      }
+    } catch (error) {
+      console.error('Sidebar: Failed to delete project chat', error);
+    }
+  }
+
+  async function createChatInProject(projectId: string) {
+    try {
+      const res = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, title: 'New Chat' })
+      });
+      if (!res.ok) throw new Error('Failed to create chat');
+      const chat = await res.json();
+      // Refresh project chats so the new one shows up
+      const projectRes = await fetch(`/api/projects/${projectId}`);
+      if (projectRes.ok) {
+        const data = await projectRes.json();
+        setExpandedProjectChats(data.chats ?? []);
+      }
+      window.location.href = `/chat/${chat.id}`;
+    } catch (error) {
+      console.error('Sidebar: Failed to create chat in project', error);
     }
   }
 
@@ -209,20 +303,122 @@ export function Sidebar() {
                 ) : projects.length === 0 ? (
                   <div className="chat-item opacity-50">No projects</div>
                 ) : (
-                  projects.slice(0, 10).map((project) => (
-                    <Link
-                      key={project.id}
-                      href={`/projects/${project.id}`}
-                      className={`chat-item block ${isActiveProject(project.id) ? 'active' : ''}`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      <span
-                        className="mr-2 inline-block h-2 w-2 rounded-full"
-                        style={{ backgroundColor: project.color }}
-                      />
-                      {project.name}
-                    </Link>
-                  ))
+                  projects.slice(0, 10).map((project) => {
+                    const isExpanded = expandedProjectId === project.id;
+                    return (
+                      <div key={project.id}>
+                        {/* Project header: link + expand toggle */}
+                        <div className="flex items-center gap-1">
+                          <Link
+                            href={`/projects/${project.id}`}
+                            className={`chat-item flex-1 truncate ${isActiveProject(project.id) || isExpanded ? 'active' : ''}`}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            <span
+                              className="mr-2 inline-block h-2 w-2 rounded-full"
+                              style={{ backgroundColor: project.color }}
+                            />
+                            {project.name}
+                          </Link>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              toggleProjectExpand(project.id);
+                            }}
+                            className={`flex-shrink-0 rounded p-1.5 transition-colors hover:bg-[--color-bg-tertiary] ${
+                              isExpanded ? 'text-[--color-accent]' : 'text-[--color-text-dim]'
+                            }`}
+                            title={isExpanded ? 'Collapse chats' : 'Show chats'}
+                            aria-label={isExpanded ? 'Collapse chats' : 'Show chats'}
+                          >
+                            <svg
+                              className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Expanded chat list */}
+                        {isExpanded && (
+                          <div className="ml-3 border-l border-[--color-border] pl-2">
+                            {loadingProjectChats ? (
+                              <div className="chat-item opacity-50">Loading...</div>
+                            ) : expandedProjectChats.length === 0 ? (
+                              <div className="px-2 py-2 text-center">
+                                <div className="mb-2 flex justify-between text-xs text-[--color-text-dim]">
+                                  <p>0 Chats</p>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      createChatInProject(project.id);
+                                    }}
+                                    className="inline-flex items-center gap-1 text-xs text-[--color-accent] hover:underline"
+                                  >
+                                    <svg
+                                      className="h-3 w-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 4v16m8-8H4"
+                                      />
+                                    </svg>
+                                    Create chat
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              expandedProjectChats.map((chat) => (
+                                <div key={chat.id} className="group flex items-center gap-1">
+                                  <Link
+                                    href={`/chat/${chat.id}`}
+                                    className={`chat-item block flex-1 truncate text-xs ${isActiveChat(chat.id) ? 'active' : ''}`}
+                                    onClick={() => setMobileOpen(false)}
+                                  >
+                                    {chat.title}
+                                  </Link>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      deleteProjectChat(chat.id, project.id);
+                                    }}
+                                    className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                                    title="Delete chat"
+                                    aria-label="Delete chat"
+                                  >
+                                    <svg
+                                      className="h-3 w-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
