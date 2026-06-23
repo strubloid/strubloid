@@ -3,11 +3,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChatComposer } from '@/components/ChatComposer';
 
-// Mock the error banner since ChatComposer imports it
-vi.mock('@/components/ErrorBanner', () => ({
-  __esModule: true,
-  ErrorBanner: () => null,
-}));
+// Mock the model loading API to avoid real fetch calls
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Mock fetch for /api/ai/models
+  globalThis.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ models: [{ modelId: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', isFree: false }] }),
+  } as Response);
+});
 
 const PLACEHOLDER = 'Type a message... (Enter to send, Shift+Enter for newline)';
 
@@ -18,6 +22,8 @@ function renderComposer(props: Record<string, unknown> = {}) {
     useAiBrain: false,
     devMode: false,
     disabled: false,
+    selectedModelId: 'deepseek-v4-flash',
+    onModelChange: vi.fn(),
     previousMessages: [] as string[],
     ...props,
   };
@@ -25,18 +31,16 @@ function renderComposer(props: Record<string, unknown> = {}) {
 }
 
 describe('ChatComposer', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('renders textarea and send button', () => {
+  it('renders textarea and send button', async () => {
     renderComposer();
     expect(screen.getByPlaceholderText(PLACEHOLDER)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument();
+    // Wait for model selector to render with loaded models
+    const select = await screen.findByTitle('Select AI model');
+    expect(select).toBeInTheDocument();
   });
 
   it('calls onSend when Enter is pressed with content', async () => {
-    const onSend = vi.fn();
+    const onSend = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
 
     renderComposer({ onSend });
@@ -45,7 +49,7 @@ describe('ChatComposer', () => {
     await user.type(textarea, 'hello');
     await user.keyboard('{Enter}');
 
-    expect(onSend).toHaveBeenCalledWith('hello');
+    expect(onSend).toHaveBeenCalledWith('hello', 'deepseek-v4-flash');
   });
 
   it('does not call onSend for empty input', async () => {
@@ -83,9 +87,9 @@ describe('ChatComposer', () => {
     expect(screen.getByRole('button', { name: /send message/i })).toBeDisabled();
   });
 
-  it('shows request counter at zero messages', () => {
+  it('shows request counter at zero messages', async () => {
     renderComposer();
-    expect(screen.getByText(/messages sent: 0/i)).toBeInTheDocument();
+    expect(await screen.findByText(/sent: 0/i)).toBeInTheDocument();
   });
 
   it('shows request counter incremented after send', async () => {
@@ -99,7 +103,7 @@ describe('ChatComposer', () => {
     await user.keyboard('{Enter}');
 
     await vi.waitFor(() => {
-      expect(screen.getByText(/messages sent: 1/i)).toBeInTheDocument();
+      expect(screen.getByText(/sent: 1/i)).toBeInTheDocument();
     });
   });
 
@@ -112,12 +116,12 @@ describe('ChatComposer', () => {
     const brainButton = screen.getByTitle('Enable AI Brain');
     await user.click(brainButton);
 
-    expect(onToggleBrain).toHaveBeenCalledWith(true);
+    expect(onToggleBrain).toHaveBeenCalledOnce();
   });
 
-  it('shows brain active message when on', () => {
+  it('shows brain description when on', () => {
     renderComposer({ useAiBrain: true });
-    expect(screen.getByText(/AI Brain is active/)).toBeInTheDocument();
+    expect(screen.getByText(/AI remembers past conversations/)).toBeInTheDocument();
   });
 
   it('shows dev mode hint when devMode is on', () => {
@@ -126,11 +130,9 @@ describe('ChatComposer', () => {
   });
 
   it('recalls previous messages with ArrowUp', async () => {
-    const onSend = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
 
     renderComposer({
-      onSend,
       previousMessages: ['hello', 'how are you?'],
     });
 
@@ -171,17 +173,15 @@ describe('ChatComposer', () => {
     expect(textarea).toBeDisabled();
   });
 
-  it('shows recalling indicator when navigating history', async () => {
+  it('calls onModelChange when model selector changes', async () => {
+    const onModelChange = vi.fn();
     const user = userEvent.setup();
 
-    renderComposer({
-      previousMessages: ['hello', 'world'],
-    });
+    renderComposer({ onModelChange });
 
-    const textarea = screen.getByPlaceholderText(PLACEHOLDER) as HTMLTextAreaElement;
-    await user.click(textarea);
-    await user.keyboard('{ArrowUp}');
+    const select = await screen.findByTitle('Select AI model');
+    await user.selectOptions(select, 'deepseek-v4-flash');
 
-    expect(screen.getByText(/recalling message/i)).toBeInTheDocument();
+    expect(onModelChange).toHaveBeenCalledWith('deepseek-v4-flash');
   });
 });

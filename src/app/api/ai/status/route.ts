@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getBigPickleAI } from '@/ais/big-pickle/BigPickleAI';
+import { getZenAI } from '@/ais/zen/ZenAI';
 
 export async function GET() {
   try {
-    const ai = getBigPickleAI();
-    const status = ai.getStatus();
+    const ai = getZenAI();
+    const status = await ai.getStatus();
     return NextResponse.json(status);
   } catch (error) {
     return NextResponse.json(

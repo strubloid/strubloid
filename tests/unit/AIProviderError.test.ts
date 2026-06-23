@@ -38,8 +38,30 @@ describe('AIProviderError', () => {
   });
 
   it('httpError defaults expose helpful message per status', () => {
-    expect(AIProviderError.httpError(401).message).toContain('BIGPICKLE_API_KEY');
+    expect(AIProviderError.httpError(401).message).toContain('ZEN_API_KEY');
+    expect(AIProviderError.httpError(402).message).toContain('Payment required');
     expect(AIProviderError.httpError(429).message).toContain('Rate limit');
     expect(AIProviderError.httpError(503).message).toContain('temporarily');
+  });
+
+  it('httpError extracts message from JSON body', () => {
+    const jsonBody = JSON.stringify({
+      type: 'error',
+      error: { type: 'CreditsError', message: 'No payment method. Add one in Settings.' }
+    });
+    const e = AIProviderError.httpError(402, jsonBody);
+    expect(e.message).toContain('No payment method');
+    expect(e.message).not.toContain('Payment required');
+  });
+
+  it('httpError falls back to raw body text when not JSON', () => {
+    const e = AIProviderError.httpError(402, 'plain text error');
+    expect(e.message).toBe('plain text error');
+  });
+
+  it('httpError uses default message instead of raw HTML body', () => {
+    const e = AIProviderError.httpError(502, '<!DOCTYPE html><html><body>Gateway error</body></html>');
+    expect(e.message).toContain('gateway');
+    expect(e.message).not.toContain('DOCTYPE');
   });
 });

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { getBigPickleAI } from '@/ais/big-pickle/BigPickleAI';
+import { getZenAI } from '@/ais/zen/ZenAI';
 import { AIProviderError } from '@/ais/AIProviderError';
 
 const SendMessageSchema = z.object({
   chatId: z.string().optional(),
   projectId: z.string().optional(),
   message: z.string().min(1).max(10000),
+  modelId: z.string().optional(),
   useAiBrain: z.boolean().optional().default(false),
 });
 
@@ -23,9 +24,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { chatId: existingChatId, projectId, message, useAiBrain } = parsed.data;
+    const { chatId: existingChatId, projectId, message, modelId, useAiBrain } = parsed.data;
 
-    const ai = getBigPickleAI();
+    const ai = getZenAI();
 
     // Get or create chat
     let chat;
@@ -38,24 +39,34 @@ export async function POST(request: NextRequest) {
       if (!chat) {
         return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
       }
+
+      // Update selected model if provided
+      if (modelId) {
+        await db.chat.update({
+          where: { id: chat.id },
+          data: { selectedModelId: modelId },
+        });
+        chat.selectedModelId = modelId;
+      }
     } else {
       // Create new chat
       const isRandom = !projectId;
       const title = message.slice(0, 50) + (message.length > 50 ? '...' : '');
-      
+
       chat = await db.chat.create({
         data: {
           title,
           projectId: projectId ?? null,
           isRandom,
           useAiBrain,
+          selectedModelId: modelId ?? 'big-pickle',
         },
         include: { messages: { orderBy: { createdAt: 'asc' } } },
       });
     }
 
     // Add user message
-    const userMessage = await db.message.create({
+    await db.message.create({
       data: {
         chatId: chat.id,
         role: 'user',
@@ -85,14 +96,20 @@ export async function POST(request: NextRequest) {
       content: m.content,
     }));
 
+    // Determine model to use
+    const activeModelId = modelId || chat.selectedModelId || 'big-pickle';
+
     // Call AI
     let aiResponse;
     try {
-      aiResponse = await ai.sendMessage({
+      // Send with model selection
+      const config = await import('@/ais/zen/ZenConfig').then(m => m.loadZenConfig());
+      const client = new (await import('@/ais/zen/ZenAIClient')).ZenAIClient(config);
+      aiResponse = await client.sendMessage({
         messages: aiMessages,
         useAiBrain,
         brainMemories,
-      });
+      }, activeModelId);
     } catch (error) {
       // Save failed message with error marker
       await db.message.create({
@@ -115,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save assistant response
-    const assistantMessage = await db.message.create({
+    await db.message.create({
       data: {
         chatId: chat.id,
         role: 'assistant',
@@ -133,6 +150,7 @@ export async function POST(request: NextRequest) {
       response: aiResponse,
       chatId: chat.id,
       messages,
+      model: aiResponse.model,
     });
   } catch (error) {
     console.error('[/api/chat/send] Error:', error);

@@ -29,6 +29,12 @@ const UpdateProjectSchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
 });
 
+// Mirror the production UpdateChat schema
+const UpdateChatSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  useAiBrain: z.boolean().optional(),
+});
+
 describe('API request schemas', () => {
   describe('POST /api/chat/send', () => {
     it('accepts minimal valid payload', () => {
@@ -110,6 +116,38 @@ describe('API request schemas', () => {
       expect(UpdateProjectSchema.safeParse({ description: 'desc' }).success).toBe(true);
       expect(UpdateProjectSchema.safeParse({ color: '#000000' }).success).toBe(true);
       expect(UpdateProjectSchema.safeParse({}).success).toBe(true);
+    });
+  });
+
+  describe('PATCH /api/chats/[id]', () => {
+    it('accepts empty body (no-op)', () => {
+      expect(UpdateChatSchema.safeParse({}).success).toBe(true);
+    });
+
+    it('accepts title alone', () => {
+      expect(UpdateChatSchema.safeParse({ title: 'Renamed chat' }).success).toBe(true);
+    });
+
+    it('accepts useAiBrain alone', () => {
+      expect(UpdateChatSchema.safeParse({ useAiBrain: true }).success).toBe(true);
+    });
+
+    it('accepts both fields together', () => {
+      const r = UpdateChatSchema.safeParse({ title: 'Hello', useAiBrain: false });
+      expect(r.success).toBe(true);
+    });
+
+    it('rejects empty title (min 1)', () => {
+      expect(UpdateChatSchema.safeParse({ title: '' }).success).toBe(false);
+    });
+
+    it('rejects title over 200 chars', () => {
+      expect(UpdateChatSchema.safeParse({ title: 'x'.repeat(201) }).success).toBe(false);
+    });
+
+    it('rejects wrong types', () => {
+      expect(UpdateChatSchema.safeParse({ title: 123 }).success).toBe(false);
+      expect(UpdateChatSchema.safeParse({ useAiBrain: 'yes' }).success).toBe(false);
     });
   });
 });

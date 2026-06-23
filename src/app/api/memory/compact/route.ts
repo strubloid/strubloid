@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getBigPickleAI } from '@/ais/big-pickle/BigPickleAI';
+import { getZenAI } from '@/ais/zen/ZenAI';
 
 export async function POST() {
   try {
@@ -24,7 +24,7 @@ export async function POST() {
       },
     });
 
-    const ai = getBigPickleAI();
+    const ai = getZenAI();
     const results = [];
 
     for (const chat of chatsToCompact) {

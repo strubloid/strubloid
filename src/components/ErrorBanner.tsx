@@ -15,9 +15,9 @@ export function ErrorBanner({ error, code, isRetryable, onRetry }: ErrorBannerPr
   if (!error || dismissed) return null;
 
   return (
-    <div className="mx-4 my-2 p-3 rounded-lg bg-red-900/30 border border-red-700/50 flex items-start gap-3">
+    <div className="error-message mx-4 my-2 flex items-start gap-3 rounded-lg border border-red-700/50 bg-red-900/30 p-3">
       <svg
-        className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
+        className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -30,10 +30,10 @@ export function ErrorBanner({ error, code, isRetryable, onRetry }: ErrorBannerPr
         />
       </svg>
 
-      <div className="flex-1 min-w-0">
-        <p className="text-red-300 text-sm font-medium">{error}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-red-300">{error}</p>
         {code && (
-          <p className="text-red-400/70 text-xs mt-1">
+          <p className="mt-1 text-xs text-red-400/70">
             Error code: {code}
             {isRetryable && ' • This error may be temporary'}
           </p>
@@ -44,7 +44,7 @@ export function ErrorBanner({ error, code, isRetryable, onRetry }: ErrorBannerPr
         {isRetryable && onRetry && (
           <button
             onClick={onRetry}
-            className="px-3 py-1 text-xs bg-red-800/50 hover:bg-red-800 text-red-200 rounded transition-colors"
+            className="rounded bg-red-800/50 px-3 py-1 text-xs text-red-200 transition-colors hover:bg-red-800"
           >
             Retry
           </button>
@@ -52,11 +52,16 @@ export function ErrorBanner({ error, code, isRetryable, onRetry }: ErrorBannerPr
 
         <button
           onClick={() => setDismissed(true)}
-          className="p-1 text-red-400 hover:text-red-300 transition-colors"
+          className="p-1 text-red-400 transition-colors hover:text-red-300"
           aria-label="Dismiss error"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>

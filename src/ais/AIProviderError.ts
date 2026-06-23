@@ -61,15 +61,33 @@ export class AIProviderError extends Error {
 
   static httpError(statusCode: number, message?: string): AIProviderError {
     const defaultMessages: Record<number, string> = {
-      401: 'Authentication failed — check BIGPICKLE_API_KEY',
+      401: 'Authentication failed — check ZEN_API_KEY or update in Settings',
+      402: 'Payment required — the selected model needs billing setup, even if marked as free. Check your OpenCode workspace for details.',
       403: 'Access forbidden — check your AI provider permissions',
       429: 'Rate limit exceeded — try again shortly',
       500: 'AI provider internal error',
       502: 'AI provider gateway error',
       503: 'AI provider temporarily unavailable'
     };
+
+    // If the body contains a structured JSON error, extract the real message
+    let displayMessage = message ?? defaultMessages[statusCode] ?? `HTTP error ${statusCode}`;
+    if (message) {
+      try {
+        const parsed = JSON.parse(message);
+        if (parsed?.error?.message) {
+          displayMessage = parsed.error.message;
+        }
+      } catch {
+        // Not JSON — if it looks like HTML, use a clean default instead
+        if (/^<!DOCTYPE|<html|<head|<body/i.test(message)) {
+          displayMessage = defaultMessages[statusCode] ?? `HTTP error ${statusCode}`;
+        }
+      }
+    }
+
     return new AIProviderError({
-      message: message ?? defaultMessages[statusCode] ?? `HTTP error ${statusCode}`,
+      message: displayMessage,
       code: 'HTTP_ERROR',
       statusCode,
       isRetryable: statusCode >= 500 || statusCode === 429

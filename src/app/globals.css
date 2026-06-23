@@ -91,6 +91,13 @@ a {
 .message-assistant {
   background: linear-gradient(135deg, #1a1a2a 0%, #0f0f1a 100%);
   border: 1px solid rgba(100, 100, 200, 0.2);
+  width: 70vw;
+}
+
+.error-message {
+  width: 70vw;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Composer textarea */
@@ -291,3 +298,29 @@ textarea:focus {
 .glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+/* Loading dots animation for AI thinking */
+@keyframes loading-dot {
+  0%, 20% { opacity: 0.2; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+  80%, 100% { opacity: 0.2; transform: translateY(0); }
+}
+
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.loading-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-dim);
+  animation: loading-dot 1.4s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: 0s; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }

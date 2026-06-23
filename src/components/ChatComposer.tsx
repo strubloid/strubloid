@@ -1,14 +1,21 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+interface AiModel {
+  modelId: string;
+  name: string;
+  isFree: boolean;
+}
 
 interface ChatComposerProps {
-  onSend: (message: string) => Promise<void>;
+  onSend: (message: string, modelId?: string) => Promise<void>;
   disabled?: boolean;
   useAiBrain: boolean;
-  onToggleBrain: (enabled: boolean) => void;
-  devMode?: boolean;
-  /** Previous user messages for ArrowUp recall */
+  onToggleBrain: () => void;
+  devMode: boolean;
+  selectedModelId?: string;
+  onModelChange?: (modelId: string) => void;
   previousMessages?: string[];
 }
 
@@ -17,176 +24,188 @@ export function ChatComposer({
   disabled = false,
   useAiBrain,
   onToggleBrain,
-  devMode = false,
+  devMode,
+  selectedModelId,
+  onModelChange,
   previousMessages = [],
 }: ChatComposerProps) {
-  const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
+  const [input, setInput] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [requestCount, setRequestCount] = useState(0);
+  const [models, setModels] = useState<AiModel[]>([]);
+  const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Reset history index when new messages arrive
+  // Load available models
   useEffect(() => {
-    setHistoryIndex(-1);
-  }, [previousMessages.length]);
+    fetch('/api/ai/models')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.models) setModels(data.models);
+      })
+      .catch(() => {});
+  }, []);
 
+  const handleSend = useCallback(async () => {
+    const trimmed = input.trim();
+    if (!trimmed || disabled || isSending) return;
+
+    setInput('');
+    setHistoryIndex(-1);
+    setRequestCount((c) => c + 1);
+    setIsSending(true);
+
+    try {
+      await onSend(trimmed, selectedModelId);
+    } catch {
+      // Error handled by parent
+    } finally {
+      setIsSending(false);
+    }
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  }, [input, disabled, isSending, onSend, selectedModelId]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+        return;
+      }
+
+      // ArrowUp: recall previous messages (works when input empty or already in history)
+      if (e.key === 'ArrowUp' && previousMessages.length > 0) {
+        if (input === '' && historyIndex === -1) {
+          // First press: recall the last message
+          e.preventDefault();
+          const lastIdx = previousMessages.length - 1;
+          setInput(previousMessages[lastIdx]);
+          setHistoryIndex(lastIdx);
+          return;
+        }
+        if (historyIndex > 0) {
+          // Already in history: go to previous (older) message
+          e.preventDefault();
+          const prevIdx = historyIndex - 1;
+          setInput(previousMessages[prevIdx]);
+          setHistoryIndex(prevIdx);
+          return;
+        }
+        return;
+      }
+
+      // ArrowDown: go forward in history
+      if (e.key === 'ArrowDown' && historyIndex >= 0) {
+        e.preventDefault();
+        if (historyIndex < previousMessages.length - 1) {
+          const nextIdx = historyIndex + 1;
+          setInput(previousMessages[nextIdx]);
+          setHistoryIndex(nextIdx);
+        } else {
+          setInput('');
+          setHistoryIndex(-1);
+        }
+        return;
+      }
+    },
+    [handleSend, input, previousMessages, historyIndex]
+  );
+
+  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [message]);
-
-  async function handleSend() {
-    if (!message.trim() || isSending || disabled) return;
-
-    const messageToSend = message.trim();
-    setMessage('');
-    setIsSending(true);
-    setHistoryIndex(-1);
-    setRequestCount((c) => c + 1);
-
-    try {
-      await onSend(messageToSend);
-    } catch (error) {
-      console.error('ChatComposer: Send failed', error);
-    } finally {
-      setIsSending(false);
-      textareaRef.current?.focus();
-    }
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-      return;
-    }
-
-    // ArrowUp / ArrowDown for message history recall
-    if (e.key === 'ArrowUp' && !message && previousMessages.length > 0) {
-      e.preventDefault();
-      // Go to the most recent message
-      const lastIdx = previousMessages.length - 1;
-      setMessage(previousMessages[lastIdx]);
-      setHistoryIndex(lastIdx);
-      return;
-    }
-
-    if (e.key === 'ArrowUp' && historyIndex > 0) {
-      e.preventDefault();
-      const newIdx = historyIndex - 1;
-      setMessage(previousMessages[newIdx]);
-      setHistoryIndex(newIdx);
-      return;
-    }
-
-    if (e.key === 'ArrowDown' && historyIndex >= 0 && historyIndex < previousMessages.length - 1) {
-      e.preventDefault();
-      const newIdx = historyIndex + 1;
-      setMessage(previousMessages[newIdx]);
-      setHistoryIndex(newIdx);
-      return;
-    }
-
-    if (e.key === 'ArrowDown' && historyIndex === previousMessages.length - 1) {
-      e.preventDefault();
-      setMessage('');
-      setHistoryIndex(-1);
-      return;
-    }
-  }
-
-  const canSend = message.trim().length > 0 && !isSending && !disabled;
+  }, [input]);
 
   return (
     <div className="border-t border-[--color-border] bg-[--color-bg-secondary] p-4">
-      {/* Dev mode warning */}
-      {devMode && (
-        <div className="dev-mode-banner text-xs px-3 py-2 rounded-t-lg -mt-4 mb-4 flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          DEV MODE: AI responses are simulated. Configure BIGPICKLE_API_URL for real responses.
-        </div>
-      )}
-
-      <div className="flex gap-3">
-        {/* AI Brain Toggle */}
-        <div className="flex flex-col items-center justify-center">
-          <button
-            onClick={() => onToggleBrain(!useAiBrain)}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-[--color-bg-tertiary] transition-colors"
-            title={useAiBrain ? 'Disable AI Brain' : 'Enable AI Brain'}
-            disabled={disabled}
+      <div className="mx-auto flex max-w-3xl flex-col gap-2">
+        {/* Model selector + brain toggle row */}
+        <div className="flex items-center gap-2">
+          {/* Model selector */}
+          <select
+            value={selectedModelId || ''}
+            onChange={(e) => onModelChange?.(e.target.value)}
+            className="rounded border border-[--color-border] bg-[--color-bg] px-2 py-1 text-xs outline-none"
+            title="Select AI model"
           >
-            <svg
-              className={`w-5 h-5 ${useAiBrain ? 'text-[--color-accent]' : 'text-[--color-text-dim]'}`}
-              fill={useAiBrain ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            <span className="text-[10px] text-[--color-text-dim]">Brain</span>
+            {models.length === 0 && (
+              <option value="">Loading models...</option>
+            )}
+            {models.map((model) => (
+              <option key={model.modelId} value={model.modelId}>
+                {model.name} {model.isFree ? '(Free)' : ''}
+              </option>
+            ))}
+          </select>
+
+          {/* Brain toggle */}
+          <button
+            onClick={() => onToggleBrain()}
+            title={useAiBrain ? 'AI Brain is active' : 'Enable AI Brain'}
+            className={`rounded border px-2 py-1 text-xs transition-colors ${
+              useAiBrain
+                ? 'border-purple-600/50 bg-purple-900/30 text-purple-300'
+                : 'border-[--color-border] text-[--color-text-dim] hover:text-white'
+            }`}
+          >
+            🧠 {useAiBrain ? 'Brain ON' : 'Brain'}
           </button>
+
+          {useAiBrain && (
+            <span className="text-xs text-purple-400">
+              AI remembers past conversations
+            </span>
+          )}
+
+          <span className="ml-auto text-xs text-[--color-text-dim]">
+            Sent: {requestCount}
+          </span>
         </div>
 
-        {/* Message input */}
-        <div className="flex-1 composer">
+        {/* Dev mode banner */}
+        {devMode && (
+          <div className="rounded border border-yellow-700/50 bg-yellow-900/20 px-3 py-1.5 text-xs text-yellow-200">
+            DEV MODE: AI responses are simulated.
+            <br />
+            Go to Settings to configure your Zen AI API key.
+          </div>
+        )}
+
+        {/* Input area */}
+        <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message... (Enter to send, Shift+Enter for newline)"
-            className="w-full bg-[--color-bg-tertiary] border border-[--color-border] rounded-lg px-4 py-3 text-[--color-text] placeholder-[--color-text-dim] focus:border-[--color-accent] outline-none"
             rows={1}
             disabled={disabled || isSending}
+            className="max-h-32 min-h-[2.5rem] flex-1 resize-none rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-2 text-sm outline-none transition-colors focus:border-blue-500 disabled:opacity-50"
           />
-        </div>
 
-        {/* Send button */}
-        <button
-          onClick={handleSend}
-          disabled={!canSend}
-          className="btn-primary px-4 py-2 rounded-lg flex items-center justify-center self-end"
-          aria-label="Send message"
-        >
-          {isSending ? (
-            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <button
+            onClick={handleSend}
+            disabled={disabled || isSending || !input.trim()}
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
+            title="Send message (Enter)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5"
+            >
+              <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
             </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          )}
-        </button>
-      </div>
-
-      {/* AI Brain status indicator */}
-      {useAiBrain && (
-        <div className="mt-2 text-xs text-[--color-accent] flex items-center gap-1">
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
-          AI Brain is active — relevant memories will be included
+          </button>
         </div>
-      )}
-
-      {/* Request counter */}
-      <div className="mt-1.5 flex items-center justify-between text-[10px] text-[--color-text-dim]">
-        <span>
-          Messages sent: {requestCount}
-        </span>
-        {historyIndex >= 0 && (
-          <span>
-            Recalling message {historyIndex + 1} of {previousMessages.length}
-          </span>
-        )}
       </div>
     </div>
   );

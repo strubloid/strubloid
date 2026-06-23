@@ -8,7 +8,7 @@ export interface AI {
   sendMessage(input: SendMessageInput): Promise<AIResponse>;
   compactMemory(input: CompactMemoryInput): Promise<MemoryCompactionResult>;
   getProviderName(): string;
-  getStatus(): AIStatus;
+  getStatus(): AIStatus | Promise<AIStatus>;
 }
 
 export interface CompactMemoryInput {

@@ -13,6 +13,7 @@ interface Chat {
   title: string;
   useAiBrain: boolean;
   isRandom: boolean;
+  selectedModelId: string | null;
   messages: Message[];
 }
 
@@ -25,6 +26,7 @@ export default function ChatPage() {
   const [chat, setChat] = useState<Chat | null>(null);
   const [useAiBrain, setUseAiBrain] = useState(false);
   const [devMode, setDevMode] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState('big-pickle');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -56,6 +58,7 @@ export default function ChatPage() {
         const chatData = await chatRes.json();
         setChat(chatData);
         setUseAiBrain(chatData.useAiBrain ?? false);
+        setSelectedModelId(chatData.selectedModelId || 'big-pickle');
       } else {
         // Create a new chat
         const createRes = await fetch('/api/chats', {
@@ -74,10 +77,23 @@ export default function ChatPage() {
     }
   }
 
-  async function handleSend(message: string) {
+  async function handleSend(message: string, modelId?: string) {
     if (!chat) return;
-
     setError(null);
+
+    // Optimistic UI: show user message + loading dots immediately
+    const tempUserId = `temp-user-${Date.now()}`;
+    const tempLoadingId = `temp-loading-${Date.now()}`;
+    const now = new Date().toISOString();
+
+    setChat({
+      ...chat,
+      messages: [
+        ...chat.messages,
+        { id: tempUserId, role: 'user', content: message, createdAt: now },
+        { id: tempLoadingId, role: 'assistant', content: '...', createdAt: now },
+      ],
+    });
 
     try {
       const res = await fetch('/api/chat/send', {
@@ -87,6 +103,7 @@ export default function ChatPage() {
           chatId: chat.id,
           message,
           useAiBrain,
+          modelId: modelId || selectedModelId,
         }),
       });
 
@@ -98,8 +115,12 @@ export default function ChatPage() {
       const data = await res.json();
       setChat(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to send message';
-      setError(message);
+      // Remove loading dots, keep user message so it doesn't flicker
+      setChat((prev) =>
+        prev ? { ...prev, messages: prev.messages.filter((m) => m.id !== tempLoadingId) } : prev
+      );
+      const errMsg = err instanceof Error ? err.message : 'Failed to send message';
+      setError(errMsg);
       throw err;
     }
   }
@@ -199,8 +220,10 @@ export default function ChatPage() {
         <ChatComposer
           onSend={handleSend}
           useAiBrain={useAiBrain}
-          onToggleBrain={handleToggleBrain}
+          onToggleBrain={() => handleToggleBrain(!useAiBrain)}
           devMode={devMode}
+          selectedModelId={selectedModelId}
+          onModelChange={setSelectedModelId}
           previousMessages={userMessages}
         />
       </main>

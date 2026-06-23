@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { db } from '@/lib/db';
+
+const UpdateChatSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  useAiBrain: z.boolean().optional(),
+});
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -41,12 +47,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body = await request.json();
+    const parsed = UpdateChatSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
 
     const chat = await db.chat.update({
       where: { id },
-      data: {
-        useAiBrain: body.useAiBrain,
-      },
+      data: parsed.data,
       include: {
         messages: {
           orderBy: { createdAt: 'asc' },

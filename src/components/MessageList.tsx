@@ -45,7 +45,7 @@ export function MessageList({ messages, devMode = false }: MessageListProps) {
         {devMode && (
           <div className="dev-mode-banner px-4 py-2 rounded-lg text-sm max-w-md">
             <p className="font-semibold mb-1">DEV MODE ACTIVE</p>
-            <p>Configure BIGPICKLE_API_URL in your .env file to enable real AI responses.</p>
+            <p>Configure your Zen AI API key in Settings to enable real AI responses.</p>
           </div>
         )}
 
@@ -99,12 +99,20 @@ export function MessageList({ messages, devMode = false }: MessageListProps) {
 
               {/* Message content */}
               <div className="whitespace-pre-wrap break-words">
-                {message.content.split('\n').map((line, i, arr) => (
-                  <span key={i}>
-                    {line}
-                    {i < arr.length - 1 && <br />}
+                {message.content === '...' && isAssistant ? (
+                  <span className="loading-dots">
+                    <span />
+                    <span />
+                    <span />
                   </span>
-                ))}
+                ) : (
+                  message.content.split('\n').map((line, i, arr) => (
+                    <span key={i}>
+                      {line}
+                      {i < arr.length - 1 && <br />}
+                    </span>
+                  ))
+                )}
               </div>
 
               {/* Timestamp */}

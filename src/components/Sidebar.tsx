@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface ChatPreview {
   id: string;
@@ -19,11 +20,13 @@ interface ProjectPreview {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [randomChats, setRandomChats] = useState<ChatPreview[]>([]);
   const [projects, setProjects] = useState<ProjectPreview[]>([]);
   const [starredProjects, setStarredProjects] = useState<ProjectPreview[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<ChatPreview | null>(null);
 
   useEffect(() => {
     loadData();
@@ -69,6 +72,23 @@ export function Sidebar() {
 
   function isActiveProject(projectId: string) {
     return pathname === `/projects/${projectId}`;
+  }
+
+  async function confirmDeleteChat() {
+    if (!pendingDelete) return;
+    const deletedId = pendingDelete.id;
+    try {
+      const res = await fetch(`/api/chats/${deletedId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete chat');
+      setRandomChats((cs) => cs.filter((c) => c.id !== deletedId));
+      if (pathname === `/chat/${deletedId}`) {
+        router.push('/chat');
+      }
+    } catch (err) {
+      console.error('Sidebar: Failed to delete chat', err);
+    } finally {
+      setPendingDelete(null);
+    }
   }
 
   return (
@@ -125,14 +145,34 @@ export function Sidebar() {
                   <div className="chat-item opacity-50">No chats yet</div>
                 ) : (
                   randomChats.map((chat) => (
-                    <Link
-                      key={chat.id}
-                      href={`/chat/${chat.id}`}
-                      className={`chat-item block ${isActiveChat(chat.id) ? 'active' : ''}`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      {chat.title}
-                    </Link>
+                    <div key={chat.id} className="group flex items-center gap-1">
+                      <Link
+                        href={`/chat/${chat.id}`}
+                        className={`chat-item block flex-1 truncate ${isActiveChat(chat.id) ? 'active' : ''}`}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        {chat.title}
+                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setPendingDelete(chat);
+                        }}
+                        className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                        title="Delete chat"
+                        aria-label="Delete chat"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   ))
                 )}
               </div>
@@ -218,6 +258,17 @@ export function Sidebar() {
           </div>
         </div>
       </aside>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete Chat"
+        message={`Are you sure you want to delete "${pendingDelete?.title ?? 'this chat'}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={confirmDeleteChat}
+        onCancel={() => setPendingDelete(null)}
+      />
     </>
   );
 }
