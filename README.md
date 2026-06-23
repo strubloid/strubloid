@@ -7,7 +7,7 @@
 </pre>
 
 <p align="center">
-  <b>rafael mendes</b> · <code>senior software engineer</code>
+  <b>Rafael Mendes</b> · <code>Senior Software Engineer</code>
   <br>
   <sub>react · next.js · typescript · python · distributed systems</sub>
 </p>
@@ -19,8 +19,6 @@
   <img src="https://img.shields.io/badge/coffee-powered-8B5E3C?style=flat-square" alt="">
   <img src="https://img.shields.io/badge/since-2007-9b59b6?style=flat-square" alt="">
 </p>
-
-<br>
 
 I'm a senior software engineer based in Cork, Ireland with 15+ years shipping production software. Started in Brazil writing Java for a government supercomputer, moved through PHP consulting shops, found my home in the JavaScript ecosystem, and never looked back. I've shipped for Liverpool FC and the Central Bank of Ireland, built no-code platforms from scratch, migrated monorepos, and automated enough of my workflow that bash is practically a reflex.
 
