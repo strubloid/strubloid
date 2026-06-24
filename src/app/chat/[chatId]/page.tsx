@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { MessageList, Message } from '@/components/MessageList';
@@ -22,6 +22,17 @@ interface AiStatus {
   isUsingDevMode: boolean;
 }
 
+/** SSE frame payload from /api/chat/send */
+interface StreamPayload {
+  type: 'delta' | 'done' | 'error' | 'phase';
+  delta?: string;
+  full?: string;
+  model?: string;
+  assistantId?: string;
+  phase?: string;
+  error?: string;
+}
+
 export default function ChatByIdPage() {
   const params = useParams();
   const router = useRouter();
@@ -40,9 +51,43 @@ export default function ChatByIdPage() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [selectedModelId, setSelectedModelId] = useState('big-pickle');
 
+  // ── Streaming state ─────────────────────────────────────
+  const [thinkingPhase, setThinkingPhase] = useState<string | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+
+  const titleSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // RAF-batched content accumulator for smooth streaming
+  const pendingContentRef = useRef('');
+  const rafScheduledRef = useRef(false);
+  const tempLoadingIdRef = useRef<string | null>(null);
+
+  const scheduleChatUpdate = useCallback((newContent: string) => {
+    pendingContentRef.current += newContent;
+    if (rafScheduledRef.current) return;
+    rafScheduledRef.current = true;
+    requestAnimationFrame(() => {
+      rafScheduledRef.current = false;
+      const content = pendingContentRef.current;
+      pendingContentRef.current = '';
+      if (!content || !tempLoadingIdRef.current) return;
+      setChat((prev) =>
+        prev
+          ? {
+              ...prev,
+              messages: prev.messages.map((m) =>
+                m.id === tempLoadingIdRef.current
+                  ? { ...m, content }
+                  : m
+              ),
+            }
+          : prev
+      );
+    });
+  }, []);
+
   useEffect(() => {
-    checkAiStatus();
-    loadChat();
+    Promise.all([checkAiStatus(), loadChat()]);
   }, [chatId]);
 
   async function checkAiStatus() {
@@ -81,9 +126,10 @@ export default function ChatByIdPage() {
     if (!chat) return;
     setError(null);
 
-    // Optimistic UI: show user message + loading dots immediately
+    // Optimistic UI: show user message + loading dots
     const tempUserId = `temp-user-${Date.now()}`;
     const tempLoadingId = `temp-loading-${Date.now()}`;
+    tempLoadingIdRef.current = tempLoadingId;
     const now = new Date().toISOString();
 
     setChat({
@@ -94,6 +140,8 @@ export default function ChatByIdPage() {
         { id: tempLoadingId, role: 'assistant', content: '...', createdAt: now },
       ],
     });
+    setStreamingMessageId(tempLoadingId);
+    setThinkingPhase('context-building');
 
     try {
       const res = await fetch('/api/chat/send', {
@@ -109,18 +157,111 @@ export default function ChatByIdPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({ error: 'Failed to send message' }));
         throw new Error(data.error || 'Failed to send message');
       }
 
-      const data = await res.json();
-      setChat(data);
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('Response body not readable');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullContent = '';
+
+      while (true) {
+        const { value, done: readerDone } = await reader.read();
+        if (readerDone) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Split on double newlines (SSE frame separator)
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() ?? '';
+
+        for (const raw of frames) {
+          const line = raw.trim();
+          if (!line || !line.startsWith('data: ')) continue;
+
+          const body = line.slice(6).trim();
+          if (body === '[DONE]') break;
+
+          try {
+            const payload: StreamPayload = JSON.parse(body);
+
+            switch (payload.type) {
+              case 'phase':
+                setThinkingPhase(payload.phase ?? 'token-start');
+                break;
+              case 'delta':
+                fullContent += payload.delta ?? '';
+                scheduleChatUpdate(payload.delta ?? '');
+                // First delta → switch to composing
+                setThinkingPhase('composing');
+                break;
+              case 'done':
+                fullContent = payload.full ?? fullContent;
+                setChat((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        messages: prev.messages.map((m) =>
+                          m.id === tempLoadingId
+                            ? {
+                                ...m,
+                                content: fullContent,
+                                id: payload.assistantId || m.id,
+                                createdAt: new Date().toISOString(),
+                              }
+                            : m
+                        ),
+                      }
+                    : prev
+                );
+                setThinkingPhase(null);
+                setStreamingMessageId(null);
+                tempLoadingIdRef.current = null;
+                break;
+              case 'error':
+                throw new Error(payload.error || 'Stream error');
+            }
+          } catch (parseErr) {
+            // Only throw if it's an error payload, otherwise skip
+            try {
+              const p = JSON.parse(body);
+              if (p.type === 'error') throw new Error(p.error || 'Stream error');
+            } catch {
+              // Not an error — skip unparseable frame
+            }
+          }
+        }
+      }
     } catch (err) {
-      // Remove loading dots, keep user message so it doesn't flicker
-      setChat((prev) =>
-        prev ? { ...prev, messages: prev.messages.filter((m) => m.id !== tempLoadingId) } : prev
-      );
       const errMsg = err instanceof Error ? err.message : 'Failed to send message';
+
+      // Keep partial content if we received any, else remove loading dots
+      setChat((prev) => {
+        if (!prev) return prev;
+        const loadingIdx = prev.messages.findIndex((m) => m.id === tempLoadingId);
+        if (loadingIdx === -1) return prev;
+
+        const loadingMsg = prev.messages[loadingIdx];
+        const hasPartialContent = loadingMsg.content !== '...' && loadingMsg.content.length > 0;
+
+        return {
+          ...prev,
+          messages: hasPartialContent
+            ? prev.messages.map((m) =>
+                m.id === tempLoadingId
+                  ? { ...m, content: m.content + '\n\n[Stream interrupted — ' + errMsg + ']' }
+                  : m
+              )
+            : prev.messages.filter((m) => m.id !== tempLoadingId),
+        };
+      });
+
+      setThinkingPhase(null);
+      setStreamingMessageId(null);
+      tempLoadingIdRef.current = null;
       setError(errMsg);
       throw err;
     }
@@ -130,7 +271,6 @@ export default function ChatByIdPage() {
     if (!chat) return;
     setError(null);
 
-    // Temp IDs are client-generated optimistically — no API call needed
     if (messageId.startsWith('temp-')) {
       setChat((prev) =>
         prev ? { ...prev, messages: prev.messages.filter((m) => m.id !== messageId) } : prev
@@ -156,7 +296,6 @@ export default function ChatByIdPage() {
     if (!chat) return;
     setError(null);
 
-    // Find the user message that preceded this assistant message
     const msgIndex = chat.messages.findIndex((m) => m.id === messageId);
     if (msgIndex < 1) return;
     const prevMsg = chat.messages[msgIndex - 1];
@@ -165,7 +304,7 @@ export default function ChatByIdPage() {
     try {
       await handleSend(prevMsg.content);
     } catch {
-      // Error is already set by handleSend via setError
+      // Error is already set by handleSend
     }
   }
 
@@ -176,7 +315,7 @@ export default function ChatByIdPage() {
         await fetch(`/api/chats/${chat.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ useAiBrain: enabled })
+          body: JSON.stringify({ useAiBrain: enabled }),
         });
       } catch {
         // Non-critical
@@ -191,7 +330,7 @@ export default function ChatByIdPage() {
         await fetch(`/api/chats/${chat.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ useRandomChats: enabled })
+          body: JSON.stringify({ useRandomChats: enabled }),
         });
       } catch {
         // Non-critical
@@ -202,9 +341,7 @@ export default function ChatByIdPage() {
   async function handleDeleteChat() {
     if (!chat) return;
     try {
-      const res = await fetch(`/api/chats/${chat.id}`, {
-        method: 'DELETE'
-      });
+      const res = await fetch(`/api/chats/${chat.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete chat');
       router.push('/chat');
     } catch (err) {
@@ -226,6 +363,18 @@ export default function ChatByIdPage() {
     setIsEditingTitle(false);
     setEditedTitle('');
     setTitleError(null);
+  }
+
+  function debouncedSaveTitle(delayMs = 400) {
+    if (titleSaveTimer.current) clearTimeout(titleSaveTimer.current);
+    titleSaveTimer.current = setTimeout(() => saveTitle(), delayMs);
+  }
+
+  function cancelPendingTitleSave() {
+    if (titleSaveTimer.current) {
+      clearTimeout(titleSaveTimer.current);
+      titleSaveTimer.current = null;
+    }
   }
 
   async function saveTitle() {
@@ -264,8 +413,8 @@ export default function ChatByIdPage() {
     }
   }
 
-  // Extract user messages for keyboard history recall
-  const userMessages = chat?.messages?.filter((m) => m.role === 'user').map((m) => m.content) ?? [];
+  const userMessages =
+    chat?.messages?.filter((m) => m.role === 'user').map((m) => m.content) ?? [];
 
   if (isLoading) {
     return (
@@ -316,25 +465,27 @@ export default function ChatByIdPage() {
                 <input
                   type="text"
                   value={editedTitle}
-                  onChange={(e) => {
-                    setEditedTitle(e.target.value);
-                    if (titleError) setTitleError(null);
+                  onBlur={() => {
+                    if (editedTitle.trim() && editedTitle.trim() !== chat.title) {
+                      debouncedSaveTitle();
+                    } else {
+                      cancelEditingTitle();
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
+                      cancelPendingTitleSave();
                       saveTitle();
                     } else if (e.key === 'Escape') {
                       e.preventDefault();
+                      cancelPendingTitleSave();
                       cancelEditingTitle();
                     }
                   }}
-                  onBlur={() => {
-                    if (editedTitle.trim() && editedTitle.trim() !== chat.title) {
-                      saveTitle();
-                    } else {
-                      cancelEditingTitle();
-                    }
+                  onChange={(e) => {
+                    setEditedTitle(e.target.value);
+                    if (titleError) setTitleError(null);
                   }}
                   autoFocus
                   maxLength={200}
@@ -405,6 +556,8 @@ export default function ChatByIdPage() {
           devMode={devMode}
           onDelete={handleDeleteMessage}
           onRefresh={handleRefreshMessage}
+          streamingMessageId={streamingMessageId}
+          thinkingPhase={thinkingPhase}
         />
 
         <ErrorBanner error={error} onRetry={() => setError(null)} />

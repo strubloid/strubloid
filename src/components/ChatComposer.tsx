@@ -38,17 +38,35 @@ export function ChatComposer({
   const [requestCount, setRequestCount] = useState(0);
   const [models, setModels] = useState<AiModel[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load available models
-  useEffect(() => {
+  // Lazy-load models on first interaction with the select
+  function loadModels() {
+    if (modelsLoaded) return;
+    // Check sessionStorage cache first
+    const cached = sessionStorage.getItem('strubloid_models');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setModels(parsed);
+          setModelsLoaded(true);
+          return;
+        }
+      } catch { /* fall through to fetch */ }
+    }
     fetch('/api/ai/models')
       .then((r) => r.json())
       .then((data) => {
-        if (data.models) setModels(data.models);
+        if (data.models) {
+          setModels(data.models);
+          setModelsLoaded(true);
+          sessionStorage.setItem('strubloid_models', JSON.stringify(data.models));
+        }
       })
       .catch(() => {});
-  }, []);
+  }
 
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
@@ -135,6 +153,7 @@ export function ChatComposer({
           <select
             value={selectedModelId || ''}
             onChange={(e) => onModelChange?.(e.target.value)}
+            onFocus={loadModels}
             className="rounded border border-[--color-border] bg-[--color-bg] px-2 py-1 text-xs outline-none"
             title="Select AI model"
           >

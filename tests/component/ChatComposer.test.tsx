@@ -182,6 +182,10 @@ describe('ChatComposer', () => {
     renderComposer({ onModelChange });
 
     const select = await screen.findByTitle('Select AI model');
+    // Focus triggers lazy model loading (fetch mock provides the model)
+    await user.click(select);
+    // Wait for options to be populated from the fetch mock
+    const deepseekOption = await screen.findByText('DeepSeek V4 Flash');
     await user.selectOptions(select, 'deepseek-v4-flash');
 
     expect(onModelChange).toHaveBeenCalledWith('deepseek-v4-flash');

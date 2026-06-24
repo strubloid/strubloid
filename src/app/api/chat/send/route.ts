@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { getZenAI } from '@/ais/zen/ZenAI';
 import { getClientForModel } from '@/ais/getProviderClient';
 import { AIProviderError } from '@/ais/AIProviderError';
 import { buildMemoryContext } from '@/lib/memory/memory.service';
+import { formatFactsForPrompt } from '@/lib/memory/memory.parsers';
+import type { StreamEvent } from '@/ais/AIResponse';
 
 const SendMessageSchema = z.object({
   chatId: z.string().optional(),
@@ -21,9 +22,9 @@ export async function POST(request: NextRequest) {
     const parsed = SendMessageSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: parsed.error.issues },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ error: 'Invalid request', details: parsed.error.issues }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -36,9 +37,7 @@ export async function POST(request: NextRequest) {
       useRandomChats,
     } = parsed.data;
 
-    const ai = getZenAI();
-
-    // ── Resolve chat ──────────────────────────────────────────
+    // ── Resolve chat (single read, no re-reads later) ─────────
     let chat;
     if (existingChatId) {
       chat = await db.chat.findUnique({
@@ -47,7 +46,10 @@ export async function POST(request: NextRequest) {
       });
 
       if (!chat) {
-        return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+        return new Response(
+          JSON.stringify({ error: 'Chat not found' }),
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
       }
 
       if (modelId) {
@@ -59,7 +61,10 @@ export async function POST(request: NextRequest) {
       }
     } else {
       const isRandom = !projectId;
-      const title = message.slice(0, 50) + (message.length > 50 ? '...' : '');
+      const words = message.split(/\s+/).filter(Boolean);
+      const title = words.length > 6
+        ? words.slice(0, 6).join(' ') + '...'
+        : message;
 
       chat = await db.chat.create({
         data: {
@@ -75,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Save user message ─────────────────────────────────────
-    await db.message.create({
+    const userMsg = await db.message.create({
       data: {
         chatId: chat.id,
         role: 'user',
@@ -83,53 +88,23 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // ── Get all messages for AI context ──────────────────────
-    const allMessages = await db.message.findMany({
-      where: { chatId: chat.id },
-      orderBy: { createdAt: 'asc' },
-    });
+    // ── Build in-memory messages — NO re-read ────────────────
+    const allMessages = [...chat.messages, userMsg];
 
-    // ── Build brain memory context (project-scoped) ───────────
-    let brainContext = '';
-    if (useAiBrain) {
-      const memoryWhere = chat.projectId
-        ? { projectId: chat.projectId }
-        : {};
-      const memories = await db.memoryEntry.findMany({
-        where: memoryWhere,
-        orderBy: { updatedAt: 'desc' },
-        take: 10,
-      });
-      if (memories.length > 0) {
-        const formatted = memories.map((m) => {
-          const facts = parseFactsForPrompt(m.facts);
-          return `[Project memory — "${m.title}"]\nSummary: ${m.summary}${facts ? '\n' + facts : ''}`;
-        });
-        brainContext = `\n\nProject memories:\n${formatted.join('\n\n')}`;
-      }
-    }
+    // ── Build contexts in parallel (Phase 3.5) ────────────────
+    const [brainContext, randomResult] = await Promise.all([
+      useAiBrain ? buildBrainContext(chat.projectId) : Promise.resolve(''),
+      useRandomChats
+        ? buildMemoryContext({
+            userMessage: message,
+            currentChatId: chat.id,
+            includeRandomChats: true,
+          })
+        : Promise.resolve({ contextBlock: '', stats: { activeRandomChatsFound: 0, activeRandomMessagesFound: 0, compactedMemoryEntriesFound: 0, totalItemsInjected: 0 } }),
+    ]);
 
-    // ── Build random chat context (active chats + compacted) ──
-    let randomContext = '';
-    let memoryStats = {
-      activeRandomChatsFound: 0,
-      activeRandomMessagesFound: 0,
-      compactedMemoryEntriesFound: 0,
-      totalItemsInjected: 0,
-    };
-
-    if (useRandomChats) {
-      const result = await buildMemoryContext({
-        userMessage: message,
-        currentChatId: chat.id,
-        includeRandomChats: true,
-      });
-      memoryStats = result.stats;
-      randomContext = result.contextBlock;
-    }
-
-    // ── Combine all context ──────────────────────────────────
-    const fullContext = brainContext + randomContext;
+    const fullContext = brainContext + randomResult.contextBlock;
+    const memoryStats = randomResult.stats;
 
     // ── Build AI messages ─────────────────────────────────────
     const aiMessages = allMessages.map((m) => ({
@@ -150,106 +125,204 @@ export async function POST(request: NextRequest) {
         activeRandomChatsFound: memoryStats.activeRandomChatsFound,
         activeRandomMessagesFound: memoryStats.activeRandomMessagesFound,
         compactedMemoryEntriesFound: memoryStats.compactedMemoryEntriesFound,
-        brainMemoriesFound: brainContext ? brainContext.split('\n\n').filter(l => l.startsWith('[Project memory')).length : 0,
+        brainMemoriesFound: brainContext ? brainContext.split('\n\n').filter((l: string) => l.startsWith('[Project memory')).length : 0,
         contextInjected: fullContext.length > 0,
         contextLength: fullContext.length,
       });
     }
 
-    // ── Call AI ──────────────────────────────────────────────
-    let aiResponse;
+    // ── Get client + model (single lookup, cached config) ────
+    let clientModel;
     try {
-      const { client } = await getClientForModel(activeModelId);
-      aiResponse = await client.sendMessage({
-        messages: aiMessages,
-        useAiBrain: useAiBrain || useRandomChats, // activate memory handling in client
-        brainMemories: fullContext ? [fullContext] : [], // pass combined context
-      }, activeModelId);
+      clientModel = await getClientForModel(activeModelId);
     } catch (error) {
-      await db.message.create({
-        data: {
-          chatId: chat.id,
-          role: 'assistant',
-          content:
-            error instanceof AIProviderError
-              ? `AI Provider Error: ${error.message}`
-              : 'An unexpected error occurred',
-        },
-      });
-
-      if (error instanceof AIProviderError) {
-        return NextResponse.json(
-          {
-            error: error.message,
-            code: error.code,
-            isRetryable: error.isRetryable,
-          },
-          { status: 502 }
-        );
-      }
-      return NextResponse.json({ error: 'AI request failed' }, { status: 502 });
+      return new Response(
+        JSON.stringify({ error: 'Failed to initialize AI client' }),
+        { status: 502, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    // ── Save assistant response ──────────────────────────────
-    await db.message.create({
-      data: {
-        chatId: chat.id,
-        role: 'assistant',
-        content: aiResponse.content,
+    const { client, model: modelInfo } = clientModel;
+
+    // ── Setup abort bridging ─────────────────────────────────
+    const providerAbortController = new AbortController();
+    const onAbort = () => providerAbortController.abort();
+    request.signal.addEventListener('abort', onAbort, { once: true });
+
+    // ── Create SSE stream ─────────────────────────────────────
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        const write = (event: StreamEvent) => {
+          if (!request.signal.aborted) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+          }
+        };
+
+        try {
+          // ── Phase: warming up / context built ──────────────
+          write({ type: 'phase', phase: 'context-building' });
+          write({ type: 'phase', phase: 'model-selected', modelName: modelInfo?.name ?? activeModelId });
+          write({ type: 'phase', phase: 'token-start' });
+
+          // ── Stream from provider ───────────────────────────
+          let fullContent = '';
+          let usedModel = activeModelId;
+
+          try {
+            const gen = client.streamMessage(
+              {
+                messages: aiMessages,
+                useAiBrain: useAiBrain || useRandomChats,
+                brainMemories: fullContext ? [fullContext] : [],
+              },
+              activeModelId,
+              modelInfo
+                ? {
+                    modelId: modelInfo.modelId,
+                    name: modelInfo.name,
+                    endpoint: modelInfo.endpoint,
+                    provider: modelInfo.provider,
+                  }
+                : undefined,
+              providerAbortController.signal
+            );
+
+            for await (const event of gen) {
+              if (event.type === 'delta') {
+                fullContent += event.delta ?? '';
+                write(event);
+              } else if (event.type === 'error') {
+                write(event);
+                // Save partial content as error message
+                await db.message.create({
+                  data: {
+                    chatId: chat.id,
+                    role: 'assistant',
+                    content: event.error || 'An error occurred during generation',
+                  },
+                });
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.close();
+                return;
+              } else if (event.type === 'done') {
+                fullContent = event.full ?? fullContent;
+                usedModel = event.model ?? usedModel;
+                write(event);
+              }
+            }
+          } catch (streamError) {
+            // Stream itself threw — persist error message
+            const errMsg = streamError instanceof AIProviderError
+              ? streamError.message
+              : 'An unexpected error occurred during streaming';
+            await db.message.create({
+              data: {
+                chatId: chat.id,
+                role: 'assistant',
+                content: errMsg,
+              },
+            });
+            write({ type: 'error', error: errMsg });
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+            return;
+          }
+
+          // ── Persist assistant response (post-stream) ──────
+          let assistantMsg;
+          try {
+            assistantMsg = await db.message.create({
+              data: {
+                chatId: chat.id,
+                role: 'assistant',
+                content: fullContent,
+              },
+            });
+          } catch (persistError) {
+            console.error('[chat/send] Failed to persist assistant message:', persistError);
+            write({ type: 'error', error: 'Failed to save response' });
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+            return;
+          }
+
+          // ── Fire-and-forget: auto-save brain memory ───────
+          if (chat.projectId && fullContent) {
+            const memTitle = message.length > 80 ? message.slice(0, 77) + '...' : message;
+            const memSummary = fullContent.length > 300 ? fullContent.slice(0, 297) + '...' : fullContent;
+            db.memoryEntry
+              .create({
+                data: {
+                  projectId: chat.projectId,
+                  title: memTitle,
+                  summary: memSummary,
+                  facts: message,
+                  preferences: null,
+                  sourceChatIds: JSON.stringify([chat.id]),
+                },
+              })
+              .catch((err: Error) => {
+                console.error('[chat/send] Failed to save brain memory:', err);
+              });
+          }
+
+          // ── Send final done with assistantId ──────────────
+          write({
+            type: 'done',
+            full: fullContent,
+            model: usedModel,
+            assistantId: assistantMsg.id,
+          });
+        } catch (err) {
+          // Unhandled error in stream setup
+          if (!request.signal.aborted) {
+            write({ type: 'error', error: 'Internal server error' });
+          }
+        } finally {
+          if (!request.signal.aborted) {
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          }
+          controller.close();
+        }
       },
     });
 
-    // ── Auto-save brain memory for project chats ─────────────
-    if (chat.projectId) {
-      const title =
-        message.length > 80 ? message.slice(0, 77) + '...' : message;
-      const summary =
-        aiResponse.content.length > 300
-          ? aiResponse.content.slice(0, 297) + '...'
-          : aiResponse.content;
-      await db.memoryEntry
-        .create({
-          data: {
-            projectId: chat.projectId,
-            title,
-            summary,
-            facts: message,
-            preferences: null,
-            sourceChatIds: JSON.stringify([chat.id]),
-          },
-        })
-        .catch((err) => {
-          console.error('[/api/chat/send] Failed to save brain memory:', err);
-        });
-    }
-
-    // ── Return full chat ─────────────────────────────────────
-    const fullChat = await db.chat.findUnique({
-      where: { id: chat.id },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' },
-        },
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'X-Accel-Buffering': 'no', // Disable nginx buffering
       },
     });
-
-    return NextResponse.json(fullChat);
   } catch (error) {
-    console.error('[/api/chat/send] Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[chat/send] Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
 
-/** Parse facts string for readable display in AI context */
-function parseFactsForPrompt(facts: string | null | undefined): string {
-  if (!facts) return '';
-  try {
-    const parsed = JSON.parse(facts);
-    if (Array.isArray(parsed)) {
-      return parsed.filter(Boolean).map((f) => `- ${f}`).join('\n');
-    }
-  } catch {
-    // Not JSON — use as-is
-  }
-  return facts;
+// ── Helpers ─────────────────────────────────────────────────
+
+/**
+ * Build brain memory context block for project-scoped memories.
+ * Extracted into a standalone function so it can be parallelized.
+ */
+async function buildBrainContext(projectId: string | null): Promise<string> {
+  if (!projectId) return '';
+  const memories = await db.memoryEntry.findMany({
+    where: { projectId },
+    orderBy: { updatedAt: 'desc' },
+    take: 10,
+  });
+  if (memories.length === 0) return '';
+
+  const formatted = memories.map((m) => {
+    const facts = formatFactsForPrompt(m.facts);
+    return `[Project memory — "${m.title}"]\nSummary: ${m.summary}${facts ? '\n' + facts : ''}`;
+  });
+  return `\n\nProject memories:\n${formatted.join('\n\n')}`;
 }

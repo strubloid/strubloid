@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { ThinkingIndicator } from './ThinkingIndicator';
 
 export interface Message {
   id: string;
@@ -14,9 +15,20 @@ interface MessageListProps {
   devMode?: boolean;
   onDelete?: (messageId: string) => void;
   onRefresh?: (messageId: string) => void;
+  /** ID of the message currently being streamed (shows thinking indicator). */
+  streamingMessageId?: string | null;
+  /** Current thinking phase for the streaming message. */
+  thinkingPhase?: string | null;
 }
 
-export function MessageList({ messages, devMode = false, onDelete, onRefresh }: MessageListProps) {
+export function MessageList({
+  messages,
+  devMode = false,
+  onDelete,
+  onRefresh,
+  streamingMessageId,
+  thinkingPhase,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +73,7 @@ export function MessageList({ messages, devMode = false, onDelete, onRefresh }: 
       {messages.map((message) => {
         const isUser = message.role === 'user';
         const isAssistant = message.role === 'assistant';
+        const isStreaming = message.id === streamingMessageId;
 
         return (
           <div key={message.id} className={`group text-config flex justify-start`}>
@@ -96,7 +109,9 @@ export function MessageList({ messages, devMode = false, onDelete, onRefresh }: 
 
               {/* Message content */}
               <div className="whitespace-pre-wrap break-words">
-                {message.content === '...' && isAssistant ? (
+                {isAssistant && isStreaming && thinkingPhase ? (
+                  <ThinkingIndicator phase={thinkingPhase} />
+                ) : message.content === '...' && isAssistant ? (
                   <span className="loading-dots">
                     <span />
                     <span />
@@ -113,48 +128,50 @@ export function MessageList({ messages, devMode = false, onDelete, onRefresh }: 
               </div>
 
               {/* Timestamp + Actions */}
-              <div className="mt-2 flex items-center justify-between gap-2">
-                <span className="text-xs text-[--color-text-dim]">
-                  {new Date(message.createdAt).toLocaleTimeString()}
-                </span>
+              {!isStreaming && (
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-xs text-[--color-text-dim]">
+                    {new Date(message.createdAt).toLocaleTimeString()}
+                  </span>
 
-                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  {isAssistant && onRefresh && (
-                    <button
-                      onClick={() => onRefresh(message.id)}
-                      className="rounded p-1 text-[--color-text-dim] transition-colors hover:bg-[--color-bg-tertiary] hover:text-blue-400"
-                      title="Regenerate response"
-                      aria-label="Regenerate"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(message.id)}
-                      className="rounded p-1 text-[--color-text-dim] transition-colors hover:bg-[--color-bg-tertiary] hover:text-red-400"
-                      title="Delete message"
-                      aria-label="Delete"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {isAssistant && onRefresh && (
+                      <button
+                        onClick={() => onRefresh(message.id)}
+                        className="rounded p-1 text-[--color-text-dim] transition-colors hover:bg-[--color-bg-tertiary] hover:text-blue-400"
+                        title="Regenerate response"
+                        aria-label="Regenerate"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(message.id)}
+                        className="rounded p-1 text-[--color-text-dim] transition-colors hover:bg-[--color-bg-tertiary] hover:text-red-400"
+                        title="Delete message"
+                        aria-label="Delete"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         );

@@ -30,3 +30,24 @@ export interface SendMessageInput {
   useAiBrain?: boolean;
   brainMemories?: string[];
 }
+
+// ── Streaming ────────────────────────────────────────────
+
+/** Event emitted by the streaming message pipeline. */
+export interface StreamEvent {
+  type: 'delta' | 'done' | 'error' | 'phase';
+  /** Text delta for a token chunk. */
+  delta?: string;
+  /** Full assembled text (only on done). */
+  full?: string;
+  /** Provider model identifier. */
+  model?: string;
+  /** Persisted assistant message id (only on done). */
+  assistantId?: string;
+  /** Phase label for thinking indicator. */
+  phase?: 'context-building' | 'model-selected' | 'token-start';
+  /** Model name for phase events. */
+  modelName?: string;
+  /** Error message. */
+  error?: string;
+}

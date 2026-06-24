@@ -3,11 +3,21 @@
 
 import { db } from '@/lib/db';
 import { ZenAIClient } from '@/ais/zen/ZenAIClient';
+import { loadZenConfig } from '@/ais/zen/ZenConfig';
+import { loadNvidiaConfig } from '@/ais/nvidia/NvidiaConfig';
+import { cachedConfig } from '@/lib/configCache';
 
 /** Minimal model shape needed for dispatching. */
-interface ModelInfo {
+export interface ModelInfo {
   modelSource: string;
   endpoint: string;
+  modelId: string;
+  name: string;
+  provider: string;
+  isEnabled: boolean;
+  isFree: boolean;
+  inputPrice: number | null;
+  outputPrice: number | null;
 }
 
 /**
@@ -24,24 +34,21 @@ export async function getClientForModel(
 
   // If not found, default to Zen for backward compatibility
   if (!model) {
-    const { loadZenConfig } = await import('@/ais/zen/ZenConfig');
-    const config = await loadZenConfig();
+    const config = await cachedConfig('zen_config', loadZenConfig);
     return {
       client: new ZenAIClient(config),
-      model: { modelSource: 'zen', endpoint: '/v1/chat/completions' },
+      model: { modelSource: 'zen', endpoint: '/v1/chat/completions', modelId, name: modelId, provider: 'openai', isEnabled: true, isFree: false, inputPrice: null, outputPrice: null },
     };
   }
 
   const source = model.modelSource;
 
   if (source === 'nvidia') {
-    const { loadNvidiaConfig } = await import('@/ais/nvidia/NvidiaConfig');
-    const config = await loadNvidiaConfig();
+    const config = await cachedConfig('nvidia_config', loadNvidiaConfig);
     return { client: new ZenAIClient(config), model };
   }
 
   // Default: Zen
-  const { loadZenConfig } = await import('@/ais/zen/ZenConfig');
-  const config = await loadZenConfig();
+  const config = await cachedConfig('zen_config', loadZenConfig);
   return { client: new ZenAIClient(config), model };
 }

@@ -33,6 +33,10 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<ChatPreview | null>(null);
+  // Pagination state for random chats
+  const [chatsNextCursor, setChatsNextCursor] = useState<string | null>(null);
+  const [chatsHasMore, setChatsHasMore] = useState(false);
+  const [chatsLoadingMore, setChatsLoadingMore] = useState(false);
 
   // Project accordion state
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
@@ -92,12 +96,30 @@ export function Sidebar() {
       const projectsData = await projectsRes.json();
 
       setRandomChats(chatsData.chats ?? []);
+      setChatsNextCursor(chatsData.nextCursor ?? null);
+      setChatsHasMore(chatsData.hasMore ?? false);
       setProjects(projectsData.projects ?? []);
       setStarredProjects(projectsData.projects?.filter((p: ProjectPreview) => p.isStarred) ?? []);
     } catch (error) {
       console.error('Sidebar: Failed to load data', error);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function loadMoreChats() {
+    if (!chatsNextCursor || chatsLoadingMore) return;
+    setChatsLoadingMore(true);
+    try {
+      const res = await fetch(`/api/chats?isRandom=true&limit=20&cursor=${chatsNextCursor}`);
+      const data = await res.json();
+      setRandomChats((prev) => [...prev, ...(data.chats ?? [])]);
+      setChatsNextCursor(data.nextCursor ?? null);
+      setChatsHasMore(data.hasMore ?? false);
+    } catch (error) {
+      console.error('Sidebar: Failed to load more chats', error);
+    } finally {
+      setChatsLoadingMore(false);
     }
   }
 
@@ -283,6 +305,15 @@ export function Sidebar() {
                       </button>
                     </div>
                   ))
+                )}
+                {chatsHasMore && (
+                  <button
+                    onClick={loadMoreChats}
+                    disabled={chatsLoadingMore}
+                    className="chat-item w-full text-center text-xs text-[--color-text-dim] transition-colors hover:text-white disabled:opacity-50"
+                  >
+                    {chatsLoadingMore ? 'Loading...' : `Load more (${randomChats.length}+)`}
+                  </button>
                 )}
               </div>
             </div>
