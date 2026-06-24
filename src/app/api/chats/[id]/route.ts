@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 const UpdateChatSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   useAiBrain: z.boolean().optional(),
+  useRandomChats: z.boolean().optional(),
 });
 
 interface RouteParams {

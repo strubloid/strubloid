@@ -2,10 +2,10 @@
  * Tests for POST /api/chats/clean-random
  *
  * Verifies that:
- * - Random chats with messages get compacted into memory entries
+ * - ALL random chat messages are aggregated into ONE memory entry
  * - Empty random chats are skipped
  * - All random chats are deleted after compaction
- * - The response has correct counts
+ * - The response has correct counts and structure
  * - Project chats are NOT affected
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
@@ -15,13 +15,14 @@ import { db } from '@/lib/db';
 vi.mock('@/ais/zen/ZenAI', () => {
   const mockCompactMemory = vi.fn().mockImplementation(
     async ({ chatMessages }: { chatMessages: { id: string; role: string; content: string }[] }) => {
+      const uniqueChats = new Set(chatMessages.map((m) => m.id));
       const fullText = chatMessages.map((m) => `${m.role}: ${m.content}`).join('\n');
       return {
-        title: fullText.length > 80 ? fullText.slice(0, 77) + '...' : fullText,
-        summary: `Summary of ${chatMessages.length} messages`,
+        title: `Summary of ${chatMessages.length} messages from multiple chats`,
+        summary: `Aggregate summary of ${chatMessages.length} messages across conversations`,
         facts: fullText,
         preferences: null,
-        sourceChatIds: chatMessages.map((m) => m.id),
+        sourceChatIds: Array.from(uniqueChats),
         compactedCount: 1,
       };
     },
@@ -46,7 +47,7 @@ async function runCleanRandom() {
 describe('POST /api/chats/clean-random', () => {
   // Track created records for cleanup
   const createdChatIds: string[] = [];
-  const createdMemoryIds: string[] = [];
+  let createdMemoryId: string | null = null;
 
   beforeAll(async () => {
     // Ensure we start clean for this test
@@ -136,7 +137,7 @@ describe('POST /api/chats/clean-random', () => {
       },
     });
 
-    // Create an empty random chat (should be skipped)
+    // Create an empty random chat (should be skipped/just deleted)
     const emptyRandomChat = await db.chat.create({
       data: {
         id: 'test-random-chat-empty',
@@ -155,25 +156,24 @@ describe('POST /api/chats/clean-random', () => {
     await db.chat.deleteMany({
       where: { id: { in: createdChatIds } },
     });
-    await db.memoryEntry.deleteMany({
-      where: { id: { in: createdMemoryIds } },
-    });
-    // Delete memory entries created by compaction (they reference orig chat ids)
-    const memories = await db.memoryEntry.findMany({
+    if (createdMemoryId) {
+      await db.memoryEntry.delete({ where: { id: createdMemoryId } }).catch(() => {});
+    }
+    // Clean up any memory entries with sourceChatIds referencing random chats
+    const staleMemories = await db.memoryEntry.findMany({
       where: {
         sourceChatIds: {
           contains: 'test-random-chat',
         },
       },
     });
-    for (const m of memories) {
-      await db.memoryEntry.delete({ where: { id: m.id } });
-      createdMemoryIds.push(m.id);
+    for (const m of staleMemories) {
+      await db.memoryEntry.delete({ where: { id: m.id } }).catch(() => {});
     }
     await db.project.delete({ where: { id: 'test-clean-project' } }).catch(() => {});
   });
 
-  it('compacts random chats into memory and deletes them', async () => {
+  it('aggregates all random chat messages into ONE memory entry and deletes chats', async () => {
     // Verify setup: 3 random chats + 1 project chat
     const beforeChats = await db.chat.findMany({
       where: { isRandom: true },
@@ -188,24 +188,23 @@ describe('POST /api/chats/clean-random', () => {
     expect(response.status).toBe(200);
     expect(data).toHaveProperty('compactedCount');
     expect(data).toHaveProperty('deletedCount');
-    expect(data).toHaveProperty('entries');
+    expect(data).toHaveProperty('entry');
     expect(data).toHaveProperty('message');
 
-    // 2 random chats had messages -> compacted
+    // 2 random chats had messages -> compacted into ONE entry
     expect(data.compactedCount).toBe(2);
-    // 1 random chat was empty -> skipped
-    expect(data.skippedCount).toBe(1);
+    expect(data.populatedChatsCount).toBe(2);
+    // 1 random chat was empty
+    expect(data.emptyChatsCount).toBe(1);
     // All 3 random chats deleted
     expect(data.deletedCount).toBe(3);
 
-    // Verify entries have proper structure
-    expect(data.entries.length).toBe(2);
-    for (const entry of data.entries) {
-      expect(entry).toHaveProperty('chatId');
-      expect(entry).toHaveProperty('memoryEntryId');
-      expect(entry).toHaveProperty('title');
-      createdMemoryIds.push(entry.memoryEntryId);
-    }
+    // Verify single entry
+    expect(data.entry).not.toBeNull();
+    expect(data.entry).toHaveProperty('id');
+    expect(data.entry).toHaveProperty('title');
+    expect(data.entry.sourceChatCount).toBe(2);
+    createdMemoryId = data.entry.id;
 
     // Verify: no random chats remain
     const afterChats = await db.chat.findMany({
@@ -218,6 +217,14 @@ describe('POST /api/chats/clean-random', () => {
       where: { id: 'test-project-chat' },
     });
     expect(projectChat).not.toBeNull();
+
+    // Verify: the memory entry exists in DB with no projectId (global)
+    const memoryEntry = await db.memoryEntry.findUnique({
+      where: { id: data.entry.id },
+    });
+    expect(memoryEntry).not.toBeNull();
+    expect(memoryEntry!.projectId).toBeNull();
+    expect(memoryEntry!.summary).toContain('Aggregate summary');
   });
 
   it('returns empty result when no random chats exist', async () => {
@@ -228,6 +235,7 @@ describe('POST /api/chats/clean-random', () => {
     expect(response.status).toBe(200);
     expect(data.compactedCount).toBe(0);
     expect(data.deletedCount).toBe(0);
+    expect(data.entry).toBeNull();
     expect(data.message).toBe('No random chats to clean');
   });
 
@@ -254,6 +262,7 @@ describe('POST /api/chats/clean-random', () => {
         content: 'Recursion is when a function calls itself.',
       },
     });
+    createdChatIds.push(chat.id);
 
     const response = await runCleanRandom();
     const data = await response.json();
@@ -261,9 +270,11 @@ describe('POST /api/chats/clean-random', () => {
     expect(response.status).toBe(200);
     expect(data.compactedCount).toBe(1);
     expect(data.deletedCount).toBe(1);
+    expect(data.entry).not.toBeNull();
+    expect(data.entry.sourceChatCount).toBe(1);
 
-    if (data.entries[0]?.memoryEntryId) {
-      createdMemoryIds.push(data.entries[0].memoryEntryId);
+    if (data.entry?.id) {
+      createdMemoryId = data.entry.id;
     }
 
     // Clean up created chat

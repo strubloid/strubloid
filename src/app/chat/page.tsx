@@ -12,6 +12,7 @@ interface Chat {
   id: string;
   title: string;
   useAiBrain: boolean;
+  useRandomChats: boolean;
   isRandom: boolean;
   selectedModelId: string | null;
   messages: Message[];
@@ -25,6 +26,7 @@ export default function ChatPage() {
   const router = useRouter();
   const [chat, setChat] = useState<Chat | null>(null);
   const [useAiBrain, setUseAiBrain] = useState(false);
+  const [useRandomChats, setUseRandomChats] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState('big-pickle');
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export default function ChatPage() {
         const chatData = await chatRes.json();
         setChat(chatData);
         setUseAiBrain(chatData.useAiBrain ?? false);
+        setUseRandomChats(chatData.useRandomChats ?? false);
         setSelectedModelId(chatData.selectedModelId || 'big-pickle');
       } else {
         // Create a new chat
@@ -103,6 +106,7 @@ export default function ChatPage() {
           chatId: chat.id,
           message,
           useAiBrain,
+          useRandomChats,
           modelId: modelId || selectedModelId,
         }),
       });
@@ -135,6 +139,22 @@ export default function ChatPage() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ useAiBrain: enabled }),
+        });
+      } catch {
+        // Non-critical, ignore
+      }
+    }
+  }
+
+  async function handleToggleRandomChats(enabled: boolean) {
+    setUseRandomChats(enabled);
+
+    if (chat) {
+      try {
+        await fetch(`/api/chats/${chat.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ useRandomChats: enabled }),
         });
       } catch {
         // Non-critical, ignore
@@ -221,6 +241,8 @@ export default function ChatPage() {
           onSend={handleSend}
           useAiBrain={useAiBrain}
           onToggleBrain={() => handleToggleBrain(!useAiBrain)}
+          useRandomChats={useRandomChats}
+          onToggleRandomChats={() => handleToggleRandomChats(!useRandomChats)}
           devMode={devMode}
           selectedModelId={selectedModelId}
           onModelChange={setSelectedModelId}

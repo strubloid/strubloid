@@ -49,11 +49,22 @@ Respond with ONLY valid JSON, no markdown formatting.`,
 
     try {
       const parsed = JSON.parse(response.content);
+
+      // Normalize facts: the AI may return a string or array
+      const facts = Array.isArray(parsed.facts)
+        ? parsed.facts.join('\n')
+        : String(parsed.facts ?? '');
+
+      // Normalize preferences
+      const preferences = parsed.preferences
+        ? String(parsed.preferences)
+        : null;
+
       return {
         title: parsed.title || 'Memory',
         summary: parsed.summary || response.content.slice(0, 200),
-        facts: parsed.facts || '',
-        preferences: parsed.preferences || null,
+        facts,
+        preferences,
         sourceChatIds: input.chatMessages.map((m) => m.id),
         compactedCount: 1,
       };

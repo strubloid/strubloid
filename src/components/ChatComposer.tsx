@@ -13,6 +13,8 @@ interface ChatComposerProps {
   disabled?: boolean;
   useAiBrain: boolean;
   onToggleBrain: () => void;
+  useRandomChats: boolean;
+  onToggleRandomChats: () => void;
   devMode: boolean;
   selectedModelId?: string;
   onModelChange?: (modelId: string) => void;
@@ -24,6 +26,8 @@ export function ChatComposer({
   disabled = false,
   useAiBrain,
   onToggleBrain,
+  useRandomChats,
+  onToggleRandomChats,
   devMode,
   selectedModelId,
   onModelChange,
@@ -155,8 +159,28 @@ export function ChatComposer({
             🧠 {useAiBrain ? 'Brain ON' : 'Brain'}
           </button>
 
-          {useAiBrain && (
-            <span className="text-xs text-purple-400">AI remembers past conversations</span>
+          {useAiBrain && !useRandomChats && (
+            <span className="text-xs text-purple-400">remembers project chat history</span>
+          )}
+
+          {/* Random Chats toggle */}
+          <button
+            onClick={() => onToggleRandomChats()}
+            title={useRandomChats ? 'Random Chat summaries active' : 'Include random chat summaries'}
+            className={`rounded border px-2 py-1 text-xs transition-colors ${
+              useRandomChats
+                ? 'border-orange-600/50 bg-orange-900/30 text-orange-300'
+                : 'border-[--color-border] text-[--color-text-dim] hover:text-white'
+            }`}
+          >
+            📋 {useRandomChats ? 'Randoms ON' : 'Randoms'}
+          </button>
+
+          {useRandomChats && !useAiBrain && (
+            <span className="text-xs text-orange-400">includes compressed random chat knowledge</span>
+          )}
+          {useAiBrain && useRandomChats && (
+            <span className="text-xs text-purple-400">brain + random chat summaries active</span>
           )}
 
           <span className="ml-auto text-xs text-[--color-text-dim]">Sent: {requestCount}</span>

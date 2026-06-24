@@ -7,6 +7,7 @@ const SendMessageSchema = z.object({
   projectId: z.string().optional(),
   message: z.string().min(1).max(10000),
   useAiBrain: z.boolean().optional().default(false),
+  useRandomChats: z.boolean().optional().default(false),
 });
 
 // Mirror the production CreateChat schema
@@ -33,6 +34,7 @@ const UpdateProjectSchema = z.object({
 const UpdateChatSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   useAiBrain: z.boolean().optional(),
+  useRandomChats: z.boolean().optional(),
 });
 
 describe('API request schemas', () => {
@@ -52,8 +54,17 @@ describe('API request schemas', () => {
         projectId: 'p1',
         message: 'hi',
         useAiBrain: true,
+        useRandomChats: true,
       });
       expect(r.success).toBe(true);
+    });
+
+    it('defaults useRandomChats to false', () => {
+      const r = SendMessageSchema.safeParse({ message: 'hello' });
+      expect(r.success).toBe(true);
+      if (r.success) {
+        expect(r.data.useRandomChats).toBe(false);
+      }
     });
 
     it('rejects empty message', () => {
@@ -132,9 +143,17 @@ describe('API request schemas', () => {
       expect(UpdateChatSchema.safeParse({ useAiBrain: true }).success).toBe(true);
     });
 
+    it('accepts useRandomChats alone', () => {
+      expect(UpdateChatSchema.safeParse({ useRandomChats: true }).success).toBe(true);
+    });
+
     it('accepts both fields together', () => {
-      const r = UpdateChatSchema.safeParse({ title: 'Hello', useAiBrain: false });
+      const r = UpdateChatSchema.safeParse({ title: 'Hello', useAiBrain: false, useRandomChats: true });
       expect(r.success).toBe(true);
+    });
+
+    it('rejects wrong types for useRandomChats', () => {
+      expect(UpdateChatSchema.safeParse({ useRandomChats: 'yes' }).success).toBe(false);
     });
 
     it('rejects empty title (min 1)', () => {

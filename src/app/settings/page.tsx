@@ -293,8 +293,8 @@ export default function SettingsPage() {
       const data = await res.json();
       if (res.ok) {
         const parts: string[] = [];
-        if (data.compactedCount > 0) parts.push(`${data.compactedCount} compacted into memory`);
-        if (data.skippedCount > 0) parts.push(`${data.skippedCount} empty skipped`);
+        if (data.compactedCount > 0) parts.push(`${data.compactedCount} compressed → ${data.entry?.title || 'memory'}`);
+        if (data.emptyChatsCount > 0) parts.push(`${data.emptyChatsCount} empty skipped`);
         if (data.deletedCount > 0) parts.push(`${data.deletedCount} deleted`);
         setCleanResult(`✓ ${parts.join(', ')}`);
       } else {

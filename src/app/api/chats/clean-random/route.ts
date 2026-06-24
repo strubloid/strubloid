@@ -4,7 +4,7 @@ import { getZenAI } from '@/ais/zen/ZenAI';
 
 export async function POST() {
   try {
-    // Find all random chats that haven't been compacted+cleaned yet
+    // Find all random chats with their messages
     const randomChats = await db.chat.findMany({
       where: {
         isRandom: true,
@@ -20,66 +20,63 @@ export async function POST() {
       return NextResponse.json({
         compactedCount: 0,
         deletedCount: 0,
-        entries: [],
+        entry: null,
         message: 'No random chats to clean',
       });
     }
 
-    const ai = getZenAI();
-    const results: Array<{
-      chatId: string;
-      memoryEntryId?: string;
-      title: string;
-    }> = [];
-    let skippedCount = 0;
+    // Separate populated chats from empty ones
+    const populatedChats = randomChats.filter((c) => c.messages.length > 0);
+    const emptyChats = randomChats.filter((c) => c.messages.length === 0);
 
-    for (const chat of randomChats) {
-      // Skip empty chats — nothing to compact
-      if (chat.messages.length === 0) {
-        skippedCount++;
-        continue;
-      }
+    let memoryEntryId: string | null = null;
+    let compactedTitle = '';
 
-      const chatMessages = chat.messages.map((m) => ({
-        id: m.id,
-        role: m.role,
-        content: m.content,
-        createdAt: m.createdAt,
-      }));
+    if (populatedChats.length > 0) {
+      // Collect ALL messages from ALL populated random chats into one batch
+      const allMessages = populatedChats.flatMap((chat) =>
+        chat.messages.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          createdAt: m.createdAt,
+        }))
+      );
+
+      const ai = getZenAI();
 
       try {
-        const result = await ai.compactMemory({ chatMessages });
+        // Compact ALL messages together into ONE aggregate summary
+        const result = await ai.compactMemory({ chatMessages: allMessages });
 
-        const memoryEntry = await db.memoryEntry.create({
+        // Collect all source chat IDs
+        const allSourceChatIds = populatedChats.map((c) => c.id);
+        const allMessageIds = allMessages.map((m) => m.id);
+
+        // Normalize fields for Prisma (facts is already string from compactMemory normalization)
+        const entry = await db.memoryEntry.create({
           data: {
-            projectId: chat.projectId ?? null,
+            projectId: null, // global — not scoped to a project
             title: result.title,
             summary: result.summary,
-            facts: result.facts,
-            preferences: result.preferences,
-            sourceChatIds: JSON.stringify(result.sourceChatIds),
+            facts: result.facts || '',
+            preferences: result.preferences ?? null,
+            sourceChatIds: JSON.stringify(allSourceChatIds),
           },
         });
 
-        results.push({
-          chatId: chat.id,
-          memoryEntryId: memoryEntry.id,
-          title: result.title,
-        });
+        memoryEntryId = entry.id;
+        compactedTitle = result.title;
       } catch (error) {
         console.error(
-          `[/api/chats/clean-random] Error compacting chat ${chat.id}:`,
+          '[/api/chats/clean-random] Error compacting random chats:',
           error
         );
-        // Still mark it for deletion — no point keeping a chat that failed to compact
-        results.push({
-          chatId: chat.id,
-          title: '(compaction failed)',
-        });
+        // Proceed with deletion even if compaction fails
       }
     }
 
-    // Delete all random chats (both compacted and empty ones)
+    // Delete ALL random chats
     const deleteResult = await db.chat.deleteMany({
       where: {
         isRandom: true,
@@ -87,14 +84,23 @@ export async function POST() {
     });
 
     return NextResponse.json({
-      compactedCount: results.filter((r) => r.memoryEntryId).length,
-      skippedCount,
+      compactedCount: memoryEntryId ? populatedChats.length : 0,
+      populatedChatsCount: populatedChats.length,
+      emptyChatsCount: emptyChats.length,
       deletedCount: deleteResult.count,
-      entries: results,
+      entry: memoryEntryId
+        ? {
+            id: memoryEntryId,
+            title: compactedTitle,
+            sourceChatCount: populatedChats.length,
+          }
+        : null,
       message:
-        results.length > 0
-          ? `Compacted ${results.filter((r) => r.memoryEntryId).length} chats into memory, deleted ${deleteResult.count} random chats`
-          : 'No random chats with messages to compact',
+        populatedChats.length > 0 && memoryEntryId
+          ? `Compressed ${populatedChats.length} random chats into 1 memory entry ("${compactedTitle}") and deleted ${deleteResult.count} chats`
+          : memoryEntryId === null && populatedChats.length > 0
+            ? `Compaction failed, but ${deleteResult.count} chats were still deleted`
+            : `Deleted ${deleteResult.count} empty random chats`,
     });
   } catch (error) {
     console.error('[/api/chats/clean-random] Error:', error);

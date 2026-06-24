@@ -33,6 +33,7 @@ model Chat {
   project          Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   isRandom         Boolean   @default(false)
   useAiBrain       Boolean   @default(false)
+  useRandomChats   Boolean   @default(false)
   selectedModelId  String?   @default("big-pickle")
   selectedModel    AiModel?  @relation(fields: [selectedModelId], references: [modelId])
   messages         Message[]

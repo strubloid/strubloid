@@ -74,7 +74,7 @@ export class ZenAIClient {
     let systemPrompt = `You are ${model.name}, an AI assistant created by OpenCode. When asked who you are or what model you are, identify yourself as ${model.name}.`;
 
     if (options.useAiBrain && options.brainMemories?.length) {
-      systemPrompt += `\n\nYou have access to memories from past conversations.\n\nRelevant memories:\n${options.brainMemories.join('\n---\n')}\n\nUse these memories when helpful, but don't mention them unless relevant.`;
+      systemPrompt += `\n\nYou have access to saved memories from past conversations.\n\nRelevant saved memory:\n${options.brainMemories.join('\n---\n')}\n\nIMPORTANT: Use the memory above when answering the user. If the user asks about data they shared, saved, or discussed before, answer from this memory. Do NOT say you have no access to previous conversations — the memory was provided to you. Only say you have no information if the memory section above is empty.`;
     }
 
     switch (model.provider) {

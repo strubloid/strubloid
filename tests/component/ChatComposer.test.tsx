@@ -19,7 +19,9 @@ function renderComposer(props: Record<string, unknown> = {}) {
   const defaults = {
     onSend: vi.fn(),
     onToggleBrain: vi.fn(),
+    onToggleRandomChats: vi.fn(),
     useAiBrain: false,
+    useRandomChats: false,
     devMode: false,
     disabled: false,
     selectedModelId: 'deepseek-v4-flash',
@@ -121,7 +123,7 @@ describe('ChatComposer', () => {
 
   it('shows brain description when on', () => {
     renderComposer({ useAiBrain: true });
-    expect(screen.getByText(/AI remembers past conversations/)).toBeInTheDocument();
+    expect(screen.getByText(/remembers project chat history/)).toBeInTheDocument();
   });
 
   it('shows dev mode hint when devMode is on', () => {
