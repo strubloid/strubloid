@@ -54,6 +54,11 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
 
   // Search/filter
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<{
+    chats: ChatPreview[];
+    projects: ProjectPreview[];
+  } | null>(null);
+  const [searching, setSearching] = useState(false);
   const loadDataRef = useRef(loadData);
   const expandedProjectIdRef = useRef(expandedProjectId);
 
@@ -112,6 +117,33 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
       expandProjectById(projectMatch[1]);
     }
   }, [pathname]);
+
+  // Debounced search via API — searches chat titles, project names, and message content
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      setSearching(false);
+      return;
+    }
+
+    const trimmed = searchQuery.trim();
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}&limit=20`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setSearching(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   function expandProjectById(projectId: string) {
     if (expandedProjectId === projectId && expandedProjectChats.length > 0) return;
@@ -229,11 +261,11 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
   }
 
   const filteredChats = searchQuery
-    ? randomChats.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? (searchResults?.chats ?? randomChats.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase())))
     : randomChats;
 
   const filteredProjects = searchQuery
-    ? projects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? (searchResults?.projects ?? projects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase())))
     : projects;
 
   const isIconsMode = mode === 'icons';
@@ -289,7 +321,7 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                   </div>
                 ) : filteredChats.length === 0 ? (
                   <div className="chat-item opacity-50">
-                    {!isIconsMode && (searchQuery ? 'No matches' : 'No chats yet')}
+                    {!isIconsMode && (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No chats yet')}
                   </div>
                 ) : (
                   filteredChats.map((chat) => (
@@ -350,7 +382,7 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                   </div>
                 ) : filteredProjects.length === 0 ? (
                   <div className="chat-item opacity-50">
-                    {!isIconsMode && (searchQuery ? 'No matches' : 'No projects')}
+                    {!isIconsMode && (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No projects')}
                   </div>
                 ) : (
                   filteredProjects.slice(0, 10).map((project) => {
