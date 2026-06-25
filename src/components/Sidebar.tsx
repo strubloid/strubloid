@@ -31,7 +31,11 @@ interface SidebarProps {
   onMobileToggle?: (open: boolean) => void;
 }
 
-export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, onMobileToggle }: SidebarProps) {
+export function Sidebar({
+  mode: externalMode,
+  mobileOpen: externalMobileOpen,
+  onMobileToggle
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const ctx = useSidebar();
@@ -39,7 +43,7 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
 
   // Use provided props or fall back to context
   const mode = isEmbedded ? externalMode : ctx.mode;
-  const mobileOpen = isEmbedded ? externalMobileOpen ?? false : ctx.mobileOpen;
+  const mobileOpen = isEmbedded ? (externalMobileOpen ?? false) : ctx.mobileOpen;
 
   const [randomChats, setRandomChats] = useState<ChatPreview[]>([]);
   const [projects, setProjects] = useState<ProjectPreview[]>([]);
@@ -264,11 +268,13 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
   }
 
   const filteredChats = searchQuery
-    ? (searchResults?.chats ?? randomChats.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase())))
+    ? (searchResults?.chats ??
+      randomChats.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase())))
     : randomChats;
 
   const filteredProjects = searchQuery
-    ? (searchResults?.projects ?? projects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase())))
+    ? (searchResults?.projects ??
+      projects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase())))
     : projects;
 
   const isIconsMode = mode === 'icons';
@@ -279,12 +285,8 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
       <aside className={`sidebar mode-${mode} ${mobileOpen ? 'open' : ''}`}>
         <div className="sidebar-brush flex h-full flex-col p-4">
           <div className="brush-head">
-            {!isIconsMode && (
-              <>
-                <span className="brush-kicker">orbit rail</span>
-                <span className="brush-title">Spin contexts</span>
-              </>
-            )}
+            <span className="brush-kicker">orbit rail</span>
+            <span className="brush-title">Spin contexts</span>
           </div>
 
           {/* New Chat Button */}
@@ -293,14 +295,24 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
             className="btn-primary mb-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
             title={isIconsMode ? 'New Chat' : undefined}
           >
-            <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="h-5 w-5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             {!isIconsMode && <span>New Chat</span>}
           </button>
 
           {/* Navigation */}
-          <nav className="sidebar-orbits flex-1 overflow-y-auto -mx-4 px-4">
+          <nav className="sidebar-orbits -mx-4 flex-1 overflow-y-auto px-4">
             {/* Random Chats */}
             <div className="orbit-section mb-6">
               <button
@@ -309,9 +321,19 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                 onClick={() => setRandomChatsExpanded((value) => !value)}
                 aria-expanded={randomChatsExpanded}
               >
-                <span className="sidebar-section-title">
-                  <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                <span className="sidebar-section-title flex w-full items-center justify-center gap-2">
+                  <svg
+                    className="h-3.5 w-3.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
                   </svg>
                   {!isIconsMode && <span className="sidebar-label">Random Chats</span>}
                 </span>
@@ -319,12 +341,11 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
               </button>
               <div hidden={!randomChatsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">
-                    {!isIconsMode && 'Loading...'}
-                  </div>
+                  <div className="chat-item opacity-50">{!isIconsMode && 'Loading...'}</div>
                 ) : filteredChats.length === 0 ? (
                   <div className="chat-item opacity-50">
-                    {!isIconsMode && (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No chats yet')}
+                    {!isIconsMode &&
+                      (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No chats yet')}
                   </div>
                 ) : (
                   filteredChats.map((chat) => (
@@ -346,12 +367,22 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                             e.preventDefault();
                             setPendingDelete(chat);
                           }}
-                          className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                          className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
                           title="Delete chat"
                           aria-label="Delete chat"
                         >
-                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                         </button>
                       )}
@@ -363,52 +394,86 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
 
             {/* Projects */}
             <div className="orbit-section mb-6">
-              <div className="mb-2 flex items-center justify-between px-3">
+              <div className="flex items-center justify-between justify-center px-3">
                 <button
                   type="button"
                   className="sidebar-section-toggle compact"
                   onClick={() => setProjectsExpanded((value) => !value)}
                   aria-expanded={projectsExpanded}
                 >
-                  <span className="sidebar-section-title">
-                    <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  <span className="sidebar-section-title flex items-center justify-center gap-2">
+                    <svg
+                      className="h-3.5 w-3.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                      />
                     </svg>
                     {!isIconsMode && <span className="sidebar-label">Projects</span>}
                   </span>
                   {!isIconsMode && <span className="sidebar-count">{filteredProjects.length}</span>}
                 </button>
                 {!isIconsMode && (
-                  <Link href="/projects" className="text-xs text-[var(--color-accent)] hover:underline">
-                    View all
+                  <Link
+                    href="/projects"
+                    className="sidebar-all-link"
+                    title="All projects"
+                    aria-label="All projects"
+                  >
+                    <svg
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 6h18M3 10h12M3 14h18"
+                      />
+                    </svg>
+                    <span>all</span>
                   </Link>
                 )}
               </div>
               <div hidden={!projectsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">
-                    {!isIconsMode && 'Loading...'}
-                  </div>
+                  <div className="chat-item opacity-50">{!isIconsMode && 'Loading...'}</div>
                 ) : filteredProjects.length === 0 ? (
                   <div className="chat-item opacity-50">
-                    {!isIconsMode && (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No projects')}
+                    {!isIconsMode &&
+                      (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No projects')}
                   </div>
                 ) : (
                   filteredProjects.slice(0, 10).map((project) => {
                     const isExpanded = expandedProjectId === project.id;
                     return (
                       <div key={project.id} className="orbit-node project-item-container">
-                        <div className={`project-item relative ${isActiveProject(project.id) || isExpanded ? 'active' : ''}`}>
+                        <div
+                          className={`project-item relative ${isActiveProject(project.id) || isExpanded ? 'active' : ''}`}
+                        >
                           <Link
                             href={`/projects/${project.id}`}
-                            className="block truncate pr-10"
+                            className={
+                              isIconsMode
+                                ? 'flex items-center justify-center'
+                                : 'block truncate pr-10'
+                            }
                             onClick={() => {
                               if (isEmbedded && onMobileToggle) onMobileToggle(false);
                               else ctx.setMobileOpen(false);
                             }}
                           >
                             <span
-                              className="mr-2 inline-block h-2 w-2 rounded-full"
+                              className="inline-block h-2 w-2 rounded-full"
                               style={{ backgroundColor: project.color }}
                             />
                             {!isIconsMode && <span className="project-name">{project.name}</span>}
@@ -420,8 +485,10 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                                 e.preventDefault();
                                 toggleProjectExpand(project.id);
                               }}
-                              className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-[var(--color-bg-tertiary)] ${
-                                isExpanded ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-dim)]'
+                              className={`absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-[var(--color-bg-tertiary)] ${
+                                isExpanded
+                                  ? 'text-[var(--color-accent)]'
+                                  : 'text-[var(--color-text-dim)]'
                               }`}
                               title={isExpanded ? 'Collapse chats' : 'Show chats'}
                               aria-label={isExpanded ? 'Collapse chats' : 'Show chats'}
@@ -432,7 +499,12 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
                               >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 5l7 7-7 7"
+                                />
                               </svg>
                             </button>
                           )}
@@ -454,8 +526,18 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                                     }}
                                     className="inline-flex items-center gap-1 text-xs text-[var(--color-accent)] hover:underline"
                                   >
-                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    <svg
+                                      className="h-3 w-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 4v16m8-8H4"
+                                      />
                                     </svg>
                                     Create chat
                                   </button>
@@ -463,7 +545,10 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                               </div>
                             ) : (
                               expandedProjectChats.map((chat) => (
-                                <div key={chat.id} className="orbit-node group flex items-center gap-1">
+                                <div
+                                  key={chat.id}
+                                  className="orbit-node group flex items-center gap-1"
+                                >
                                   <Link
                                     href={`/chat/${chat.id}`}
                                     className={`chat-item block flex-1 truncate text-xs ${isActiveChat(chat.id) ? 'active' : ''}`}
@@ -480,12 +565,22 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                                       e.preventDefault();
                                       deleteProjectChat(chat.id, project.id);
                                     }}
-                                    className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                                    className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
                                     title="Delete chat"
                                     aria-label="Delete chat"
                                   >
-                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    <svg
+                                      className="h-3 w-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
                                     </svg>
                                   </button>
                                 </div>
@@ -558,7 +653,12 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                     strokeWidth={2}
                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
                   />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
                 Settings
               </Link>

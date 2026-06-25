@@ -18,6 +18,9 @@ interface Project {
   name: string;
   color: string;
   isStarred: boolean;
+  localPath?: string;
+  skills?: string;
+  aiPatterns?: string;
   chatCount: number;
   chats: Chat[];
 }
@@ -47,7 +50,6 @@ export default function ProjectDetailPage() {
         return;
       }
       if (!res.ok) throw new Error('Failed to load project');
-
       const data = await res.json();
       setProject(data);
     } catch (error) {
@@ -62,11 +64,9 @@ export default function ProjectDetailPage() {
       const res = await fetch('/api/chats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, title: 'New Chat' })
+        body: JSON.stringify({ projectId, title: 'New Chat' }),
       });
-
       if (!res.ok) throw new Error('Failed to create chat');
-
       const chat = await res.json();
       router.push(`/chat/${chat.id}`);
     } catch (error) {
@@ -81,9 +81,8 @@ export default function ProjectDetailPage() {
       await fetch(`/api/projects/${projectId}/star`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isStarred: !project.isStarred })
+        body: JSON.stringify({ isStarred: !project.isStarred }),
       });
-
       setProject({ ...project, isStarred: !project.isStarred });
       window.dispatchEvent(new CustomEvent('sidebar-refresh'));
     } catch (error) {
@@ -170,8 +169,84 @@ export default function ProjectDetailPage() {
                 )}
               </BentoCard>
 
-              <BentoCard span="third" label="guidance" title="Use this when">
-                <p>You need continuity across chats: product decisions, implementation context, research threads, or anything the AI should recall later.</p>
+              <BentoCard span="third" label="configuration" title="Project configuration">
+                {isLoading ? (
+                  <div className="cw-metric">Loading...</div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className="block truncate font-semibold">Local path</span>
+                      <input
+                        type="text"
+                        value={project.localPath ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          setProject(prev => {
+                            if (!prev) return null;
+                            return { ...prev, localPath: val || undefined };
+                          });
+                        }}
+                        placeholder="e.g., /mnt/c/Users/strubloid/projects/my-app"
+                        className="flex-1 min-w-0 bg-transparent border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="block truncate font-semibold">Skills</span>
+                      <input
+                        type="text"
+                        value={project.skills ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          setProject(prev => {
+                            if (!prev) return null;
+                            return { ...prev, skills: val || undefined };
+                          });
+                        }}
+                        placeholder="e.g., frontend-ux-refactoring,python-development"
+                        className="flex-1 min-w-0 bg-transparent border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="block truncate font-semibold">AI patterns</span>
+                      <input
+                        type="text"
+                        value={project.aiPatterns ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          setProject(prev => {
+                            if (!prev) return null;
+                            return { ...prev, aiPatterns: val || undefined };
+                          });
+                        }}
+                        placeholder="e.g., The AI should follow a research-first pattern, then implement, then test."
+                        className="flex-1 min-w-0 bg-transparent border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                      />
+                    </div>
+                    <Button
+                      variant="primary"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`/api/projects/${projectId}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              localPath: project.localPath ?? undefined,
+                              skills: project.skills ?? undefined,
+                              aiPatterns: project.aiPatterns ?? undefined,
+                            }),
+                          });
+                          if (!res.ok) throw new Error('Failed to update project');
+                          // Optionally refetch to get latest from server
+                          await loadProject();
+                        } catch (error) {
+                          console.error('Failed to save project config', error);
+                        }
+                      }}
+                    >
+                      Save configuration
+                    </Button>
+                  </div>
+                )}
               </BentoCard>
 
               <section className="cw-card cw-card-full">

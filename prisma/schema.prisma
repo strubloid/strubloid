@@ -12,14 +12,17 @@ datasource db {
 }
 
 model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  color       String   @default("#9ad933")
-  isStarred   Boolean  @default(false)
-  chats       Chat[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  color         String   @default("#9ad933")
+  isStarred     Boolean  @default(false)
+  localPath     String?  // local filesystem path for agent actions
+  skills        String?  // comma-separated skill IDs or names for the agent
+  aiPatterns    String?  // description of AI patterns to apply to this project
+  chats         Chat[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([isStarred])
   @@index([updatedAt])

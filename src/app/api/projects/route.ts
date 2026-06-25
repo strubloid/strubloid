@@ -6,6 +6,9 @@ const CreateProjectSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  localPath: z.string().optional(),
+  skills: z.string().optional(),
+  aiPatterns: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {

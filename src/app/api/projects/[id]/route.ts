@@ -6,6 +6,9 @@ const UpdateProjectSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  localPath: z.string().optional(),
+  skills: z.string().optional(),
+  aiPatterns: z.string().optional(),
 });
 
 interface RouteParams {

@@ -6,9 +6,8 @@
 .sidebar {
   width: $sidebar-width-full;
   height: 100%;
-  background:
-    radial-gradient(circle at 100% 14%, rgba($color-accent, 0.14), transparent 11rem),
-    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+  background: radial-gradient(circle at 100% 14%, rgba($color-accent, 0.14), transparent 11rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)),
     $color-bg-secondary;
   border-right: 1px solid rgba($color-accent, 0.18);
   border-radius: 0 42px 42px 0;
@@ -16,8 +15,12 @@
   position: sticky;
   top: 0;
   flex-shrink: 0;
-  transition: width $transition-smooth, transform $transition-smooth;
-  box-shadow: 22px 0 70px rgba(0, 0, 0, 0.24), inset -1px 0 0 rgba(255,255,255,0.04);
+  transition:
+    width $transition-smooth,
+    transform $transition-smooth;
+  box-shadow:
+    22px 0 70px rgba(0, 0, 0, 0.24),
+    inset -1px 0 0 rgba(255, 255, 255, 0.04);
 
   &.mode-full {
     width: $sidebar-width-full;
@@ -28,15 +31,30 @@
 
     .sidebar-label,
     .chat-title,
-    .project-name,
-    .brush-head { display: none; }
+    .project-name {
+      display: none;
+    }
 
-    .sidebar-brush { padding-inline: 10px !important; }
-    .orbit-section { border-radius: 999px; padding-block: 8px; }
-    .sidebar-section-toggle { justify-content: center; padding-inline: 0; }
-    .sidebar-count { display: none; }
-    .readable-list { display: none !important; }
-    .orbit-node { width: 40px; }
+    .sidebar-brush {
+      padding-inline: 10px !important;
+    }
+    .orbit-section {
+      border-radius: 999px;
+      padding-block: 8px;
+    }
+    .sidebar-section-toggle {
+      justify-content: center;
+      padding-inline: 6px;
+    }
+    .sidebar-count {
+      display: none;
+    }
+    .readable-list {
+      display: none !important;
+    }
+    .orbit-node {
+      width: 40px;
+    }
     .chat-item,
     .project-item {
       width: 40px;
@@ -46,6 +64,15 @@
       display: grid !important;
       place-items: center;
       border-radius: 999px;
+    }
+
+    .brush-head {
+      margin-bottom: 10px;
+      .brush-kicker,
+      .brush-title {
+        font-size: 0.75rem;
+      }
+      align-self: center;
     }
   }
 
@@ -101,12 +128,12 @@
     content: '';
     position: absolute;
     top: 18px;
-    right: 10px;
+    right: 4px;
     bottom: 18px;
     width: 2px;
     border-radius: 999px;
     background: linear-gradient(180deg, transparent, rgba($color-accent, 0.45), transparent);
-    opacity: 0.75;
+    opacity: 0.45;
     pointer-events: none;
   }
 }
@@ -116,6 +143,7 @@
   margin-bottom: 10px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   padding: 0 10px;
 }
@@ -153,17 +181,17 @@
 }
 
 .orbit-section {
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 24px;
   background: rgba(8, 10, 14, 0.46);
   padding: 8px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .sidebar-section-toggle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 10px;
   width: 100%;
   border: 0;
@@ -172,10 +200,12 @@
   padding: 8px 10px;
   color: $color-text;
   cursor: pointer;
-  transition: background $transition-fast, color $transition-fast;
+  transition:
+    background $transition-fast,
+    color $transition-fast;
 
   &:hover {
-    background: rgba(255,255,255,0.045);
+    background: rgba(255, 255, 255, 0.045);
   }
 
   &[aria-expanded='true'] {
@@ -198,14 +228,46 @@
   display: inline-flex;
   min-width: 24px;
   justify-content: center;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   padding: 2px 7px;
-  background: rgba(255,255,255,0.045);
+  background: rgba(255, 255, 255, 0.045);
   color: $color-text-dim;
   font-family: $font-mono;
   font-size: 10px;
   font-weight: 800;
+}
+
+.sidebar-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  border: 1px solid rgba($color-accent, 0.18);
+  border-radius: 999px;
+  background: rgba($color-accent, 0.055);
+  color: rgba($color-text, 0.86);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    border-color $transition-fast,
+    background $transition-fast,
+    color $transition-fast,
+    transform $transition-fast;
+
+  svg {
+    color: $color-accent;
+  }
+
+  &:hover {
+    border-color: rgba($color-accent, 0.42);
+    background: rgba($color-accent, 0.11);
+    color: $color-accent;
+    transform: translateY(-1px);
+  }
 }
 
 .orbit-label {
@@ -223,7 +285,9 @@
   max-height: 0;
   opacity: 0;
   pointer-events: none;
-  transition: max-height 220ms ease, opacity 160ms ease;
+  transition:
+    max-height 220ms ease,
+    opacity 160ms ease;
 
   &.expanded {
     max-height: 260px;
@@ -239,15 +303,18 @@
   min-width: 0;
 }
 
-// === SIDEBAR ITEMS ===
 .chat-item {
-  min-height: 46px;
-  padding: 10px 14px;
+  min-height: 48px;
+  padding: 14px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.035);
   cursor: pointer;
-  transition: background 0.16s, border-color 0.16s, transform 0.16s, box-shadow 0.16s;
+  transition:
+    background 0.16s,
+    border-color 0.16s,
+    transform 0.16s,
+    box-shadow 0.16s;
   font-size: $font-size-sm;
   color: $color-text;
 
@@ -256,6 +323,7 @@
     border-color: rgba($color-accent, 0.25);
     transform: translateX(2px);
   }
+
   &.active {
     background: $color-accent-dim;
     color: $color-accent;
@@ -277,13 +345,17 @@
 
 .project-item {
   position: relative;
-  min-height: 46px;
-  padding: 10px 14px;
+  min-height: 48px;
+  padding: 14px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.035);
   cursor: pointer;
-  transition: background 0.16s, border-color 0.16s, transform 0.16s, box-shadow 0.16s;
+  transition:
+    background 0.16s,
+    border-color 0.16s,
+    transform 0.16s,
+    box-shadow 0.16s;
   font-size: $font-size-sm;
   color: $color-text;
   width: 100%;
@@ -296,6 +368,7 @@
   }
 
   &.active {
+    background: $color-accent-dim;
     color: $color-accent;
     border-color: rgba($color-accent, 0.42);
     box-shadow: 0 0 0 4px rgba($color-accent, 0.07);
