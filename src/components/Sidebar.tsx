@@ -51,7 +51,7 @@ export function Sidebar({
   const [isLoading, setIsLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<ChatPreview | null>(null);
   const [randomChatsExpanded, setRandomChatsExpanded] = useState(true);
-  const [projectsExpanded, setProjectsExpanded] = useState(true);
+  const [projectsExpanded, setProjectsExpanded] = useState(false);
   const [starredExpanded, setStarredExpanded] = useState(false);
 
   // Project accordion state
@@ -155,6 +155,8 @@ export function Sidebar({
   function expandProjectById(projectId: string) {
     if (expandedProjectId === projectId && expandedProjectChats.length > 0) return;
 
+    setProjectsExpanded(true);
+    setRandomChatsExpanded(false);
     setExpandedProjectId(projectId);
     setLoadingProjectChats(true);
     setExpandedProjectChats([]);
@@ -163,6 +165,26 @@ export function Sidebar({
       .then((data) => setExpandedProjectChats(data.chats ?? []))
       .catch(() => setExpandedProjectId(null))
       .finally(() => setLoadingProjectChats(false));
+  }
+
+  function toggleRandomChatsSection() {
+    setRandomChatsExpanded((expanded) => {
+      const nextExpanded = !expanded;
+      if (nextExpanded) {
+        setProjectsExpanded(false);
+      }
+      return nextExpanded;
+    });
+  }
+
+  function toggleProjectsSection() {
+    setProjectsExpanded((expanded) => {
+      const nextExpanded = !expanded;
+      if (nextExpanded) {
+        setRandomChatsExpanded(false);
+      }
+      return nextExpanded;
+    });
   }
 
   async function loadData() {
@@ -314,11 +336,11 @@ export function Sidebar({
           {/* Navigation */}
           <nav className="sidebar-orbits -mx-4 flex-1 overflow-y-auto px-4">
             {/* Random Chats */}
-            <div className="orbit-section mb-6">
+            <div className={`orbit-section mb-6 ${randomChatsExpanded ? 'expanded' : ''}`}>
               <button
                 type="button"
                 className="sidebar-section-toggle"
-                onClick={() => setRandomChatsExpanded((value) => !value)}
+                onClick={toggleRandomChatsSection}
                 aria-expanded={randomChatsExpanded}
               >
                 <span className="sidebar-section-title flex w-full items-center justify-center gap-2">
@@ -393,12 +415,12 @@ export function Sidebar({
             </div>
 
             {/* Projects */}
-            <div className="orbit-section mb-6">
+            <div className={`orbit-section mb-6 ${projectsExpanded ? 'expanded' : ''}`}>
               <div className="flex items-center justify-between justify-center px-3">
                 <button
                   type="button"
                   className="sidebar-section-toggle compact"
-                  onClick={() => setProjectsExpanded((value) => !value)}
+                  onClick={toggleProjectsSection}
                   aria-expanded={projectsExpanded}
                 >
                   <span className="sidebar-section-title flex items-center justify-center gap-2">
@@ -511,7 +533,7 @@ export function Sidebar({
                         </div>
 
                         {isExpanded && !isIconsMode && (
-                          <div className="ml-3 border-l border-[var(--color-border)] pl-2">
+                          <div className="m-2 border-l border-[var(--color-border)] pl-2 opacity-50">
                             {loadingProjectChats ? (
                               <div className="chat-item opacity-50">Loading...</div>
                             ) : expandedProjectChats.length === 0 ? (
@@ -547,7 +569,7 @@ export function Sidebar({
                               expandedProjectChats.map((chat) => (
                                 <div
                                   key={chat.id}
-                                  className="orbit-node group flex items-center gap-1"
+                                  className="orbit-node group mt-2 mb-2 flex items-center gap-1"
                                 >
                                   <Link
                                     href={`/chat/${chat.id}`}

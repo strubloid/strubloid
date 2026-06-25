@@ -24,6 +24,10 @@
 
   &.mode-full {
     width: $sidebar-width-full;
+
+    .orbit-section.expanded {
+      height: 100%;
+    }
   }
 
   &.mode-icons {
@@ -290,7 +294,7 @@
     opacity 160ms ease;
 
   &.expanded {
-    max-height: 260px;
+    max-height: 100%;
     opacity: 1;
     overflow-y: auto;
     pointer-events: auto;
@@ -380,6 +384,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-left: 0.4rem;
 }
 
 .sidebar-label {
