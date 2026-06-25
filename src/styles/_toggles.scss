@@ -1,0 +1,63 @@
+@use 'variables' as *;
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: $color-border;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+
+  &.active {
+    background: $color-accent;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  &.active::after {
+    transform: translateX(20px);
+  }
+}
+
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid $color-border;
+  background: transparent;
+  color: $color-text-dim;
+
+  &:hover {
+    color: $color-text;
+    border-color: $color-text-dim;
+  }
+
+  &.active-brain {
+    background: rgba($color-purple, 0.15);
+    border-color: rgba($color-purple, 0.4);
+    color: lighten($color-purple, 20%);
+  }
+
+  &.active-random {
+    background: rgba($color-orange, 0.15);
+    border-color: rgba($color-orange, 0.4);
+    color: lighten($color-orange, 20%);
+  }
+}

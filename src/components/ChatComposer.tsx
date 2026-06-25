@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import styles from './ChatComposer.module.scss';
 
 interface AiModel {
   modelId: string;
@@ -41,10 +42,8 @@ export function ChatComposer({
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Lazy-load models on first interaction with the select
   function loadModels() {
     if (modelsLoaded) return;
-    // Check sessionStorage cache first
     const cached = sessionStorage.getItem('strubloid_models');
     if (cached) {
       try {
@@ -54,7 +53,7 @@ export function ChatComposer({
           setModelsLoaded(true);
           return;
         }
-      } catch { /* fall through to fetch */ }
+      } catch { /* fall through */ }
     }
     fetch('/api/ai/models')
       .then((r) => r.json())
@@ -98,10 +97,9 @@ export function ChatComposer({
         return;
       }
 
-      // ArrowUp: recall previous messages (works when input empty or already in history)
+      // ArrowUp: recall previous messages
       if (e.key === 'ArrowUp' && previousMessages.length > 0) {
         if (input === '' && historyIndex === -1) {
-          // First press: recall the last message
           e.preventDefault();
           const lastIdx = previousMessages.length - 1;
           setInput(previousMessages[lastIdx]);
@@ -109,7 +107,6 @@ export function ChatComposer({
           return;
         }
         if (historyIndex > 0) {
-          // Already in history: go to previous (older) message
           e.preventDefault();
           const prevIdx = historyIndex - 1;
           setInput(previousMessages[prevIdx]);
@@ -145,16 +142,16 @@ export function ChatComposer({
   }, [input]);
 
   return (
-    <div className="border-t border-[--color-border] bg-[--color-bg-secondary] p-4">
-      <div className="mx-auto flex flex-col gap-2">
-        {/* Model selector + brain toggle row */}
-        <div className="flex items-center gap-2">
+    <div className={styles.wrapper}>
+      <div className={styles.inner}>
+        {/* Toolbar row */}
+        <div className={styles.toolbar}>
           {/* Model selector */}
           <select
             value={selectedModelId || ''}
             onChange={(e) => onModelChange?.(e.target.value)}
             onFocus={loadModels}
-            className="rounded border border-[--color-border] bg-[--color-bg] px-2 py-1 text-xs outline-none"
+            className={styles.modelSelect}
             title="Select AI model"
           >
             {models.length === 0 && <option value="">Loading models...</option>}
@@ -167,55 +164,45 @@ export function ChatComposer({
 
           {/* Brain toggle */}
           <button
-            onClick={() => onToggleBrain()}
+            onClick={onToggleBrain}
             title={useAiBrain ? 'AI Brain is active' : 'Enable AI Brain'}
-            className={`rounded border px-2 py-1 text-xs transition-colors ${
-              useAiBrain
-                ? 'border-purple-600/50 bg-purple-900/30 text-purple-300'
-                : 'border-[--color-border] text-[--color-text-dim] hover:text-white'
-            }`}
+            className={`${styles.toggleBtn} ${useAiBrain ? styles.brainActive : ''}`}
           >
             🧠 {useAiBrain ? 'Brain ON' : 'Brain'}
           </button>
 
           {useAiBrain && !useRandomChats && (
-            <span className="text-xs text-purple-400">remembers project chat history</span>
+            <span className={styles.toggleHint}>remembers project chat history</span>
           )}
 
           {/* Random Chats toggle */}
           <button
-            onClick={() => onToggleRandomChats()}
+            onClick={onToggleRandomChats}
             title={useRandomChats ? 'Random Chat summaries active' : 'Include random chat summaries'}
-            className={`rounded border px-2 py-1 text-xs transition-colors ${
-              useRandomChats
-                ? 'border-orange-600/50 bg-orange-900/30 text-orange-300'
-                : 'border-[--color-border] text-[--color-text-dim] hover:text-white'
-            }`}
+            className={`${styles.toggleBtn} ${useRandomChats ? styles.randomActive : ''}`}
           >
             📋 {useRandomChats ? 'Randoms ON' : 'Randoms'}
           </button>
 
           {useRandomChats && !useAiBrain && (
-            <span className="text-xs text-orange-400">includes compressed random chat knowledge</span>
+            <span className={styles.toggleHint}>includes compressed random chat knowledge</span>
           )}
           {useAiBrain && useRandomChats && (
-            <span className="text-xs text-purple-400">brain + random chat summaries active</span>
+            <span className={styles.toggleHint}>brain + random chat summaries active</span>
           )}
 
-          <span className="ml-auto text-xs text-[--color-text-dim]">Sent: {requestCount}</span>
+          <span className={styles.requestCount}>Sent: {requestCount}</span>
         </div>
 
         {/* Dev mode banner */}
         {devMode && (
-          <div className="rounded border border-yellow-700/50 bg-yellow-900/20 px-3 py-1.5 text-xs text-yellow-200">
-            DEV MODE: AI responses are simulated.
-            <br />
-            Go to Settings to configure your Zen AI API key.
+          <div className={styles.devBanner}>
+            DEV MODE: AI responses are simulated. Go to Settings to configure your AI API key.
           </div>
         )}
 
-        {/* Input area */}
-        <div className="flex items-end gap-2">
+        {/* Input row */}
+        <div className={styles.inputRow}>
           <textarea
             ref={textareaRef}
             value={input}
@@ -224,13 +211,13 @@ export function ChatComposer({
             placeholder="Type a message... (Enter to send, Shift+Enter for newline)"
             rows={1}
             disabled={disabled || isSending}
-            className="max-h-32 min-h-[2.5rem] flex-1 resize-none rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-2 text-sm outline-none transition-colors focus:border-blue-500 disabled:opacity-50"
+            className={styles.textarea}
           />
 
           <button
             onClick={handleSend}
             disabled={disabled || isSending || !input.trim()}
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
+            className={styles.sendBtn}
             title="Send message (Enter)"
           >
             <svg

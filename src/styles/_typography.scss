@@ -1,0 +1,41 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.section-header {
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $color-text-dim;
+  padding: 8px 12px;
+}
+
+.page-title {
+  font-size: $font-size-2xl;
+  font-weight: 700;
+  color: $color-text;
+}
+
+.page-subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-dim;
+  margin-top: 4px;
+}
+
+.card-title {
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: $color-text;
+}
+
+.text-dim {
+  color: $color-text-dim;
+}
+
+.text-accent {
+  color: $color-accent;
+}
+
+.font-mono-custom {
+  font-family: $font-mono;
+}

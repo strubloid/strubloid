@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { ThinkingIndicator } from './ThinkingIndicator';
+import styles from './MessageList.module.scss';
 
 export interface Message {
   id: string;
@@ -15,9 +16,7 @@ interface MessageListProps {
   devMode?: boolean;
   onDelete?: (messageId: string) => void;
   onRefresh?: (messageId: string) => void;
-  /** ID of the message currently being streamed (shows thinking indicator). */
   streamingMessageId?: string | null;
-  /** Current thinking phase for the streaming message. */
   thinkingPhase?: string | null;
 }
 
@@ -37,9 +36,8 @@ export function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-        {/* Matrix-style empty state */}
-        <div className="relative mb-8">
+      <div className={styles.empty}>
+        <div className={styles.emptyGlow}>
           <div className="flex gap-1 opacity-20">
             {['{', '}', '<', '>', '/', '*', '0', '1'].map((char, i) => (
               <span
@@ -51,17 +49,17 @@ export function MessageList({
               </span>
             ))}
           </div>
-          <div className="glow-text mt-4 text-4xl text-[--color-accent]">Ready to Chat</div>
+          <div className={styles.emptyTitle}>Ready to Chat</div>
         </div>
 
         {devMode && (
-          <div className="dev-mode-banner max-w-md rounded-lg px-4 py-2 text-sm">
-            <p className="mb-1 font-semibold">DEV MODE ACTIVE</p>
-            <p>Configure your Zen AI API key in Settings to enable real AI responses.</p>
+          <div className={styles.devBanner}>
+            <strong>DEV MODE ACTIVE</strong>
+            <p>Configure your AI API key in Settings to enable real AI responses.</p>
           </div>
         )}
 
-        <p className="mt-4 max-w-sm text-sm text-[--color-text-dim]">
+        <p className={styles.emptySubtitle}>
           Send a message below to start a conversation. Your chats will be saved automatically.
         </p>
       </div>
@@ -69,25 +67,22 @@ export function MessageList({
   }
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto p-4">
+    <div className={styles.container}>
       {messages.map((message) => {
         const isUser = message.role === 'user';
         const isAssistant = message.role === 'assistant';
         const isStreaming = message.id === streamingMessageId;
 
         return (
-          <div key={message.id} className={`group text-config flex justify-start`}>
+          <div
+            key={message.id}
+            className={`${styles.row} ${isUser ? styles.user : styles.assistant}`}
+          >
             <div
-              className={`max-w-[80%] rounded-lg p-4 ${
-                isUser
-                  ? 'message-user'
-                  : isAssistant
-                    ? 'message-assistant'
-                    : 'bg-[--color-bg-tertiary]'
-              }`}
+              className={`${styles.bubble} ${isUser ? styles.user : isAssistant ? styles.assistant : ''}`}
             >
               {/* Role indicator */}
-              <div className="mb-1 flex items-center gap-2 text-xs text-[--color-text-dim]">
+              <div className={styles.roleBadge}>
                 {isUser && (
                   <>
                     <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
@@ -108,11 +103,11 @@ export function MessageList({
               </div>
 
               {/* Message content */}
-              <div className="whitespace-pre-wrap break-words">
+              <div className={styles.content}>
                 {isAssistant && isStreaming && thinkingPhase ? (
                   <ThinkingIndicator phase={thinkingPhase} />
                 ) : message.content === '...' && isAssistant ? (
-                  <span className="loading-dots">
+                  <span className={styles.loadingDots}>
                     <span />
                     <span />
                     <span />
@@ -129,16 +124,16 @@ export function MessageList({
 
               {/* Timestamp + Actions */}
               {!isStreaming && (
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-xs text-[--color-text-dim]">
+                <div className={styles.meta}>
+                  <span className={styles.time}>
                     {new Date(message.createdAt).toLocaleTimeString()}
                   </span>
 
-                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className={styles.actions}>
                     {isAssistant && onRefresh && (
                       <button
                         onClick={() => onRefresh(message.id)}
-                        className="rounded p-1 text-[--color-text-dim] transition-colors hover:bg-[--color-bg-tertiary] hover:text-blue-400"
+                        className={`${styles.actionBtn} ${styles.refresh}`}
                         title="Regenerate response"
                         aria-label="Regenerate"
                       >
@@ -155,7 +150,7 @@ export function MessageList({
                     {onDelete && (
                       <button
                         onClick={() => onDelete(message.id)}
-                        className="rounded p-1 text-[--color-text-dim] transition-colors hover:bg-[--color-bg-tertiary] hover:text-red-400"
+                        className={`${styles.actionBtn} ${styles.delete}`}
                         title="Delete message"
                         aria-label="Delete"
                       >

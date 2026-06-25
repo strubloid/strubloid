@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sidebar } from '@/components/Sidebar';
 import { MessageList, Message } from '@/components/MessageList';
 import { ChatComposer } from '@/components/ChatComposer';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ChatSkeleton } from '@/components/LoadingSkeleton';
+import { parseSSEStream } from '@/lib/sse-parser';
 
 interface Chat {
   id: string;
@@ -84,7 +85,6 @@ export default function ChatPage() {
     if (!chat) return;
     setError(null);
 
-    // Optimistic UI: show user message + loading dots immediately
     const tempUserId = `temp-user-${Date.now()}`;
     const tempLoadingId = `temp-loading-${Date.now()}`;
     const now = new Date().toISOString();
@@ -116,10 +116,44 @@ export default function ChatPage() {
         throw new Error(data.error || 'Failed to send message');
       }
 
-      const data = await res.json();
-      setChat(data);
+      // Parse SSE stream, stream tokens into the UI
+      let fullContent = '';
+      let done = false;
+
+      for await (const event of parseSSEStream(res.body)) {
+        if (event.type === 'delta') {
+          fullContent += event.delta ?? '';
+          // Update loading placeholder with streaming text in real time
+          setChat((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  messages: prev.messages.map((m) =>
+                    m.id === tempLoadingId
+                      ? { ...m, content: fullContent }
+                      : m
+                  ),
+                }
+              : prev
+          );
+        } else if (event.type === 'done') {
+          fullContent = event.full ?? fullContent;
+          done = true;
+          // Reload full chat from API to get persisted state
+          const chatRes = await fetch(`/api/chats/${chat.id}`);
+          if (chatRes.ok) {
+            const updatedChat = await chatRes.json();
+            setChat(updatedChat);
+          }
+        } else if (event.type === 'error') {
+          throw new Error(event.error || 'Stream error');
+        }
+      }
+
+      if (!done) {
+        throw new Error('Stream ended without completion');
+      }
     } catch (err) {
-      // Remove loading dots, keep user message so it doesn't flicker
       setChat((prev) =>
         prev ? { ...prev, messages: prev.messages.filter((m) => m.id !== tempLoadingId) } : prev
       );
@@ -132,7 +166,6 @@ export default function ChatPage() {
   async function handleToggleBrain(enabled: boolean) {
     setUseAiBrain(enabled);
 
-    // Persist to chat if we have one
     if (chat) {
       try {
         await fetch(`/api/chats/${chat.id}`, {
@@ -169,7 +202,6 @@ export default function ChatPage() {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Failed to delete chat');
-      // Navigate away to fresh random chat
       router.push('/chat');
     } catch (err) {
       setError('Failed to delete chat');
@@ -179,76 +211,64 @@ export default function ChatPage() {
     }
   }
 
-  // Extract user messages for keyboard history recall
   const userMessages = chat?.messages
     ?.filter((m) => m.role === 'user')
     .map((m) => m.content) ?? [];
 
   if (isLoading) {
     return (
-      <div className="flex h-screen">
-        <Sidebar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-[--color-text-dim]">Loading...</div>
-        </main>
-      </div>
+      <main className="flex flex-1 bg-[--color-bg]">
+        <ChatSkeleton />
+      </main>
     );
   }
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
+    <main className="flex flex-1 flex-col bg-[--color-bg]">
+      {/* Header — just title + delete */}
+      <header className="flex items-center justify-between border-b border-[--color-border] px-4 py-3">
+        <div>
+          <h1 className="font-semibold">
+            {chat?.title ?? 'Random Chat'}
+          </h1>
+          <p className="text-xs text-[--color-text-dim]">
+            {chat?.isRandom ? 'Random Chat' : 'Project Chat'}
+          </p>
+        </div>
 
-      <main className="flex-1 flex flex-col bg-[--color-bg]">
-        {/* Header */}
-        <header className="border-b border-[--color-border] px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="font-semibold">
-              {chat?.title ?? 'Random Chat'}
-            </h1>
-            <p className="text-xs text-[--color-text-dim]">
-              {chat?.isRandom ? 'Random Chat' : 'Project Chat'}
-            </p>
-          </div>
+        {chat && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="rounded-lg p-2 text-[--color-text-dim] transition-colors hover:bg-red-500/10 hover:text-red-400"
+            title="Delete chat"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        )}
+      </header>
 
-          {/* Delete chat button */}
-          {chat && (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="p-2 rounded-lg hover:bg-red-500/10 text-[--color-text-dim] hover:text-red-400 transition-colors"
-              title="Delete chat"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          )}
-        </header>
+      <MessageList messages={chat?.messages ?? []} devMode={devMode} />
 
-        {/* Messages */}
-        <MessageList messages={chat?.messages ?? []} devMode={devMode} />
+      <ErrorBanner
+        error={error}
+        onRetry={() => {
+          setError(null);
+        }}
+      />
 
-        {/* Error */}
-        <ErrorBanner
-          error={error}
-          onRetry={() => {
-            setError(null);
-          }}
-        />
-
-        {/* Composer */}
-        <ChatComposer
-          onSend={handleSend}
-          useAiBrain={useAiBrain}
-          onToggleBrain={() => handleToggleBrain(!useAiBrain)}
-          useRandomChats={useRandomChats}
-          onToggleRandomChats={() => handleToggleRandomChats(!useRandomChats)}
-          devMode={devMode}
-          selectedModelId={selectedModelId}
-          onModelChange={setSelectedModelId}
-          previousMessages={userMessages}
-        />
-      </main>
+      <ChatComposer
+        onSend={handleSend}
+        useAiBrain={useAiBrain}
+        onToggleBrain={() => handleToggleBrain(!useAiBrain)}
+        useRandomChats={useRandomChats}
+        onToggleRandomChats={() => handleToggleRandomChats(!useRandomChats)}
+        devMode={devMode}
+        selectedModelId={selectedModelId}
+        onModelChange={setSelectedModelId}
+        previousMessages={userMessages}
+      />
 
       <ConfirmDialog
         open={showDeleteConfirm}
@@ -260,6 +280,6 @@ export default function ChatPage() {
         onConfirm={handleDeleteChat}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-    </div>
+    </main>
   );
 }

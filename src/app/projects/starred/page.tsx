@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sidebar } from '@/components/Sidebar';
 import { ProjectCard } from '@/components/ProjectCard';
+import { ListSkeleton } from '@/components/LoadingSkeleton';
 
 interface Project {
   id: string;
@@ -48,42 +48,38 @@ export default function StarredProjectsPage() {
   }
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
+    <main className="flex-1 overflow-y-auto bg-[--color-bg]">
+      <div className="mx-auto max-w-4xl p-8">
+        <div className="mb-8">
+          <h1 className="mb-1 text-2xl font-bold">Starred Projects</h1>
+          <p className="text-sm text-[--color-text-dim]">
+            Your pinned projects show up here for quick access
+          </p>
+        </div>
 
-      <main className="flex-1 overflow-y-auto bg-[--color-bg]">
-        <div className="mx-auto max-w-4xl p-8">
-          <div className="mb-8">
-            <h1 className="mb-1 text-2xl font-bold">Starred Projects</h1>
-            <p className="text-sm text-[--color-text-dim]">
-              Your pinned projects show up here for quick access
+        {isLoading ? (
+          <ListSkeleton count={4} />
+        ) : projects.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="mb-4 text-6xl opacity-20">⭐</div>
+            <h3 className="mb-2 text-xl font-semibold">No starred projects</h3>
+            <p className="mb-6 text-[--color-text-dim]">
+              Star a project from the projects list to pin it here
             </p>
           </div>
-
-          {isLoading ? (
-            <div className="py-12 text-center text-[--color-text-dim]">Loading starred projects...</div>
-          ) : projects.length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="mb-4 text-6xl opacity-20">⭐</div>
-              <h3 className="mb-2 text-xl font-semibold">No starred projects</h3>
-              <p className="mb-6 text-[--color-text-dim]">
-                Star a project from the projects list to pin it here
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {projects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  {...project}
-                  onToggleStar={(isStarred) => handleToggleStar(project.id, isStarred)}
-                  onClick={() => (window.location.href = `/projects/${project.id}`)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                {...project}
+                onToggleStar={(isStarred) => handleToggleStar(project.id, isStarred)}
+                onClick={() => (window.location.href = `/projects/${project.id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

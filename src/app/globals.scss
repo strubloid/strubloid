@@ -1,0 +1,137 @@
+// === ALL @use RULES FIRST (Sass requirement) ===
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'animations';
+@use 'effects';
+@use 'typography';
+@use 'buttons';
+@use 'toggles';
+@use 'scrollbar';
+@use 'sidebar-layout';
+
+// === TAILWIND DIRECTIVES (PostCSS, passed through by Sass) ===
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// === CSS CUSTOM PROPERTIES ===
+:root {
+  --color-accent: #9ad933;
+  --color-accent-dim: rgba(154, 217, 51, 0.15);
+  --color-bg: #0a0a0f;
+  --color-bg-secondary: #12121a;
+  --color-bg-tertiary: #1a1a24;
+  --color-border: #2a2a3a;
+  --color-text: #e0e0e0;
+  --color-text-dim: #888888;
+  --color-neon: #5cf2c2;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
+
+// === GLOBAL RESET ===
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: $font-sans;
+  background-color: $color-bg;
+  color: $color-text;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+// === GLOBAL COMPONENT STYLES ===
+
+// Chat bubbles
+.message-user {
+  background: linear-gradient(135deg, #1a2a1a 0%, #0f1a0f 100%);
+  border: 1px solid rgba($color-accent, 0.3);
+}
+
+.message-assistant {
+  background: linear-gradient(135deg, #1a1a2a 0%, #0f0f1a 100%);
+  border: 1px solid rgba(100, 100, 200, 0.2);
+}
+
+.error-message {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+// Star button
+.star-btn {
+  transition: all 0.2s;
+  &:hover { transform: scale(1.1); }
+  &.starred { color: #fbbf24; }
+}
+
+// Dev mode banner
+.dev-mode-banner {
+  background: linear-gradient(90deg, #1a1a0a 0%, #2a2a0a 50%, #1a1a0a 100%);
+  border-bottom: 1px solid rgba(255, 200, 0, 0.3);
+  color: #ffc800;
+}
+
+// Project card
+.project-card {
+  transition: all 0.15s;
+  &:hover {
+    background: $color-bg-tertiary;
+    border-color: $color-accent;
+  }
+}
+
+// Composer textarea
+.composer textarea {
+  resize: none;
+  field-sizing: content;
+  min-height: 44px;
+  max-height: 200px;
+}
+
+// Input styles
+input[type="text"],
+input[type="search"],
+textarea {
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border;
+  color: $color-text;
+  padding: 8px 12px;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $color-accent;
+  }
+}
+
+// Matrix char for empty state
+.matrix-char {
+  font-family: $font-mono;
+  font-size: 14px;
+  color: $color-accent;
+  opacity: 0.2;
+  animation: matrix-rain linear infinite;
+}
+
+// Legacy style
+.text-config {
+  margin: 2.5rem 0px !important;
+}
+
+// Reduced motion
+@include reduced-motion;

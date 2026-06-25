@@ -1,0 +1,94 @@
+@use 'variables' as *;
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 8px;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  @extend .btn;
+  background: $color-accent;
+  color: #000;
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+    box-shadow: 0 0 15px rgba($color-accent, 0.4);
+  }
+}
+
+.btn-secondary {
+  @extend .btn;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    border-color: $color-accent;
+    color: $color-accent;
+  }
+}
+
+.btn-danger {
+  @extend .btn;
+  background: rgba($color-danger, 0.15);
+  border: 1px solid rgba($color-danger, 0.3);
+  color: $color-danger;
+
+  &:hover:not(:disabled) {
+    background: rgba($color-danger, 0.25);
+    box-shadow: 0 0 12px rgba($color-danger, 0.3);
+  }
+}
+
+.btn-icon {
+  @extend .btn;
+  background: transparent;
+  color: $color-text-dim;
+  padding: 6px;
+  border-radius: 6px;
+
+  &:hover {
+    background: $color-bg-tertiary;
+    color: $color-text;
+  }
+}
+
+.btn-ghost {
+  @extend .btn;
+  background: transparent;
+  color: $color-text-dim;
+  padding: 6px 10px;
+
+  &:hover {
+    background: $color-bg-tertiary;
+    color: $color-text;
+  }
+}
+
+.btn-sm {
+  font-size: $font-size-xs;
+  padding: 4px 10px;
+}
+
+.btn-md {
+  font-size: $font-size-sm;
+  padding: 8px 16px;
+}
+
+.btn-lg {
+  font-size: $font-size-base;
+  padding: 12px 20px;
+}

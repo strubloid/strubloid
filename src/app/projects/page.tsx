@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Sidebar } from '@/components/Sidebar';
 import { ProjectCard } from '@/components/ProjectCard';
+import { ListSkeleton } from '@/components/LoadingSkeleton';
 
 interface ChatPreview {
   id: string;
@@ -105,7 +105,6 @@ export default function ProjectsPage() {
         )
       );
 
-      // Sync expanded data star state too
       if (expandedProjectData?.id === projectId) {
         setExpandedProjectData((prev) => prev ? { ...prev, isStarred } : null);
       }
@@ -131,7 +130,6 @@ export default function ProjectsPage() {
 
   async function handleProjectClick(projectId: string) {
     if (expandedProjectId === projectId) {
-      // Collapse
       setExpandedProjectId(null);
       setExpandedProjectData(null);
       return;
@@ -158,13 +156,11 @@ export default function ProjectsPage() {
     try {
       const res = await fetch(`/api/chats/${chatId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete chat');
-      // Remove from expanded data
       setExpandedProjectData((prev) =>
         prev && prev.id === projectId
           ? { ...prev, chats: prev.chats.filter((c) => c.id !== chatId), chatCount: prev.chatCount - 1 }
           : prev
       );
-      // Also update the project list chat count
       setProjects((prev) =>
         prev.map((p) => (p.id === projectId ? { ...p, chatCount: Math.max(0, p.chatCount - 1) } : p))
       );
@@ -174,180 +170,174 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-
-      <main className="flex-1 overflow-y-auto bg-[--color-bg]">
-        <div className="mx-auto max-w-4xl p-8">
-          {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Projects</h1>
-              <p className="mt-1 text-sm text-[--color-text-dim]">
-                Organize your conversations into projects
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="btn-primary flex items-center gap-2 rounded-lg px-4 py-2"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              New Project
-            </button>
+    <main className="flex-1 overflow-y-auto bg-[--color-bg]">
+      <div className="mx-auto max-w-4xl p-8">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Projects</h1>
+            <p className="mt-1 text-sm text-[--color-text-dim]">
+              Organize your conversations into projects
+            </p>
           </div>
 
-          {/* Create form */}
-          {showCreateForm && (
-            <div className="mb-8 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-4">
-              <h3 className="mb-4 font-semibold">Create New Project</h3>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="btn-primary flex items-center gap-2 rounded-lg px-4 py-2"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Project
+          </button>
+        </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-1 block text-sm text-[--color-text-dim]">
-                    Project Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newProjectName}
-                    onChange={(e) => setNewProjectName(e.target.value)}
-                    placeholder="My Awesome Project"
-                    className="w-full"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreateProject();
-                      if (e.key === 'Escape') setShowCreateForm(false);
-                    }}
-                  />
-                </div>
+        {/* Create form */}
+        {showCreateForm && (
+          <div className="mb-8 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-4">
+            <h3 className="mb-4 font-semibold">Create New Project</h3>
 
-                <div>
-                  <label className="mb-2 block text-sm text-[--color-text-dim]">
-                    Color
-                  </label>
-                  <div className="flex gap-2">
-                    {PROJECT_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setNewProjectColor(color)}
-                        className={`h-8 w-8 rounded-full transition-transform ${
-                          newProjectColor === color ? 'scale-110 ring-2 ring-white' : ''
-                        }`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm text-[--color-text-dim]">
+                  Project Name
+                </label>
+                <input
+                  type="text"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="My Awesome Project"
+                  className="w-full"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateProject();
+                    if (e.key === 'Escape') setShowCreateForm(false);
+                  }}
+                />
+              </div>
 
+              <div>
+                <label className="mb-2 block text-sm text-[--color-text-dim]">
+                  Color
+                </label>
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleCreateProject}
-                    className="btn-primary rounded-lg px-4 py-2"
-                    disabled={!newProjectName.trim()}
-                  >
-                    Create
-                  </button>
-                  <button
-                    onClick={() => setShowCreateForm(false)}
-                    className="btn-secondary rounded-lg px-4 py-2"
-                  >
-                    Cancel
-                  </button>
+                  {PROJECT_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setNewProjectColor(color)}
+                      className={`h-8 w-8 rounded-full transition-transform ${
+                        newProjectColor === color ? 'scale-110 ring-2 ring-white' : ''
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Projects list with accordion */}
-          {isLoading ? (
-            <div className="py-12 text-center text-[--color-text-dim]">
-              Loading projects...
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCreateProject}
+                  className="btn-primary rounded-lg px-4 py-2"
+                  disabled={!newProjectName.trim()}
+                >
+                  Create
+                </button>
+                <button
+                  onClick={() => setShowCreateForm(false)}
+                  className="btn-secondary rounded-lg px-4 py-2"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          ) : projects.length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="mb-4 text-6xl opacity-20">📁</div>
-              <h3 className="mb-2 text-xl font-semibold">No projects yet</h3>
-              <p className="mb-6 text-[--color-text-dim]">
-                Create your first project to organize your conversations
-              </p>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="btn-primary rounded-lg px-4 py-2"
-              >
-                Create Project
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {projects.map((project) => {
-                const isExpanded = expandedProjectId === project.id;
-                return (
-                  <div key={project.id} className="overflow-hidden rounded-lg">
-                    {/* Project card — clicking toggles expand */}
-                    <ProjectCard
-                      {...project}
-                      onToggleStar={(isStarred) => handleToggleStar(project.id, isStarred)}
-                      onClick={() => handleProjectClick(project.id)}
-                    />
+          </div>
+        )}
 
-                    {/* Expanded chat list */}
-                    {isExpanded && (
-                      <div className="border-x border-b border-[--color-border] rounded-b-lg bg-[--color-bg-secondary] px-3 pb-3">
-                        {loadingExpanded ? (
-                          <div className="chat-item opacity-50">Loading chats...</div>
-                        ) : expandedProjectData ? (
-                          expandedProjectData.chats.length === 0 ? (
-                            <div className="py-4 text-center">
-                              <p className="mb-2 text-sm text-[--color-text-dim]">
-                                No chats in this project yet
-                              </p>
-                              <button
-                                onClick={() => createChatInProject(project.id)}
-                                className="text-xs text-[--color-accent] hover:underline"
-                              >
-                                Create first chat
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-0.5 pt-2">
-                              {expandedProjectData.chats.map((chat) => (
-                                <div key={chat.id} className="group flex items-center gap-1">
-                                  <Link
-                                    href={`/chat/${chat.id}`}
-                                    className="chat-item block flex-1 truncate"
-                                  >
-                                    {chat.title}
-                                  </Link>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      e.preventDefault();
-                                      handleDeleteChat(chat.id, project.id);
-                                    }}
-                                    className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
-                                    title="Delete chat"
-                                    aria-label="Delete chat"
-                                  >
-                                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+        {/* Projects list with accordion */}
+        {isLoading ? (
+          <ListSkeleton count={6} />
+        ) : projects.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="mb-4 text-6xl opacity-20">📁</div>
+            <h3 className="mb-2 text-xl font-semibold">No projects yet</h3>
+            <p className="mb-6 text-[--color-text-dim]">
+              Create your first project to organize your conversations
+            </p>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="btn-primary rounded-lg px-4 py-2"
+            >
+              Create Project
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {projects.map((project) => {
+              const isExpanded = expandedProjectId === project.id;
+              return (
+                <div key={project.id} className="overflow-hidden rounded-lg">
+                  {/* Project card — clicking toggles expand */}
+                  <ProjectCard
+                    {...project}
+                    onToggleStar={(isStarred) => handleToggleStar(project.id, isStarred)}
+                    onClick={() => handleProjectClick(project.id)}
+                  />
+
+                  {/* Expanded chat list */}
+                  {isExpanded && (
+                    <div className="border-x border-b border-[--color-border] rounded-b-lg bg-[--color-bg-secondary] px-3 pb-3">
+                      {loadingExpanded ? (
+                        <div className="chat-item opacity-50">Loading chats...</div>
+                      ) : expandedProjectData ? (
+                        expandedProjectData.chats.length === 0 ? (
+                          <div className="py-4 text-center">
+                            <p className="mb-2 text-sm text-[--color-text-dim]">
+                              No chats in this project yet
+                            </p>
+                            <button
+                              onClick={() => createChatInProject(project.id)}
+                              className="text-xs text-[--color-accent] hover:underline"
+                            >
+                              Create first chat
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-0.5 pt-2">
+                            {expandedProjectData.chats.map((chat) => (
+                              <div key={chat.id} className="group flex items-center gap-1">
+                                <Link
+                                  href={`/chat/${chat.id}`}
+                                  className="chat-item block flex-1 truncate"
+                                >
+                                  {chat.title}
+                                </Link>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleDeleteChat(chat.id, project.id);
+                                  }}
+                                  className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                                  title="Delete chat"
+                                  aria-label="Delete chat"
+                                >
+                                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

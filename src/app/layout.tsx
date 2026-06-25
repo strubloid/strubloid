@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import './globals.css';
+import './globals.scss';
+import { LayoutShell } from '@/components/LayoutShell/LayoutShell';
 
 export const metadata: Metadata = {
   title: 'Strubloid - AI Chat Workspace',
@@ -12,9 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-[#0a0a0f] text-[#e0e0e0] min-h-screen">
-        {children}
+    <html lang="en" className="dark">
+      <body>
+        <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
   );

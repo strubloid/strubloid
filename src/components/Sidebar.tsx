@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ConfirmDialog } from './ConfirmDialog';
+import { useSidebar } from '@/components/LayoutShell/LayoutShell';
 
 interface ChatPreview {
   id: string;
@@ -24,24 +25,35 @@ interface ProjectChat {
   messages: { id: string }[];
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  mode?: 'full' | 'icons' | 'hidden';
+  mobileOpen?: boolean;
+  onMobileToggle?: (open: boolean) => void;
+}
+
+export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, onMobileToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const ctx = useSidebar();
+  const isEmbedded = externalMode !== undefined;
+
+  // Use provided props or fall back to context
+  const mode = isEmbedded ? externalMode : ctx.mode;
+  const mobileOpen = isEmbedded ? externalMobileOpen ?? false : ctx.mobileOpen;
+
   const [randomChats, setRandomChats] = useState<ChatPreview[]>([]);
   const [projects, setProjects] = useState<ProjectPreview[]>([]);
   const [starredProjects, setStarredProjects] = useState<ProjectPreview[]>([]);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<ChatPreview | null>(null);
-  // Pagination state for random chats
-  const [chatsNextCursor, setChatsNextCursor] = useState<string | null>(null);
-  const [chatsHasMore, setChatsHasMore] = useState(false);
-  const [chatsLoadingMore, setChatsLoadingMore] = useState(false);
 
   // Project accordion state
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [expandedProjectChats, setExpandedProjectChats] = useState<ProjectChat[]>([]);
   const [loadingProjectChats, setLoadingProjectChats] = useState(false);
+
+  // Search/filter
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadData();
@@ -49,7 +61,6 @@ export function Sidebar() {
 
   // Auto-expand project based on current pathname
   useEffect(() => {
-    // /chat/[chatId] — fetch chat to find its project
     const chatMatch = pathname.match(/^\/chat\/([^/]+)$/);
     if (chatMatch) {
       const chatId = chatMatch[1];
@@ -64,7 +75,6 @@ export function Sidebar() {
       return;
     }
 
-    // /projects/[projectId] — expand that project directly
     const projectMatch = pathname.match(/^\/projects\/([^/]+)$/);
     if (projectMatch) {
       expandProjectById(projectMatch[1]);
@@ -72,7 +82,6 @@ export function Sidebar() {
   }, [pathname]);
 
   function expandProjectById(projectId: string) {
-    // Don't re-fetch if already expanded with data for this project
     if (expandedProjectId === projectId && expandedProjectChats.length > 0) return;
 
     setExpandedProjectId(projectId);
@@ -96,30 +105,12 @@ export function Sidebar() {
       const projectsData = await projectsRes.json();
 
       setRandomChats(chatsData.chats ?? []);
-      setChatsNextCursor(chatsData.nextCursor ?? null);
-      setChatsHasMore(chatsData.hasMore ?? false);
       setProjects(projectsData.projects ?? []);
       setStarredProjects(projectsData.projects?.filter((p: ProjectPreview) => p.isStarred) ?? []);
     } catch (error) {
       console.error('Sidebar: Failed to load data', error);
     } finally {
       setIsLoading(false);
-    }
-  }
-
-  async function loadMoreChats() {
-    if (!chatsNextCursor || chatsLoadingMore) return;
-    setChatsLoadingMore(true);
-    try {
-      const res = await fetch(`/api/chats?isRandom=true&limit=20&cursor=${chatsNextCursor}`);
-      const data = await res.json();
-      setRandomChats((prev) => [...prev, ...(data.chats ?? [])]);
-      setChatsNextCursor(data.nextCursor ?? null);
-      setChatsHasMore(data.hasMore ?? false);
-    } catch (error) {
-      console.error('Sidebar: Failed to load more chats', error);
-    } finally {
-      setChatsLoadingMore(false);
     }
   }
 
@@ -164,7 +155,6 @@ export function Sidebar() {
 
   async function toggleProjectExpand(projectId: string) {
     if (expandedProjectId === projectId) {
-      // Collapse
       setExpandedProjectId(null);
       setExpandedProjectChats([]);
       return;
@@ -195,7 +185,6 @@ export function Sidebar() {
       });
       if (!res.ok) throw new Error('Failed to create chat');
       const chat = await res.json();
-      // Refresh project chats so the new one shows up
       const projectRes = await fetch(`/api/projects/${projectId}`);
       if (projectRes.ok) {
         const data = await projectRes.json();
@@ -207,113 +196,96 @@ export function Sidebar() {
     }
   }
 
+  const filteredChats = searchQuery
+    ? randomChats.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : randomChats;
+
+  const filteredProjects = searchQuery
+    ? projects.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : projects;
+
+  const isIconsMode = mode === 'icons';
+  const isHidden = mode === 'hidden';
+
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        className="fixed left-4 top-4 z-50 rounded-lg border border-[#2a2a3a] bg-[#12121a] p-2 md:hidden"
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label="Toggle sidebar"
-      >
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d={mobileOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
-          />
-        </svg>
-      </button>
-
-      {/* Overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
+      <aside className={`sidebar mode-${mode} ${mobileOpen ? 'open' : ''}`}>
         <div className="flex h-full flex-col p-4">
-          <div className="mb-6 flex w-full items-center justify-center gap-2">
-            <span className="glow-text text-xl font-bold" style={{ color: 'var(--color-accent)' }}>
-              Strubloid
-            </span>
-          </div>
-          {/* Logo/Title */}
+          {/* Search bar */}
+          {!isIconsMode && (
+            <div className="mb-3">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search chats & projects..."
+                className="w-full rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-1.5 text-xs outline-none transition-colors focus:border-[--color-accent]"
+              />
+            </div>
+          )}
 
           {/* New Chat Button */}
           <button
             onClick={createNewChat}
-            className="btn-primary mb-6 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
+            className="btn-primary mb-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
+            title={isIconsMode ? 'New Chat' : undefined}
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
+            <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            New Chat
+            {!isIconsMode && <span>New Chat</span>}
           </button>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto">
+          <nav className="flex-1 overflow-y-auto -mx-4 px-4">
             {/* Random Chats */}
             <div className="mb-6">
-              <div className="section-header">Random Chats</div>
+              <div className="section-header flex items-center gap-2">
+                <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                {!isIconsMode && <span className="sidebar-label">Random Chats</span>}
+              </div>
               <div className="space-y-1">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">Loading...</div>
-                ) : randomChats.length === 0 ? (
-                  <div className="chat-item opacity-50">No chats yet</div>
+                  <div className="chat-item opacity-50">
+                    {!isIconsMode && 'Loading...'}
+                  </div>
+                ) : filteredChats.length === 0 ? (
+                  <div className="chat-item opacity-50">
+                    {!isIconsMode && (searchQuery ? 'No matches' : 'No chats yet')}
+                  </div>
                 ) : (
-                  randomChats.map((chat) => (
+                  filteredChats.map((chat) => (
                     <div key={chat.id} className="group flex items-center gap-1">
                       <Link
                         href={`/chat/${chat.id}`}
-                        className={`chat-item block flex-1 truncate ${isActiveChat(chat.id) ? 'active' : ''}`}
-                        onClick={() => setMobileOpen(false)}
-                      >
-                        {chat.title}
-                      </Link>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          setPendingDelete(chat);
+                        className={`chat-title chat-item block flex-1 truncate ${isActiveChat(chat.id) ? 'active' : ''}`}
+                        onClick={() => {
+                          if (isEmbedded && onMobileToggle) onMobileToggle(false);
+                          else ctx.setMobileOpen(false);
                         }}
-                        className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
-                        title="Delete chat"
-                        aria-label="Delete chat"
                       >
-                        <svg
-                          className="h-3.5 w-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        {!isIconsMode && chat.title}
+                      </Link>
+                      {!isIconsMode && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setPendingDelete(chat);
+                          }}
+                          className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                          title="Delete chat"
+                          aria-label="Delete chat"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   ))
-                )}
-                {chatsHasMore && (
-                  <button
-                    onClick={loadMoreChats}
-                    disabled={chatsLoadingMore}
-                    className="chat-item w-full text-center text-xs text-[--color-text-dim] transition-colors hover:text-white disabled:opacity-50"
-                  >
-                    {chatsLoadingMore ? 'Loading...' : `Load more (${randomChats.length}+)`}
-                  </button>
                 )}
               </div>
             </div>
@@ -321,61 +293,75 @@ export function Sidebar() {
             {/* Projects */}
             <div className="mb-6">
               <div className="mb-2 flex items-center justify-between px-3">
-                <span className="section-header" style={{ padding: '0 0 8px 0' }}>
-                  Projects
-                </span>
-                <Link href="/projects" className="text-xs text-[--color-accent] hover:underline">
-                  View all
-                </Link>
+                <div className="section-header" style={{ padding: '0 0 8px 0' }}>
+                  <div className="flex items-center gap-2">
+                    <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    {!isIconsMode && <span className="sidebar-label">Projects</span>}
+                  </div>
+                </div>
+                {!isIconsMode && (
+                  <Link href="/projects" className="text-xs text-[--color-accent] hover:underline">
+                    View all
+                  </Link>
+                )}
               </div>
               <div className="space-y-1">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">Loading...</div>
-                ) : projects.length === 0 ? (
-                  <div className="chat-item opacity-50">No projects</div>
+                  <div className="chat-item opacity-50">
+                    {!isIconsMode && 'Loading...'}
+                  </div>
+                ) : filteredProjects.length === 0 ? (
+                  <div className="chat-item opacity-50">
+                    {!isIconsMode && (searchQuery ? 'No matches' : 'No projects')}
+                  </div>
                 ) : (
-                  projects.slice(0, 10).map((project) => {
+                  filteredProjects.slice(0, 10).map((project) => {
                     const isExpanded = expandedProjectId === project.id;
                     return (
                       <div key={project.id} className="project-item-container">
-                        {/* Project header: link + expand toggle */}
                         <div className={`project-item relative ${isActiveProject(project.id) || isExpanded ? 'active' : ''}`}>
                           <Link
                             href={`/projects/${project.id}`}
                             className="block truncate pr-10"
-                            onClick={() => setMobileOpen(false)}
+                            onClick={() => {
+                              if (isEmbedded && onMobileToggle) onMobileToggle(false);
+                              else ctx.setMobileOpen(false);
+                            }}
                           >
                             <span
                               className="mr-2 inline-block h-2 w-2 rounded-full"
                               style={{ backgroundColor: project.color }}
                             />
-                            {project.name}
+                            {!isIconsMode && <span className="project-name">{project.name}</span>}
                           </Link>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              toggleProjectExpand(project.id);
-                            }}
-                            className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-[--color-bg-tertiary] ${
-                              isExpanded ? 'text-[--color-accent]' : 'text-[--color-text-dim]'
-                            }`}
-                            title={isExpanded ? 'Collapse chats' : 'Show chats'}
-                            aria-label={isExpanded ? 'Collapse chats' : 'Show chats'}
-                          >
-                            <svg
-                              className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                          {!isIconsMode && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                toggleProjectExpand(project.id);
+                              }}
+                              className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-[--color-bg-tertiary] ${
+                                isExpanded ? 'text-[--color-accent]' : 'text-[--color-text-dim]'
+                              }`}
+                              title={isExpanded ? 'Collapse chats' : 'Show chats'}
+                              aria-label={isExpanded ? 'Collapse chats' : 'Show chats'}
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
+                              <svg
+                                className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
 
-                        {/* Expanded chat list */}
-                        {isExpanded && (
+                        {isExpanded && !isIconsMode && (
                           <div className="ml-3 border-l border-[--color-border] pl-2">
                             {loadingProjectChats ? (
                               <div className="chat-item opacity-50">Loading...</div>
@@ -391,18 +377,8 @@ export function Sidebar() {
                                     }}
                                     className="inline-flex items-center gap-1 text-xs text-[--color-accent] hover:underline"
                                   >
-                                    <svg
-                                      className="h-3 w-3"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 4v16m8-8H4"
-                                      />
+                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                     </svg>
                                     Create chat
                                   </button>
@@ -414,7 +390,10 @@ export function Sidebar() {
                                   <Link
                                     href={`/chat/${chat.id}`}
                                     className={`chat-item block flex-1 truncate text-xs ${isActiveChat(chat.id) ? 'active' : ''}`}
-                                    onClick={() => setMobileOpen(false)}
+                                    onClick={() => {
+                                      if (isEmbedded && onMobileToggle) onMobileToggle(false);
+                                      else ctx.setMobileOpen(false);
+                                    }}
                                   >
                                     {chat.title}
                                   </Link>
@@ -428,18 +407,8 @@ export function Sidebar() {
                                     title="Delete chat"
                                     aria-label="Delete chat"
                                   >
-                                    <svg
-                                      className="h-3 w-3"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                      />
+                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                   </button>
                                 </div>
@@ -455,13 +424,13 @@ export function Sidebar() {
             </div>
 
             {/* Starred Projects */}
-            {starredProjects.length > 0 && (
+            {starredProjects.length > 0 && !isIconsMode && (
               <div className="mb-6">
                 <div className="section-header flex items-center gap-2">
                   <svg className="h-4 w-4" fill="#fbbf24" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
-                  Starred
+                  <span className="sidebar-label">Starred</span>
                 </div>
                 <div className="space-y-1">
                   {starredProjects.map((project) => (
@@ -469,13 +438,16 @@ export function Sidebar() {
                       key={project.id}
                       href={`/projects/${project.id}`}
                       className={`project-item block ${isActiveProject(project.id) ? 'active' : ''}`}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={() => {
+                        if (isEmbedded && onMobileToggle) onMobileToggle(false);
+                        else ctx.setMobileOpen(false);
+                      }}
                     >
                       <span
                         className="mr-2 inline-block h-2 w-2 rounded-full"
                         style={{ backgroundColor: project.color }}
                       />
-                      {project.name}
+                      <span className="project-name">{project.name}</span>
                     </Link>
                   ))}
                 </div>
@@ -484,29 +456,29 @@ export function Sidebar() {
           </nav>
 
           {/* Footer links */}
-          <div className="space-y-2 border-t border-[--color-border] pt-4">
-            <Link
-              href="/settings"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[--color-bg-tertiary]"
-              onClick={() => setMobileOpen(false)}
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Settings
-            </Link>
-          </div>
+          {!isIconsMode && (
+            <div className="space-y-2 border-t border-[--color-border] pt-4">
+              <Link
+                href="/settings"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[--color-bg-tertiary]"
+                onClick={() => {
+                  if (isEmbedded && onMobileToggle) onMobileToggle(false);
+                  else ctx.setMobileOpen(false);
+                }}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+              </Link>
+            </div>
+          )}
         </div>
       </aside>
 

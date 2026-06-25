@@ -25,7 +25,8 @@ export function ProjectCard({
   return (
     <div
       onClick={onClick}
-      className="project-card p-4 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] cursor-pointer"
+      className="project-card rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-4 cursor-pointer"
+      style={{ borderLeftColor: color, borderLeftWidth: '3px' }}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3">

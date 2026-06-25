@@ -61,8 +61,8 @@ export async function buildMemoryContext(
       },
       include: {
         messages: {
-          orderBy: { createdAt: 'asc' },
-          take: 50, // last 50 messages per chat
+          orderBy: { createdAt: 'desc' },
+          take: 6, // last 6 messages per chat — sufficient for context
         },
       },
       orderBy: { updatedAt: 'desc' },

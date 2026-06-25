@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { invalidateConfig } from '@/lib/configCache';
 
 const UpdateConfigSchema = z.object({
   key: z.string().min(1).max(100),
@@ -46,6 +47,9 @@ export async function POST(request: NextRequest) {
         create: { key, value },
       });
     }
+
+    // Invalidate config cache so next request picks up changes immediately
+    invalidateConfig();
 
     return NextResponse.json({ success: true });
   } catch (error) {

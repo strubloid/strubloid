@@ -1,0 +1,165 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// === SIDEBAR STRUCTURE ===
+.sidebar {
+  width: $sidebar-width-full;
+  height: 100vh;
+  background: $color-bg-secondary;
+  border-right: 1px solid $color-border;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  transition: width $transition-smooth, transform $transition-smooth;
+
+  &.mode-full {
+    width: $sidebar-width-full;
+  }
+
+  &.mode-icons {
+    width: $sidebar-width-icons;
+
+    .sidebar-label,
+    .chat-title,
+    .project-name { display: none; }
+  }
+
+  &.mode-hidden {
+    width: 0;
+    border-right: none;
+    overflow: hidden;
+  }
+
+  // Tablet: slightly narrower when full
+  @include respond-below('lg') {
+    &.mode-full {
+      width: 240px;
+    }
+  }
+
+  // Mobile: overlay
+  @include respond-below('md') {
+    position: fixed;
+    z-index: $z-sidebar;
+    transform: translateX(-100%);
+
+    &.mode-hidden,
+    &.mode-icons,
+    &.mode-full {
+      width: $sidebar-width-full;
+    }
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-overlay - 1;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+
+  @include respond-above('md') {
+    display: none;
+  }
+}
+
+// === SIDEBAR ITEMS ===
+.chat-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+  font-size: $font-size-sm;
+  color: $color-accent;
+
+  &:hover { background: $color-bg-tertiary; }
+  &.active {
+    background: $color-accent-dim;
+    color: $color-accent;
+  }
+}
+
+.chat-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-item-container {
+  position: relative;
+}
+
+.project-item {
+  position: relative;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+  font-size: $font-size-sm;
+  color: $color-text;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:hover { background: $color-bg-tertiary; }
+
+  &.active {
+    color: $color-accent;
+    border: none;
+    animation: project-glow 2s ease-in-out infinite;
+  }
+}
+
+.project-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-label {
+  font-size: $font-size-xs;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $color-text-dim;
+}
+
+// === TOGGLE PILLS (used in HeaderBar) ===
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid $color-border;
+  background: transparent;
+  color: $color-text-dim;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: $color-bg-tertiary;
+    color: $color-text;
+    border-color: lighten($color-border, 5%);
+  }
+
+  &.active-brain {
+    background: rgba($color-accent, 0.15);
+    border-color: rgba($color-accent, 0.4);
+    color: $color-accent;
+  }
+
+  &.active-random {
+    background: rgba($color-purple, 0.15);
+    border-color: rgba($color-purple, 0.4);
+    color: $color-purple;
+  }
+}

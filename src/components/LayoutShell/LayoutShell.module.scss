@@ -1,0 +1,24 @@
+@use '../../styles/variables' as *;
+
+.layout-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: $color-bg;
+}
+
+.layout-body {
+  display: flex;
+  flex: 1;
+  min-height: 0; // flex child shrink fix
+  position: relative;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;    // prevent flex overflow
+  overflow: hidden; // children control their own scroll
+  background: $color-bg;
+}
