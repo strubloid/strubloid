@@ -8,13 +8,16 @@ import { ChatHeaderBar } from '@/components/ChatHeaderBar';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ChatSkeleton } from '@/components/LoadingSkeleton';
+import { BrainPanel } from '@/components/BrainPanel';
 import { parseSSEStream } from '@/lib/sse-parser';
 
 interface Chat {
   id: string;
   title: string;
+  projectId: string | null;
   useAiBrain: boolean;
   useRandomChats: boolean;
+  brainProjectId: string | null;
   isRandom: boolean;
   selectedModelId: string | null;
   messages: Message[];
@@ -32,6 +35,7 @@ export default function ChatByIdPage() {
   const [chat, setChat] = useState<Chat | null>(null);
   const [useAiBrain, setUseAiBrain] = useState(false);
   const [useRandomChats, setUseRandomChats] = useState(false);
+  const [brainProjectId, setBrainProjectId] = useState<string | null>(null);
   const [devMode, setDevMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +75,7 @@ export default function ChatByIdPage() {
       setChat(data);
       setUseAiBrain(data.useAiBrain ?? false);
       setUseRandomChats(data.useRandomChats ?? false);
+      setBrainProjectId(data.brainProjectId ?? null);
       setSelectedModelId(data.selectedModelId || 'big-pickle');
     } catch (err) {
       setError('Failed to load chat');
@@ -83,6 +88,9 @@ export default function ChatByIdPage() {
   async function handleSend(message: string, modelId?: string) {
     if (!chat) return;
     setError(null);
+
+    // Show the chat in sidebar immediately (the chat already exists in DB)
+    window.dispatchEvent(new CustomEvent('sidebar-refresh'));
 
     const tempUserId = `temp-user-${Date.now()}`;
     const tempLoadingId = `temp-loading-${Date.now()}`;
@@ -106,6 +114,7 @@ export default function ChatByIdPage() {
           message,
           useAiBrain,
           useRandomChats,
+          brainProjectId,
           modelId: modelId || selectedModelId,
         }),
       });
@@ -144,6 +153,8 @@ export default function ChatByIdPage() {
             const updatedChat = await chatRes.json();
             setChat(updatedChat);
           }
+          // Update sidebar now that the chat has an auto-generated title
+          window.dispatchEvent(new CustomEvent('sidebar-refresh'));
         } else if (event.type === 'error') {
           throw new Error(event.error || 'Stream error');
         }
@@ -226,6 +237,21 @@ export default function ChatByIdPage() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ useRandomChats: enabled })
+        });
+      } catch {
+        // Non-critical
+      }
+    }
+  }
+
+  async function handleBrainProjectSelect(projectId: string | null) {
+    setBrainProjectId(projectId);
+    if (chat) {
+      try {
+        await fetch(`/api/chats/${chat.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brainProjectId: projectId }),
         });
       } catch {
         // Non-critical
@@ -331,43 +357,52 @@ export default function ChatByIdPage() {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
-      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <ChatHeaderBar
-          title={chat.title}
-          isEditing={isEditingTitle}
-          editedTitle={editedTitle}
-          onEditedTitleChange={setEditedTitle}
-          titleError={titleError}
-          onStartEdit={startEditingTitle}
-          onSave={saveTitle}
-          onCancelEdit={cancelEditingTitle}
-          onDelete={() => setShowDeleteConfirm(true)}
-          isRandom={chat.isRandom}
-          scrollContainerRef={scrollRef}
-        />
+    <div className="flex min-h-0 flex-1">
+      <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
+        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <ChatHeaderBar
+            title={chat.title}
+            isEditing={isEditingTitle}
+            editedTitle={editedTitle}
+            onEditedTitleChange={setEditedTitle}
+            titleError={titleError}
+            onStartEdit={startEditingTitle}
+            onSave={saveTitle}
+            onCancelEdit={cancelEditingTitle}
+            onDelete={() => setShowDeleteConfirm(true)}
+            isRandom={chat.isRandom}
+            scrollContainerRef={scrollRef}
+          />
 
-        <MessageList
-          messages={chat.messages}
+          <MessageList
+            messages={chat.messages}
+            devMode={devMode}
+            onDelete={handleDeleteMessage}
+            onRefresh={handleRefreshMessage}
+          />
+        </div>
+
+        <ErrorBanner error={error} onRetry={() => setError(null)} />
+
+        <ChatComposer
+          onSend={handleSend}
+          useAiBrain={useAiBrain}
+          onToggleBrain={() => handleToggleBrain(!useAiBrain)}
+          useRandomChats={useRandomChats}
+          onToggleRandomChats={() => handleToggleRandomChats(!useRandomChats)}
           devMode={devMode}
-          onDelete={handleDeleteMessage}
-          onRefresh={handleRefreshMessage}
+          selectedModelId={selectedModelId}
+          onModelChange={setSelectedModelId}
+          previousMessages={userMessages}
         />
-      </div>
+      </main>
 
-      <ErrorBanner error={error} onRetry={() => setError(null)} />
-
-      <ChatComposer
-        onSend={handleSend}
-        useAiBrain={useAiBrain}
-        onToggleBrain={() => handleToggleBrain(!useAiBrain)}
-        useRandomChats={useRandomChats}
-        onToggleRandomChats={() => handleToggleRandomChats(!useRandomChats)}
-        devMode={devMode}
-        selectedModelId={selectedModelId}
-        onModelChange={setSelectedModelId}
-        previousMessages={userMessages}
-      />
+      {useAiBrain && chat && !chat.projectId && (
+        <BrainPanel
+          brainProjectId={brainProjectId}
+          onSelectProject={handleBrainProjectSelect}
+        />
+      )}
 
       <ConfirmDialog
         open={showDeleteConfirm}
@@ -379,6 +414,6 @@ export default function ChatByIdPage() {
         onConfirm={handleDeleteChat}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-    </main>
+    </div>
   );
 }

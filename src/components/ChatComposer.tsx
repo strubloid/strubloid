@@ -67,6 +67,19 @@ export function ChatComposer({
       .catch(() => {});
   }
 
+  // Eagerly load models on mount — don't wait for user to focus the select
+  useEffect(() => {
+    loadModels();
+  }, []);
+
+  // Auto-select first model when loaded and current selection doesn't match
+  useEffect(() => {
+    if (models.length === 0) return;
+    if (!selectedModelId || !models.some((m) => m.modelId === selectedModelId)) {
+      onModelChange?.(models[0].modelId);
+    }
+  }, [models, selectedModelId]);
+
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || disabled || isSending) return;

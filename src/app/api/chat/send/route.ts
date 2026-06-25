@@ -14,6 +14,7 @@ const SendMessageSchema = z.object({
   modelId: z.string().optional(),
   useAiBrain: z.boolean().optional().default(false),
   useRandomChats: z.boolean().optional().default(false),
+  brainProjectId: z.string().nullable().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
       modelId,
       useAiBrain,
       useRandomChats,
+      brainProjectId,
     } = parsed.data;
 
     // ── Resolve chat (single read, no re-reads later) ─────────
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     // ── Build contexts in parallel (Phase 3.5) ────────────────
     const [brainContext, randomResult] = await Promise.all([
-      useAiBrain ? buildBrainContext(chat.projectId) : Promise.resolve(''),
+      useAiBrain ? buildBrainContext(brainProjectId ?? chat.projectId) : Promise.resolve(''),
       useRandomChats
         ? buildMemoryContext({
             userMessage: message,
@@ -248,13 +250,14 @@ export async function POST(request: NextRequest) {
           }
 
           // ── Fire-and-forget: auto-save brain memory ───────
-          if (chat.projectId && fullContent) {
+          const memProjectId = chat.projectId || brainProjectId;
+          if (memProjectId && fullContent) {
             const memTitle = message.length > 80 ? message.slice(0, 77) + '...' : message;
             const memSummary = fullContent.length > 300 ? fullContent.slice(0, 297) + '...' : fullContent;
             db.memoryEntry
               .create({
                 data: {
-                  projectId: chat.projectId,
+                  projectId: memProjectId,
                   title: memTitle,
                   summary: memSummary,
                   facts: message,

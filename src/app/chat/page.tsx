@@ -8,13 +8,16 @@ import { ChatHeaderBar } from '@/components/ChatHeaderBar';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ChatSkeleton } from '@/components/LoadingSkeleton';
+import { BrainPanel } from '@/components/BrainPanel';
 import { parseSSEStream } from '@/lib/sse-parser';
 
 interface Chat {
   id: string;
   title: string;
+  projectId: string | null;
   useAiBrain: boolean;
   useRandomChats: boolean;
+  brainProjectId: string | null;
   isRandom: boolean;
   selectedModelId: string | null;
   messages: Message[];
@@ -29,6 +32,7 @@ export default function ChatPage() {
   const [chat, setChat] = useState<Chat | null>(null);
   const [useAiBrain, setUseAiBrain] = useState(false);
   const [useRandomChats, setUseRandomChats] = useState(false);
+  const [brainProjectId, setBrainProjectId] = useState<string | null>(null);
   const [devMode, setDevMode] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState('big-pickle');
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +71,7 @@ export default function ChatPage() {
         setChat(chatData);
         setUseAiBrain(chatData.useAiBrain ?? false);
         setUseRandomChats(chatData.useRandomChats ?? false);
+        setBrainProjectId(chatData.brainProjectId ?? null);
         setSelectedModelId(chatData.selectedModelId || 'big-pickle');
       } else {
         // Create a new chat
@@ -90,6 +95,9 @@ export default function ChatPage() {
     if (!chat) return;
     setError(null);
 
+    // Show the chat in sidebar immediately
+    window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+
     const tempUserId = `temp-user-${Date.now()}`;
     const tempLoadingId = `temp-loading-${Date.now()}`;
     const now = new Date().toISOString();
@@ -112,6 +120,7 @@ export default function ChatPage() {
           message,
           useAiBrain,
           useRandomChats,
+          brainProjectId,
           modelId: modelId || selectedModelId,
         }),
       });
@@ -150,6 +159,8 @@ export default function ChatPage() {
             const updatedChat = await chatRes.json();
             setChat(updatedChat);
           }
+          // Update sidebar (auto-generated title, etc.)
+          window.dispatchEvent(new CustomEvent('sidebar-refresh'));
         } else if (event.type === 'error') {
           throw new Error(event.error || 'Stream error');
         }
@@ -196,6 +207,21 @@ export default function ChatPage() {
         });
       } catch {
         // Non-critical, ignore
+      }
+    }
+  }
+
+  async function handleBrainProjectSelect(projectId: string | null) {
+    setBrainProjectId(projectId);
+    if (chat) {
+      try {
+        await fetch(`/api/chats/${chat.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brainProjectId: projectId }),
+        });
+      } catch {
+        // Non-critical
       }
     }
   }
@@ -280,43 +306,52 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
-      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <ChatHeaderBar
-          title={chat?.title ?? 'Random Chat'}
-          isEditing={isEditingTitle}
-          editedTitle={editedTitle}
-          onEditedTitleChange={setEditedTitle}
-          titleError={titleError}
-          onStartEdit={startEditingTitle}
-          onSave={saveTitle}
-          onCancelEdit={cancelEditingTitle}
-          onDelete={() => setShowDeleteConfirm(true)}
-          isRandom={chat?.isRandom ?? false}
-          scrollContainerRef={scrollRef}
+    <div className="flex min-h-0 flex-1">
+      <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
+        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <ChatHeaderBar
+            title={chat?.title ?? 'Random Chat'}
+            isEditing={isEditingTitle}
+            editedTitle={editedTitle}
+            onEditedTitleChange={setEditedTitle}
+            titleError={titleError}
+            onStartEdit={startEditingTitle}
+            onSave={saveTitle}
+            onCancelEdit={cancelEditingTitle}
+            onDelete={() => setShowDeleteConfirm(true)}
+            isRandom={chat?.isRandom ?? false}
+            scrollContainerRef={scrollRef}
+          />
+
+          <MessageList messages={chat?.messages ?? []} devMode={devMode} />
+        </div>
+
+        <ErrorBanner
+          error={error}
+          onRetry={() => {
+            setError(null);
+          }}
         />
 
-        <MessageList messages={chat?.messages ?? []} devMode={devMode} />
-      </div>
+        <ChatComposer
+          onSend={handleSend}
+          useAiBrain={useAiBrain}
+          onToggleBrain={() => handleToggleBrain(!useAiBrain)}
+          useRandomChats={useRandomChats}
+          onToggleRandomChats={() => handleToggleRandomChats(!useRandomChats)}
+          devMode={devMode}
+          selectedModelId={selectedModelId}
+          onModelChange={setSelectedModelId}
+          previousMessages={userMessages}
+        />
+      </main>
 
-      <ErrorBanner
-        error={error}
-        onRetry={() => {
-          setError(null);
-        }}
-      />
-
-      <ChatComposer
-        onSend={handleSend}
-        useAiBrain={useAiBrain}
-        onToggleBrain={() => handleToggleBrain(!useAiBrain)}
-        useRandomChats={useRandomChats}
-        onToggleRandomChats={() => handleToggleRandomChats(!useRandomChats)}
-        devMode={devMode}
-        selectedModelId={selectedModelId}
-        onModelChange={setSelectedModelId}
-        previousMessages={userMessages}
-      />
+      {useAiBrain && chat && !chat.projectId && (
+        <BrainPanel
+          brainProjectId={brainProjectId}
+          onSelectProject={handleBrainProjectSelect}
+        />
+      )}
 
       <ConfirmDialog
         open={showDeleteConfirm}
@@ -328,6 +363,6 @@ export default function ChatPage() {
         onConfirm={handleDeleteChat}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-    </main>
+    </div>
   );
 }

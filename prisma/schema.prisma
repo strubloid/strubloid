@@ -33,6 +33,7 @@ model Chat {
   isRandom         Boolean   @default(false)
   useAiBrain       Boolean   @default(false)
   useRandomChats   Boolean   @default(false)
+  brainProjectId   String?   // project whose brain memories to query (for random chats)
   selectedModelId  String?   @default("big-pickle")
   selectedModel    AiModel?  @relation(fields: [selectedModelId], references: [modelId])
   messages         Message[]

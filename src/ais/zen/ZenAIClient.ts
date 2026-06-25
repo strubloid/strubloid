@@ -154,7 +154,7 @@ export class ZenAIClient {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${config.apiKey}`,
+            'Authorization': `Bearer ${config.apiKey}`,
           },
           body: JSON.stringify(body),
           signal: controller.signal,
@@ -297,7 +297,7 @@ export class ZenAIClient {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${config.apiKey}`,
+            'Authorization': `Bearer ${config.apiKey}`,
           },
           body: JSON.stringify(body),
           signal: controller.signal,
@@ -442,7 +442,7 @@ export class ZenAIClient {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${config.apiKey}`,
+            'Authorization': `Bearer ${config.apiKey}`,
           },
           body: JSON.stringify(body),
           signal: controller.signal,
@@ -470,11 +470,7 @@ export class ZenAIClient {
     _messages: { role: string; content: string }[]
   ): AIResponse {
     return {
-      content: `[DEV MODE] Zen AI is in development mode because no API key is configured.
-
-Go to **Settings → AI Provider** to add your OpenCode Zen API key.
-
-(Configured at settings page, stored in database)`,
+      content: `[DEV MODE] Zen AI is in development mode because no API key is configured.\n\nGo to **Settings → AI Provider** to add your OpenCode Zen API key.\n\n(Configured at settings page, stored in database)`,
       model: this.modelId,
     };
   }

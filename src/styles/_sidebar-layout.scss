@@ -5,11 +5,10 @@
 // === SIDEBAR STRUCTURE ===
 .sidebar {
   width: $sidebar-width-full;
-  height: 100vh;
+  height: 100%;
   background: $color-bg-secondary;
   border-right: 1px solid $color-border;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   position: sticky;
   top: 0;
   flex-shrink: 0;
@@ -43,6 +42,7 @@
   // Mobile: overlay
   @include respond-below('md') {
     position: fixed;
+    height: 100vh;
     z-index: $z-sidebar;
     transform: translateX(-100%);
 

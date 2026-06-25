@@ -55,10 +55,15 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
   // Search/filter
   const [searchQuery, setSearchQuery] = useState('');
   const loadDataRef = useRef(loadData);
+  const expandedProjectIdRef = useRef(expandedProjectId);
 
   useEffect(() => {
     loadDataRef.current = loadData;
   });
+
+  useEffect(() => {
+    expandedProjectIdRef.current = expandedProjectId;
+  }, [expandedProjectId]);
 
   useEffect(() => {
     loadData();
@@ -66,7 +71,17 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
 
   // Refresh sidebar data when custom event fires (e.g. after title edit, clean-random)
   useEffect(() => {
-    const handler = () => loadDataRef.current();
+    const handler = () => {
+      loadDataRef.current();
+      // Also refresh expanded project chat list so renamed chat titles appear
+      const pid = expandedProjectIdRef.current;
+      if (pid) {
+        fetch(`/api/projects/${pid}`)
+          .then((r) => r.json())
+          .then((data) => setExpandedProjectChats(data.chats ?? []))
+          .catch(() => {});
+      }
+    };
     window.addEventListener('sidebar-refresh', handler);
     return () => window.removeEventListener('sidebar-refresh', handler);
   }, []);

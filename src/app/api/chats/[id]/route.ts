@@ -6,6 +6,7 @@ const UpdateChatSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   useAiBrain: z.boolean().optional(),
   useRandomChats: z.boolean().optional(),
+  brainProjectId: z.string().nullable().optional(),
 });
 
 interface RouteParams {
