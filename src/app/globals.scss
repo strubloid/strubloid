@@ -43,6 +43,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.rounded-left-side {
+  // The curve: Top-Left, Top-Right, Bottom-Right, Bottom-Left
+  // border-radius: 0 50% 50% 0;
+
+  // background-color: #3498db;
+  // color: white;
+  // padding: 20px;
+  // width: 250px;
+
+  /* Round the top-left and bottom-left corners */
+  border-top-left-radius: 120px;
+  border-bottom-left-radius: 120px;
+
+  /* Keep the right corners completely straight */
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 a {
   color: inherit;
   text-decoration: none;

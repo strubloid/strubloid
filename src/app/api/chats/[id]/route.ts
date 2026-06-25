@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 
 const UpdateChatSchema = z.object({
   title: z.string().min(1).max(200).optional(),
+  projectId: z.string().nullable().optional(),
   useAiBrain: z.boolean().optional(),
   useRandomChats: z.boolean().optional(),
   brainProjectId: z.string().nullable().optional(),
@@ -58,9 +59,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    const updateData = {
+      ...parsed.data,
+      ...(parsed.data.projectId !== undefined
+        ? { isRandom: parsed.data.projectId === null }
+        : {}),
+    };
+
     const chat = await db.chat.update({
       where: { id },
-      data: parsed.data,
+      data: updateData,
       include: {
         messages: {
           orderBy: { createdAt: 'asc' },

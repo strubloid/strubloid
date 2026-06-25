@@ -101,8 +101,8 @@ export default function ChatByIdPage() {
       messages: [
         ...chat.messages,
         { id: tempUserId, role: 'user', content: message, createdAt: now },
-        { id: tempLoadingId, role: 'assistant', content: '...', createdAt: now },
-      ],
+        { id: tempLoadingId, role: 'assistant', content: '...', createdAt: now }
+      ]
     });
 
     try {
@@ -115,8 +115,8 @@ export default function ChatByIdPage() {
           useAiBrain,
           useRandomChats,
           brainProjectId,
-          modelId: modelId || selectedModelId,
-        }),
+          modelId: modelId || selectedModelId
+        })
       });
 
       if (!res.ok) {
@@ -137,10 +137,8 @@ export default function ChatByIdPage() {
               ? {
                   ...prev,
                   messages: prev.messages.map((m) =>
-                    m.id === tempLoadingId
-                      ? { ...m, content: fullContent }
-                      : m
-                  ),
+                    m.id === tempLoadingId ? { ...m, content: fullContent } : m
+                  )
                 }
               : prev
           );
@@ -188,9 +186,7 @@ export default function ChatByIdPage() {
       const res = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete message');
       setChat((prev) =>
-        prev
-          ? { ...prev, messages: prev.messages.filter((m) => m.id !== messageId) }
-          : prev
+        prev ? { ...prev, messages: prev.messages.filter((m) => m.id !== messageId) } : prev
       );
     } catch (err) {
       console.error(err);
@@ -251,12 +247,28 @@ export default function ChatByIdPage() {
         await fetch(`/api/chats/${chat.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brainProjectId: projectId }),
+          body: JSON.stringify({ brainProjectId: projectId })
         });
       } catch {
         // Non-critical
       }
     }
+  }
+
+  async function handleAssignProject(projectId: string) {
+    if (!chat) return;
+
+    const res = await fetch(`/api/chats/${chat.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId })
+    });
+
+    if (!res.ok) throw new Error('Failed to add chat to project');
+
+    const updatedChat = await res.json();
+    setChat(updatedChat);
+    window.dispatchEvent(new CustomEvent('sidebar-refresh'));
   }
 
   async function handleDeleteChat() {
@@ -310,7 +322,7 @@ export default function ChatByIdPage() {
       const res = await fetch(`/api/chats/${chat.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: trimmed }),
+        body: JSON.stringify({ title: trimmed })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -357,7 +369,7 @@ export default function ChatByIdPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="rounded-left-side ml-4 flex min-h-0 flex-1 rounded-tr-[50%] rounded-br-[50%]">
       <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
         <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           <ChatHeaderBar
@@ -394,14 +406,14 @@ export default function ChatByIdPage() {
           selectedModelId={selectedModelId}
           onModelChange={setSelectedModelId}
           previousMessages={userMessages}
+          chatId={chat.id}
+          isRandomChat={chat.isRandom}
+          onAssignProject={handleAssignProject}
         />
       </main>
 
       {useAiBrain && chat && !chat.projectId && (
-        <BrainPanel
-          brainProjectId={brainProjectId}
-          onSelectProject={handleBrainProjectSelect}
-        />
+        <BrainPanel brainProjectId={brainProjectId} onSelectProject={handleBrainProjectSelect} />
       )}
 
       <ConfirmDialog

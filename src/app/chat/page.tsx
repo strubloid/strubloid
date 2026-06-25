@@ -78,7 +78,7 @@ export default function ChatPage() {
         const createRes = await fetch('/api/chats', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: 'New Chat', isRandom: true }),
+          body: JSON.stringify({ title: 'New Chat', isRandom: true })
         });
         const newChat = await createRes.json();
         setChat(newChat);
@@ -107,8 +107,8 @@ export default function ChatPage() {
       messages: [
         ...chat.messages,
         { id: tempUserId, role: 'user', content: message, createdAt: now },
-        { id: tempLoadingId, role: 'assistant', content: '...', createdAt: now },
-      ],
+        { id: tempLoadingId, role: 'assistant', content: '...', createdAt: now }
+      ]
     });
 
     try {
@@ -121,8 +121,8 @@ export default function ChatPage() {
           useAiBrain,
           useRandomChats,
           brainProjectId,
-          modelId: modelId || selectedModelId,
-        }),
+          modelId: modelId || selectedModelId
+        })
       });
 
       if (!res.ok) {
@@ -143,10 +143,8 @@ export default function ChatPage() {
               ? {
                   ...prev,
                   messages: prev.messages.map((m) =>
-                    m.id === tempLoadingId
-                      ? { ...m, content: fullContent }
-                      : m
-                  ),
+                    m.id === tempLoadingId ? { ...m, content: fullContent } : m
+                  )
                 }
               : prev
           );
@@ -187,7 +185,7 @@ export default function ChatPage() {
         await fetch(`/api/chats/${chat.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ useAiBrain: enabled }),
+          body: JSON.stringify({ useAiBrain: enabled })
         });
       } catch {
         // Non-critical, ignore
@@ -203,7 +201,7 @@ export default function ChatPage() {
         await fetch(`/api/chats/${chat.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ useRandomChats: enabled }),
+          body: JSON.stringify({ useRandomChats: enabled })
         });
       } catch {
         // Non-critical, ignore
@@ -218,7 +216,7 @@ export default function ChatPage() {
         await fetch(`/api/chats/${chat.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brainProjectId: projectId }),
+          body: JSON.stringify({ brainProjectId: projectId })
         });
       } catch {
         // Non-critical
@@ -226,11 +224,27 @@ export default function ChatPage() {
     }
   }
 
+  async function handleAssignProject(projectId: string) {
+    if (!chat) return;
+
+    const res = await fetch(`/api/chats/${chat.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId })
+    });
+
+    if (!res.ok) throw new Error('Failed to add chat to project');
+
+    const updatedChat = await res.json();
+    setChat(updatedChat);
+    window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+  }
+
   async function handleDeleteChat() {
     if (!chat) return;
     try {
       const res = await fetch(`/api/chats/${chat.id}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       });
       if (!res.ok) throw new Error('Failed to delete chat');
       router.push('/chat');
@@ -243,9 +257,7 @@ export default function ChatPage() {
     }
   }
 
-  const userMessages = chat?.messages
-    ?.filter((m) => m.role === 'user')
-    .map((m) => m.content) ?? [];
+  const userMessages = chat?.messages?.filter((m) => m.role === 'user').map((m) => m.content) ?? [];
 
   function startEditingTitle() {
     if (!chat) return;
@@ -281,7 +293,7 @@ export default function ChatPage() {
       const res = await fetch(`/api/chats/${chat.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: trimmed }),
+        body: JSON.stringify({ title: trimmed })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -343,14 +355,14 @@ export default function ChatPage() {
           selectedModelId={selectedModelId}
           onModelChange={setSelectedModelId}
           previousMessages={userMessages}
+          chatId={chat?.id}
+          isRandomChat={chat?.isRandom ?? false}
+          onAssignProject={handleAssignProject}
         />
       </main>
 
       {useAiBrain && chat && !chat.projectId && (
-        <BrainPanel
-          brainProjectId={brainProjectId}
-          onSelectProject={handleBrainProjectSelect}
-        />
+        <BrainPanel brainProjectId={brainProjectId} onSelectProject={handleBrainProjectSelect} />
       )}
 
       <ConfirmDialog
