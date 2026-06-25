@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use 'variables' as *;
 
 ::-webkit-scrollbar {
@@ -14,7 +15,7 @@
   border-radius: 3px;
 
   &:hover {
-    background: lighten($color-border, 8%);
+    background: color.scale($color-border, $lightness: 9.1071428571%);
   }
 }
 

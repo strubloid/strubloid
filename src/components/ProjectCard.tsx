@@ -25,7 +25,7 @@ export function ProjectCard({
   return (
     <div
       onClick={onClick}
-      className="project-card rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-4 cursor-pointer"
+      className="project-card rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 cursor-pointer"
       style={{ borderLeftColor: color, borderLeftWidth: '3px' }}
     >
       <div className="flex items-start justify-between mb-2">
@@ -34,7 +34,7 @@ export function ProjectCard({
             className="w-4 h-4 rounded-full flex-shrink-0"
             style={{ backgroundColor: color }}
           />
-          <h3 className="font-semibold text-[--color-text]">{name}</h3>
+          <h3 className="font-semibold text-[var(--color-text)]">{name}</h3>
         </div>
 
         <button
@@ -42,7 +42,7 @@ export function ProjectCard({
             e.stopPropagation();
             onToggleStar(!isStarred);
           }}
-          className={`star-btn p-1 ${isStarred ? 'starred' : 'text-[--color-text-dim]'}`}
+          className={`star-btn p-1 ${isStarred ? 'starred' : 'text-[var(--color-text-dim)]'}`}
           aria-label={isStarred ? 'Unstar project' : 'Star project'}
         >
           <svg
@@ -61,7 +61,7 @@ export function ProjectCard({
         </button>
       </div>
 
-      <div className="text-sm text-[--color-text-dim]">
+      <div className="text-sm text-[var(--color-text-dim)]">
         <span>{chatCount} chat{chatCount !== 1 ? 's' : ''}</span>
         {lastChatTitle && (
           <span className="ml-2">
@@ -73,7 +73,7 @@ export function ProjectCard({
       </div>
 
       {lastChatAt && (
-        <div className="text-xs text-[--color-text-dim] mt-1">
+        <div className="text-xs text-[var(--color-text-dim)] mt-1">
           {new Date(lastChatAt).toLocaleDateString()}
         </div>
       )}

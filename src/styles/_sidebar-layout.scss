@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use 'variables' as *;
 @use 'mixins' as *;
 
@@ -148,7 +149,7 @@
   &:hover {
     background: $color-bg-tertiary;
     color: $color-text;
-    border-color: lighten($color-border, 5%);
+    border-color: color.scale($color-border, $lightness: 5.6919642857%);
   }
 
   &.active-brain {

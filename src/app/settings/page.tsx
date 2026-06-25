@@ -316,25 +316,25 @@ export default function SettingsPage() {
     const noneEnabled = models.every((m) => !m.isEnabled);
 
     return (
-      <div className="mb-3 rounded-lg border border-[--color-border]">
+      <div className="mb-3 rounded-lg border border-[var(--color-border)]">
         {/* Section header — clickable to collapse/expand */}
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex w-full items-center gap-2 rounded-t-lg bg-[--color-bg-secondary] px-4 py-3 text-left text-sm font-medium hover:bg-[--color-bg]"
+          className="flex w-full items-center gap-2 rounded-t-lg bg-[var(--color-bg-secondary)] px-4 py-3 text-left text-sm font-medium hover:bg-[var(--color-bg)]"
         >
           <span className="text-base">{collapsed ? '▶' : '▼'}</span>
           <span>{emoji}</span>
           <span>{title}</span>
-          <span className="text-xs text-[--color-text-dim]">
+          <span className="text-xs text-[var(--color-text-dim)]">
             ({models.filter((m) => m.isEnabled).length}/{models.length} selected)
           </span>
         </button>
 
         {!collapsed && (
-          <div className="border-t border-[--color-border] px-4 py-2">
+          <div className="border-t border-[var(--color-border)] px-4 py-2">
             {/* Select All / None */}
-            <label className="flex items-center gap-2 py-1 text-xs text-[--color-text-dim] hover:text-white cursor-pointer">
+            <label className="flex items-center gap-2 py-1 text-xs text-[var(--color-text-dim)] hover:text-white cursor-pointer">
               <input
                 type="checkbox"
                 checked={allEnabled}
@@ -342,7 +342,7 @@ export default function SettingsPage() {
                   if (el) el.indeterminate = !allEnabled && !noneEnabled;
                 }}
                 onChange={() => toggleSectionEnabled(models, !allEnabled)}
-                className="h-4 w-4 rounded border-[--color-border] bg-[--color-bg]"
+                className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg)]"
               />
               {allEnabled ? 'Deselect all' : 'Select all'}
             </label>
@@ -351,30 +351,30 @@ export default function SettingsPage() {
               {models.map((model) => (
                 <label
                   key={model.modelId}
-                  className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 text-sm hover:bg-[--color-bg]"
+                  className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 text-sm hover:bg-[var(--color-bg)]"
                 >
                   <input
                     type="checkbox"
                     checked={model.isEnabled}
                     onChange={() => toggleModelEnabled(model.modelId, !model.isEnabled)}
-                    className="h-4 w-4 rounded border-[--color-border] bg-[--color-bg]"
+                    className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg)]"
                   />
                   <span className="font-medium">{model.name}</span>
-                  <span className="font-mono text-xs text-[--color-text-dim]">{model.modelId}</span>
+                  <span className="font-mono text-xs text-[var(--color-text-dim)]">{model.modelId}</span>
                   {model.description && (
-                    <span className="hidden truncate text-xs text-[--color-text-dim] sm:inline">
+                    <span className="hidden truncate text-xs text-[var(--color-text-dim)] sm:inline">
                       — {model.description}
                     </span>
                   )}
                   {model.inputPrice != null && (
-                    <span className="ml-auto text-xs text-[--color-text-dim]">
+                    <span className="ml-auto text-xs text-[var(--color-text-dim)]">
                       ${model.inputPrice.toFixed(2)} / ${model.outputPrice?.toFixed(2)} /1M tok
                     </span>
                   )}
                 </label>
               ))}
               {models.length === 0 && (
-                <div className="py-4 text-center text-xs text-[--color-text-dim]">
+                <div className="py-4 text-center text-xs text-[var(--color-text-dim)]">
                   No models in this category
                 </div>
               )}
@@ -386,10 +386,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[--color-bg]">
+    <main className="flex-1 overflow-y-auto bg-[var(--color-bg)]">
       <div className="mx-auto max-w-4xl p-8">
         <h1 className="mb-2 text-2xl font-bold">Settings</h1>
-        <p className="mb-8 text-sm text-[--color-text-dim]">
+        <p className="mb-8 text-sm text-[var(--color-text-dim)]">
           Strubloid configuration and AI provider management
         </p>
 
@@ -400,7 +400,7 @@ export default function SettingsPage() {
         )}
 
         {/* Tabs */}
-        <div className="mb-8 flex gap-1 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-1">
+        <div className="mb-8 flex gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-1">
           {TABS.map(({ key, label }) => (
             <button
               key={key}
@@ -408,7 +408,7 @@ export default function SettingsPage() {
               className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === key
                   ? 'bg-blue-600 text-white'
-                  : 'text-[--color-text-dim] hover:text-white'
+                  : 'text-[var(--color-text-dim)] hover:text-white'
               }`}
             >
               {label}
@@ -425,15 +425,15 @@ export default function SettingsPage() {
             {activeTab !== 'chat' && (
               <>
                 {/* Provider Status */}
-                <section className="mb-8 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-6">
+                <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <h2 className="mb-4 text-lg font-semibold">Provider Status</h2>
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-[--color-text-dim]">Provider</span>
+                      <span className="text-[var(--color-text-dim)]">Provider</span>
                       <span className="font-mono">{info!.label}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[--color-text-dim]">Status</span>
+                      <span className="text-[var(--color-text-dim)]">Status</span>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                         !apiKey
                           ? 'bg-red-900/40 text-red-300'
@@ -443,7 +443,7 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <div className="flex items-start justify-between gap-4">
-                      <span className="text-[--color-text-dim]">API URL</span>
+                      <span className="text-[var(--color-text-dim)]">API URL</span>
                       <span className="break-all text-right font-mono text-xs">
                         {activeApiUrl}
                         <button
@@ -465,9 +465,9 @@ export default function SettingsPage() {
                 </section>
 
                 {/* API Key Configuration */}
-                <section className="mb-8 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-6">
+                <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <h2 className="mb-4 text-lg font-semibold">API Key</h2>
-                  <p className="mb-4 text-sm text-[--color-text-dim]">
+                  <p className="mb-4 text-sm text-[var(--color-text-dim)]">
                     {info!.apiKeyLabel}.{' '}
                     <a
                       href={info!.apiKeyHelpUrl}
@@ -485,12 +485,12 @@ export default function SettingsPage() {
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
                         placeholder={info!.apiKeyPlaceholder}
-                        className="w-full rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-2 font-mono text-sm outline-none focus:border-blue-500"
+                        className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 font-mono text-sm outline-none focus:border-blue-500"
                       />
                       <button
                         type="button"
                         onClick={() => setShowApiKey((v) => !v)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[--color-text-dim] hover:text-white"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-dim)] hover:text-white"
                         title={showApiKey ? 'Hide API key' : 'Show API key'}
                       >
                         {showApiKey ? (
@@ -519,11 +519,11 @@ export default function SettingsPage() {
                 </section>
 
                 {/* Available Models - collapsible free / paid sections */}
-                <section className="rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-6">
+                <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <h2 className="text-lg font-semibold">Available Models</h2>
-                      <p className="mt-1 text-sm text-[--color-text-dim]">
+                      <p className="mt-1 text-sm text-[var(--color-text-dim)]">
                         Check which models appear in the chat model selector. Unchecked models are hidden.
                       </p>
                     </div>
@@ -588,16 +588,16 @@ export default function SettingsPage() {
             {activeTab === 'chat' && (
               <>
                 {/* Default Model */}
-                <section className="mb-8 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-6">
+                <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <h2 className="mb-4 text-lg font-semibold">Default AI Model</h2>
-                  <p className="mb-4 text-sm text-[--color-text-dim]">
+                  <p className="mb-4 text-sm text-[var(--color-text-dim)]">
                     Default AI model used for new chats. Choose from all available models across providers.
                   </p>
                   <div className="flex gap-3">
                     <select
                       value={defaultModel}
                       onChange={(e) => setDefaultModel(e.target.value)}
-                      className="flex-1 rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-2 text-sm outline-none focus:border-blue-500"
+                      className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm outline-none focus:border-blue-500"
                     >
                       {chatModels.length === 0 && (
                         <option value="">No models available</option>
@@ -619,11 +619,11 @@ export default function SettingsPage() {
                 </section>
 
                 {/* Clean Random Chats */}
-                <section className="rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-6">
+                <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <h2 className="mb-4 text-lg font-semibold">
                     🧹 Clean Random Chats
                   </h2>
-                  <p className="mb-4 text-sm text-[--color-text-dim]">
+                  <p className="mb-4 text-sm text-[var(--color-text-dim)]">
                     Compact all random chats into memory entries and remove them.
                     The knowledge from random chats is preserved as compressed
                     memories so the AI Brain can still reference it.
@@ -631,7 +631,7 @@ export default function SettingsPage() {
 
                   <div className="space-y-4">
                     {/* Auto-clean toggle + periodicity */}
-                    <div className="rounded-lg border border-[--color-border] bg-[--color-bg] p-4">
+                    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
                       <h3 className="mb-3 text-sm font-medium">
                         Automatic Cleaning
                       </h3>
@@ -641,7 +641,7 @@ export default function SettingsPage() {
                             type="checkbox"
                             checked={cleanAutoEnabled}
                             onChange={handleToggleAutoClean}
-                            className="h-4 w-4 rounded border-[--color-border] bg-[--color-bg]"
+                            className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg)]"
                           />
                           <span className="text-sm">
                             Auto-clean random chats periodically
@@ -649,7 +649,7 @@ export default function SettingsPage() {
                         </label>
 
                         <div className="flex items-center gap-3">
-                          <label className="text-sm text-[--color-text-dim]">
+                          <label className="text-sm text-[var(--color-text-dim)]">
                             Every
                           </label>
                           <input
@@ -658,10 +658,10 @@ export default function SettingsPage() {
                             max="365"
                             value={cleanPeriodDays}
                             onChange={(e) => setCleanPeriodDays(e.target.value)}
-                            className="w-20 rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-1.5 text-center text-sm outline-none focus:border-blue-500"
+                            className="w-20 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-center text-sm outline-none focus:border-blue-500"
                             disabled={!cleanAutoEnabled}
                           />
-                          <label className="text-sm text-[--color-text-dim]">
+                          <label className="text-sm text-[var(--color-text-dim)]">
                             days
                           </label>
                           <button
@@ -676,11 +676,11 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Manual clean button */}
-                    <div className="rounded-lg border border-[--color-border] bg-[--color-bg] p-4">
+                    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
                       <h3 className="mb-3 text-sm font-medium">
                         Manual Clean
                       </h3>
-                      <p className="mb-3 text-xs text-[--color-text-dim]">
+                      <p className="mb-3 text-xs text-[var(--color-text-dim)]">
                         Compact all current random chats into memory entries and
                         delete them immediately.
                       </p>

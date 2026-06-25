@@ -273,14 +273,14 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <main className="flex flex-1 bg-[--color-bg]">
+      <main className="flex flex-1 bg-[var(--color-bg)]">
         <ChatSkeleton />
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col bg-[--color-bg]">
+    <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
       <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <ChatHeaderBar
           title={chat?.title ?? 'Random Chat'}

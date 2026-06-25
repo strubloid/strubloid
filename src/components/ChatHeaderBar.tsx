@@ -53,8 +53,10 @@ export function ChatHeaderBar({
       requestAnimationFrame(() => {
         const currentScrollY = el.scrollTop;
         const isAtTop = currentScrollY < 10;
+        const isNearBottom = currentScrollY > el.scrollHeight - el.clientHeight - 20;
 
-        if (isAtTop) {
+        // Always show at top or bottom
+        if (isAtTop || isNearBottom) {
           setHidden(false);
         } else if (currentScrollY > lastScrollYRef.current + 5) {
           setHidden(true);   // scrolling down past threshold

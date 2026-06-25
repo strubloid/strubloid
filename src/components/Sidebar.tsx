@@ -236,7 +236,11 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search chats & projects..."
-                className="w-full rounded-lg border border-[--color-border] bg-[--color-bg] px-3 py-1.5 text-xs outline-none transition-colors focus:border-[--color-accent]"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-xs outline-none transition-colors focus:border-[var(--color-accent)]"
               />
             </div>
           )}
@@ -292,7 +296,7 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                             e.preventDefault();
                             setPendingDelete(chat);
                           }}
-                          className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                          className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
                           title="Delete chat"
                           aria-label="Delete chat"
                         >
@@ -319,7 +323,7 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                   </div>
                 </div>
                 {!isIconsMode && (
-                  <Link href="/projects" className="text-xs text-[--color-accent] hover:underline">
+                  <Link href="/projects" className="text-xs text-[var(--color-accent)] hover:underline">
                     View all
                   </Link>
                 )}
@@ -360,8 +364,8 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                                 e.preventDefault();
                                 toggleProjectExpand(project.id);
                               }}
-                              className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-[--color-bg-tertiary] ${
-                                isExpanded ? 'text-[--color-accent]' : 'text-[--color-text-dim]'
+                              className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-[var(--color-bg-tertiary)] ${
+                                isExpanded ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-dim)]'
                               }`}
                               title={isExpanded ? 'Collapse chats' : 'Show chats'}
                               aria-label={isExpanded ? 'Collapse chats' : 'Show chats'}
@@ -379,12 +383,12 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                         </div>
 
                         {isExpanded && !isIconsMode && (
-                          <div className="ml-3 border-l border-[--color-border] pl-2">
+                          <div className="ml-3 border-l border-[var(--color-border)] pl-2">
                             {loadingProjectChats ? (
                               <div className="chat-item opacity-50">Loading...</div>
                             ) : expandedProjectChats.length === 0 ? (
                               <div className="px-2 py-2 text-center">
-                                <div className="mb-2 flex justify-between text-xs text-[--color-text-dim]">
+                                <div className="mb-2 flex justify-between text-xs text-[var(--color-text-dim)]">
                                   <p>0 Chats</p>
                                   <button
                                     onClick={(e) => {
@@ -392,7 +396,7 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                                       e.preventDefault();
                                       createChatInProject(project.id);
                                     }}
-                                    className="inline-flex items-center gap-1 text-xs text-[--color-accent] hover:underline"
+                                    className="inline-flex items-center gap-1 text-xs text-[var(--color-accent)] hover:underline"
                                   >
                                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -420,7 +424,7 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
                                       e.preventDefault();
                                       deleteProjectChat(chat.id, project.id);
                                     }}
-                                    className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                                    className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
                                     title="Delete chat"
                                     aria-label="Delete chat"
                                   >
@@ -474,10 +478,10 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
 
           {/* Footer links */}
           {!isIconsMode && (
-            <div className="space-y-2 border-t border-[--color-border] pt-4">
+            <div className="space-y-2 border-t border-[var(--color-border)] pt-4">
               <Link
                 href="/settings"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[--color-bg-tertiary]"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[var(--color-bg-tertiary)]"
                 onClick={() => {
                   if (isEmbedded && onMobileToggle) onMobileToggle(false);
                   else ctx.setMobileOpen(false);

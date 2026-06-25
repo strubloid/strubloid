@@ -88,7 +88,7 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="flex flex-1 bg-[--color-bg]">
+      <main className="flex flex-1 bg-[var(--color-bg)]">
         <PageSkeleton />
       </main>
     );
@@ -96,9 +96,9 @@ export default function ProjectDetailPage() {
 
   if (notFound || !project) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[--color-bg]">
-        <div className="text-6xl font-bold text-[--color-text-dim]">404</div>
-        <div className="text-[--color-text-dim]">Project not found</div>
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[var(--color-bg)]">
+        <div className="text-6xl font-bold text-[var(--color-text-dim)]">404</div>
+        <div className="text-[var(--color-text-dim)]">Project not found</div>
         <Link href="/projects" className="btn-primary rounded-lg px-4 py-2">
           Back to Projects
         </Link>
@@ -107,7 +107,7 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[--color-bg]">
+    <main className="flex-1 overflow-y-auto bg-[var(--color-bg)]">
       <div className="mx-auto max-w-4xl p-8">
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
@@ -117,14 +117,14 @@ export default function ProjectDetailPage() {
           />
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{project.name}</h1>
-            <p className="text-sm text-[--color-text-dim]">
+            <p className="text-sm text-[var(--color-text-dim)]">
               {project.chatCount} chat{project.chatCount !== 1 ? 's' : ''}
             </p>
           </div>
 
           <button
             onClick={toggleStar}
-            className={`star-btn p-2 ${project.isStarred ? 'starred' : 'text-[--color-text-dim]'}`}
+            className={`star-btn p-2 ${project.isStarred ? 'starred' : 'text-[var(--color-text-dim)]'}`}
             title={project.isStarred ? 'Unstar' : 'Star'}
           >
             <svg
@@ -163,7 +163,7 @@ export default function ProjectDetailPage() {
           <div className="py-12 text-center">
             <div className="mb-4 text-6xl opacity-20">💬</div>
             <h3 className="mb-2 text-xl font-semibold">No chats yet</h3>
-            <p className="mb-6 text-[--color-text-dim]">Start a conversation to see it here</p>
+            <p className="mb-6 text-[var(--color-text-dim)]">Start a conversation to see it here</p>
             <button onClick={createChat} className="btn-primary rounded-lg px-4 py-2">
               Create First Chat
             </button>
@@ -175,15 +175,15 @@ export default function ProjectDetailPage() {
               <Link
                 key={chat.id}
                 href={`/chat/${chat.id}`}
-                className="flex items-center justify-between rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-4 transition-colors hover:border-[--color-accent]"
+                className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 transition-colors hover:border-[var(--color-accent)]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium">{chat.title}</div>
-                  <div className="mt-1 text-xs text-[--color-text-dim]">
+                  <div className="mt-1 text-xs text-[var(--color-text-dim)]">
                     {chat.messages?.length} messages
                   </div>
                 </div>
-                <div className="ml-4 text-xs text-[--color-text-dim]">
+                <div className="ml-4 text-xs text-[var(--color-text-dim)]">
                   {new Date(chat.updatedAt).toLocaleDateString()}
                 </div>
               </Link>

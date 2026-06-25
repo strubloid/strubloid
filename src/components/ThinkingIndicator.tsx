@@ -39,7 +39,7 @@ export function ThinkingIndicator({ phase }: { phase: string }) {
   const activeBullets = PHASE_BULLETS[phase] ?? 1;
 
   return (
-    <span className="inline-flex items-center gap-1 text-sm text-[--color-text-dim]">
+    <span className="inline-flex items-center gap-1 text-sm text-[var(--color-text-dim)]">
       {[0, 1, 2].map((i) => (
         <span
           key={i}

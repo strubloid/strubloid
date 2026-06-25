@@ -11,11 +11,15 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/unit/**/*.test.{ts,tsx}', 'tests/component/**/*.test.{ts,tsx}'],
     exclude: ['tests/e2e/**', 'node_modules', '.next'],
-    css: false
+    css: false,
+    env: {
+      DATABASE_URL: 'file:./prisma/test.db',
+      COMPACTION_WINDOW_DAYS: '30',
+    },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 });

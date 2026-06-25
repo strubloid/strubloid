@@ -304,7 +304,7 @@ export default function ChatByIdPage() {
 
   if (isLoading) {
     return (
-      <main className="flex flex-1 bg-[--color-bg]">
+      <main className="flex flex-1 bg-[var(--color-bg)]">
         <ChatSkeleton />
       </main>
     );
@@ -312,9 +312,9 @@ export default function ChatByIdPage() {
 
   if (notFound) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[--color-bg]">
-        <div className="text-6xl font-bold text-[--color-text-dim]">404</div>
-        <div className="text-[--color-text-dim]">Chat not found</div>
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[var(--color-bg)]">
+        <div className="text-6xl font-bold text-[var(--color-text-dim)]">404</div>
+        <div className="text-[var(--color-text-dim)]">Chat not found</div>
         <a href="/chat" className="btn-primary rounded-lg px-4 py-2">
           Go to Random Chat
         </a>
@@ -324,14 +324,14 @@ export default function ChatByIdPage() {
 
   if (!chat) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-[--color-bg]">
-        <div className="text-[--color-text-dim]">Chat not available</div>
+      <main className="flex flex-1 items-center justify-center bg-[var(--color-bg)]">
+        <div className="text-[var(--color-text-dim)]">Chat not available</div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col bg-[--color-bg]">
+    <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
       <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <ChatHeaderBar
           title={chat.title}

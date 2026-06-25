@@ -50,6 +50,13 @@ describe('POST /api/chats/clean-random', () => {
   let createdMemoryId: string | null = null;
 
   beforeAll(async () => {
+    // Ensure AiModel seed exists for FK constraint (Prisma 7 enforces this)
+    await db.aiModel.upsert({
+      where: { modelId: 'big-pickle' },
+      update: {},
+      create: { modelId: 'big-pickle', name: 'Big Pickle', provider: 'openai', modelSource: 'zen' },
+    });
+
     // Ensure we start clean for this test
     await db.message.deleteMany({ where: { chat: { isRandom: true } } });
     await db.chat.deleteMany({ where: { isRandom: true } });

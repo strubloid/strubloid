@@ -2,7 +2,8 @@
 @use '../styles/mixins' as *;
 
 .container {
-  min-height: 100%;
+  flex: auto;
+  min-height: 0;
   padding: 16px;
   display: flex;
   flex-direction: column;

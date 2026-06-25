@@ -48,11 +48,11 @@ export default function StarredProjectsPage() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[--color-bg]">
+    <main className="flex-1 overflow-y-auto bg-[var(--color-bg)]">
       <div className="mx-auto max-w-4xl p-8">
         <div className="mb-8">
           <h1 className="mb-1 text-2xl font-bold">Starred Projects</h1>
-          <p className="text-sm text-[--color-text-dim]">
+          <p className="text-sm text-[var(--color-text-dim)]">
             Your pinned projects show up here for quick access
           </p>
         </div>
@@ -63,7 +63,7 @@ export default function StarredProjectsPage() {
           <div className="py-12 text-center">
             <div className="mb-4 text-6xl opacity-20">⭐</div>
             <h3 className="mb-2 text-xl font-semibold">No starred projects</h3>
-            <p className="mb-6 text-[--color-text-dim]">
+            <p className="mb-6 text-[var(--color-text-dim)]">
               Star a project from the projects list to pin it here
             </p>
           </div>

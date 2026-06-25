@@ -31,7 +31,19 @@ export function MessageList({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll the nearest scrollable parent container to the bottom when messages change
+    const scrollToBottom = () => {
+      let el = bottomRef.current?.parentElement;
+      while (el) {
+        const overflow = window.getComputedStyle(el).overflowY;
+        if (overflow === 'auto' || overflow === 'scroll') {
+          el.scrollTo({ top: el.scrollHeight, behavior: 'instant' });
+          return;
+        }
+        el = el.parentElement;
+      }
+    };
+    scrollToBottom();
   }, [messages]);
 
   if (messages.length === 0) {
@@ -42,7 +54,7 @@ export function MessageList({
             {['{', '}', '<', '>', '/', '*', '0', '1'].map((char, i) => (
               <span
                 key={i}
-                className="glow-pulse font-mono text-2xl text-[--color-accent]"
+                className="glow-pulse font-mono text-2xl text-[var(--color-accent)]"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 {char}

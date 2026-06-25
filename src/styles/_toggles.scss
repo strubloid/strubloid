@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use 'variables' as *;
 
 .toggle-switch {
@@ -52,12 +53,12 @@
   &.active-brain {
     background: rgba($color-purple, 0.15);
     border-color: rgba($color-purple, 0.4);
-    color: lighten($color-purple, 20%);
+    color: color.scale($color-purple, $lightness: 22.7678571428%);
   }
 
   &.active-random {
     background: rgba($color-orange, 0.15);
     border-color: rgba($color-orange, 0.4);
-    color: lighten($color-orange, 20%);
+    color: color.scale($color-orange, $lightness: 22.7678571428%);
   }
 }

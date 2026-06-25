@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../styles/variables' as *;
 @use '../styles/mixins' as *;
 
@@ -60,7 +61,7 @@
   &:hover {
     background: $color-bg-tertiary;
     color: $color-text;
-    border-color: lighten($color-border, 5%);
+    border-color: color.scale($color-border, $lightness: 5.6919642857%);
   }
 
   &.brainActive {
@@ -139,7 +140,7 @@
   height: 40px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, $color-accent 0%, darken($color-accent, 15%) 100%);
+  background: linear-gradient(135deg, $color-accent 0%, color.scale($color-accent, $lightness: -17.0758928571%) 100%);
   color: #000;
   cursor: pointer;
   transition: all $transition-fast;

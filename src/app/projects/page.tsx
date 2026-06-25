@@ -172,13 +172,13 @@ export default function ProjectsPage() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[--color-bg]">
+    <main className="flex-1 overflow-y-auto bg-[var(--color-bg)]">
       <div className="mx-auto max-w-4xl p-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Projects</h1>
-            <p className="mt-1 text-sm text-[--color-text-dim]">
+            <p className="mt-1 text-sm text-[var(--color-text-dim)]">
               Organize your conversations into projects
             </p>
           </div>
@@ -196,12 +196,12 @@ export default function ProjectsPage() {
 
         {/* Create form */}
         {showCreateForm && (
-          <div className="mb-8 rounded-lg border border-[--color-border] bg-[--color-bg-secondary] p-4">
+          <div className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
             <h3 className="mb-4 font-semibold">Create New Project</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm text-[--color-text-dim]">
+                <label className="mb-1 block text-sm text-[var(--color-text-dim)]">
                   Project Name
                 </label>
                 <input
@@ -219,7 +219,7 @@ export default function ProjectsPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-[--color-text-dim]">
+                <label className="mb-2 block text-sm text-[var(--color-text-dim)]">
                   Color
                 </label>
                 <div className="flex gap-2">
@@ -262,7 +262,7 @@ export default function ProjectsPage() {
           <div className="py-12 text-center">
             <div className="mb-4 text-6xl opacity-20">📁</div>
             <h3 className="mb-2 text-xl font-semibold">No projects yet</h3>
-            <p className="mb-6 text-[--color-text-dim]">
+            <p className="mb-6 text-[var(--color-text-dim)]">
               Create your first project to organize your conversations
             </p>
             <button
@@ -287,18 +287,18 @@ export default function ProjectsPage() {
 
                   {/* Expanded chat list */}
                   {isExpanded && (
-                    <div className="border-x border-b border-[--color-border] rounded-b-lg bg-[--color-bg-secondary] px-3 pb-3">
+                    <div className="border-x border-b border-[var(--color-border)] rounded-b-lg bg-[var(--color-bg-secondary)] px-3 pb-3">
                       {loadingExpanded ? (
                         <div className="chat-item opacity-50">Loading chats...</div>
                       ) : expandedProjectData ? (
                         expandedProjectData.chats.length === 0 ? (
                           <div className="py-4 text-center">
-                            <p className="mb-2 text-sm text-[--color-text-dim]">
+                            <p className="mb-2 text-sm text-[var(--color-text-dim)]">
                               No chats in this project yet
                             </p>
                             <button
                               onClick={() => createChatInProject(project.id)}
-                              className="text-xs text-[--color-accent] hover:underline"
+                              className="text-xs text-[var(--color-accent)] hover:underline"
                             >
                               Create first chat
                             </button>
@@ -319,7 +319,7 @@ export default function ProjectsPage() {
                                     e.preventDefault();
                                     handleDeleteChat(chat.id, project.id);
                                   }}
-                                  className="flex-shrink-0 rounded p-1 text-[--color-text-dim] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+                                  className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
                                   title="Delete chat"
                                   aria-label="Delete chat"
                                 >

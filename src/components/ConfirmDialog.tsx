@@ -30,18 +30,18 @@ export function ConfirmDialog({
 
       {/* Dialog */}
       <div
-        className="relative bg-[--color-bg-secondary] border border-[--color-border] rounded-xl p-6 m-4 max-w-md w-full shadow-2xl"
+        className="relative bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 m-4 max-w-md w-full shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
         <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-sm text-[--color-text-dim] mb-6">{message}</p>
+        <p className="text-sm text-[var(--color-text-dim)] mb-6">{message}</p>
 
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-[--color-border] hover:bg-[--color-bg-tertiary] transition-colors text-sm"
+            className="px-4 py-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors text-sm"
           >
             {cancelLabel}
           </button>

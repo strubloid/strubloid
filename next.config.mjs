@@ -1,11 +1,11 @@
+import path from 'node:path';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    typedRoutes: false
-  },
+  typedRoutes: false,
   sassOptions: {
-    includePaths: ['./src/styles'],
+    includePaths: [path.join(import.meta.dirname, 'src/styles')],
   },
 };
 

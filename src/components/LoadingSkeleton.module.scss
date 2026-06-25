@@ -1,11 +1,12 @@
 @use '../styles/variables' as *;
+@use 'sass:color';
 
 // === SKELETON LOADING ANIMATION ===
 .skeleton {
   background: linear-gradient(
     90deg,
     $color-bg-tertiary 25%,
-    lighten($color-bg-tertiary, 5%) 50%,
+    color.scale($color-bg-tertiary, $lightness: 5.6919642857%) 50%,
     $color-bg-tertiary 75%
   );
   background-size: 200% 100%;
