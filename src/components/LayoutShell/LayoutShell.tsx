@@ -4,6 +4,7 @@ import { useState, createContext, useContext, useEffect, useCallback } from 'rea
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { HeaderBar } from '@/components/LayoutShell/HeaderBar';
+import { CommandDeck } from '@/components/CommandDeck';
 import styles from './LayoutShell.module.scss';
 
 export type SidebarMode = 'full' | 'icons' | 'hidden';
@@ -31,7 +32,19 @@ export function useSidebar() {
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>('full');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [commandDeckOpen, setCommandDeckOpen] = useState(false);
+  const [commandDeckQuery, setCommandDeckQuery] = useState('');
   const pathname = usePathname();
+
+  useEffect(() => {
+    const open = (event: Event) => {
+      const detail = (event as CustomEvent<{ query?: string }>).detail;
+      setCommandDeckQuery(detail?.query ?? '');
+      setCommandDeckOpen(true);
+    };
+    window.addEventListener('strubloid-open-command-deck', open);
+    return () => window.removeEventListener('strubloid-open-command-deck', open);
+  }, []);
 
   // On mobile, start with hidden sidebar
   useEffect(() => {
@@ -74,7 +87,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       }}
     >
       <div className={styles['layout-shell']}>
-        <HeaderBar />
+        <HeaderBar
+          onOpenCommandDeck={(query) => {
+            setCommandDeckQuery(query ?? '');
+            setCommandDeckOpen(true);
+          }}
+        />
         <div className={styles['layout-body']}>
           <Sidebar
             mode={sidebarMode}
@@ -89,6 +107,11 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
           )}
           <main className={styles['main-area']}>{children}</main>
         </div>
+        <CommandDeck
+          open={commandDeckOpen}
+          initialQuery={commandDeckQuery}
+          onClose={() => setCommandDeckOpen(false)}
+        />
       </div>
     </SidebarContext.Provider>
   );

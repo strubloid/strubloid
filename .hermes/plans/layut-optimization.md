@@ -1,8 +1,50 @@
 # Layout Optimization — 2026 UI Modernization Plan
 
 > **Start date**: 2026-06-25  
-> **Status**: Plan phase — not yet executing.  
-> **Goal**: Modernize the Strubloid chat app UI using 2026 design direction (bento grids, modern CSS, strong hierarchy, theme tokens, micro-interactions) without breaking existing functionality.
+> **Status**: Active implementation.  
+> **Goal**: Transform Strubloid into a 2026 "Cognitive Workbench" — not a generic chat clone. The app should feel like a memory-aware command cockpit for projects, random thought capture, model routing, and cross-chat brain context. Use bento grids only where they reveal product structure; preserve chat flow and business logic.
+
+---
+
+## Product Direction Addendum — Cognitive Workbench
+
+This project should not become a pretty wrapper around a normal chat textbox. The differentiator is memory-aware work: project chats, random capture, brain memory, random-chat compaction, and multi-provider model routing. The UI should make those invisible systems visible enough that the user feels they are operating a personal AI workspace, not scrolling through commodity chats.
+
+### Inspiration synthesis
+
+- **Linear**: dark-native precision, low-noise surfaces, semi-transparent borders, compact dashboard hierarchy.
+- **OpenCode**: terminal/agent clarity, monospace technical labels, no decorative bloat.
+- **Claude**: human warmth, helpful empty states, less sterile AI-product copy.
+- **2026 bento guides**: size communicates importance, not visual randomness. Use bento for project/workspace overviews only.
+
+### Strubloid-native design language
+
+Name: **Cognitive Workbench**
+
+- Main surface: obsidian command deck.
+- Projects: memory containers, not folders.
+- Random chat: capture stream / inbox.
+- Brain: contextual recall engine.
+- Settings: systems console for providers, model routing, and random memory hygiene.
+- Bento: workspace telemetry + action cards, not decorative tiles.
+
+### Implementation stance
+
+- Do not rewrite chat flow. Chat remains linear and calm.
+- Innovate around project navigation, memory visibility, settings clarity, and empty states.
+- Keep all API calls, handlers, routes, Prisma models, and SSE streaming intact.
+- Add a safe CSS layer on top of the current SCSS/Tailwind setup rather than replacing every token in one risky change.
+
+### Course correction after first implementation review
+
+The first execution still felt too close to the old app because it mostly changed page surfaces. The stronger direction is interaction-level innovation:
+
+- **Global Command Deck**: `Cmd/Ctrl+K` command surface for creating random captures, jumping into project brains, and opening model/memory systems. This brings the app closer to Raycast/Linear/OpenCode workflows instead of normal web navigation.
+- **Composer Intent Dock**: the chat input now starts from explicit modes — Study, Debug, Build, Compare, Remember — so Strubloid changes how the user begins an AI session, not just how cards look.
+- **Research applied structurally**: command-first navigation, tech-spec controls, purposeful micro-interactions, performance-first CSS, and human-memory product language.
+- **Bento is demoted**: bento remains useful for project telemetry, but it is not the main innovation. The main innovation is operating memory/model/project context faster.
+- **Paintbrush Orbit Rail**: the sidebar should not read as a normal rectangular list. It becomes a left-side D-shaped rail with rounded context chips and wheel-scroll orbit strips for Random Chats and Projects.
+- **Centered Global Search**: search moves out of the sidebar into the top center and feeds the Command Deck, returning commands, project brains, chats, and message matches.
 
 ---
 

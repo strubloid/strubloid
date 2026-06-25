@@ -284,8 +284,8 @@ describe('POST /api/chats/clean-random', () => {
       createdMemoryId = data.entry.id;
     }
 
-    // Clean up created chat
+    // Clean up is intentionally idempotent: the endpoint already deletes the chat.
     await db.message.deleteMany({ where: { chatId: chat.id } });
-    await db.chat.delete({ where: { id: chat.id } }).catch(() => {});
+    await db.chat.deleteMany({ where: { id: chat.id } });
   });
 });

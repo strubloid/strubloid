@@ -78,6 +78,125 @@
   flex: 1;
 }
 
+.globalSearch {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: min(470px, 38vw);
+  height: 38px;
+  border: 1px solid rgba($color-accent, 0.20);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba($color-accent, 0.10), rgba(92, 242, 194, 0.04), rgba($color-purple, 0.06)),
+    rgba($color-bg, 0.62);
+  padding: 0 10px 0 13px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: $color-text;
+    font-size: $font-size-sm;
+
+    &::placeholder {
+      color: rgba($color-text-dim, 0.82);
+    }
+  }
+
+  &:focus-within {
+    border-color: rgba($color-accent, 0.52);
+    box-shadow: 0 0 0 4px rgba($color-accent, 0.08), 0 16px 48px rgba(0,0,0,0.32);
+  }
+
+  @include respond-below('lg') {
+    position: static;
+    transform: none;
+    width: min(360px, 42vw);
+  }
+
+  @include respond-below('sm') {
+    display: none;
+  }
+}
+
+.searchGlyph {
+  color: $color-accent;
+  font-family: $font-mono;
+  font-weight: 800;
+}
+
+.searchKey {
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 7px;
+  padding: 2px 6px;
+  background: rgba(0,0,0,0.22);
+  color: $color-text-dim;
+  font-family: $font-mono;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.commandButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  border: 1px solid rgba($color-accent, 0.22);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba($color-accent, 0.12), rgba(92, 242, 194, 0.05)),
+    rgba($color-bg, 0.56);
+  color: $color-text;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: border-color $transition-fast, box-shadow $transition-fast, transform $transition-fast;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  &:hover {
+    border-color: rgba($color-accent, 0.48);
+    box-shadow: 0 0 0 4px rgba($color-accent, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+  }
+
+  @include respond-below('sm') {
+    .commandLabel {
+      display: none;
+    }
+  }
+}
+
+.commandMark,
+.commandKey {
+  font-family: $font-mono;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.commandMark {
+  color: $color-accent;
+}
+
+.commandLabel {
+  font-size: $font-size-xs;
+  font-weight: 650;
+}
+
+.commandKey {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 2px 5px;
+  color: $color-text-dim;
+  background: rgba(0, 0, 0, 0.22);
+}
+
 .controls {
   display: flex;
   align-items: center;

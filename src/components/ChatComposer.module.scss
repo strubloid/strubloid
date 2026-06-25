@@ -19,6 +19,75 @@
   gap: 8px;
 }
 
+.intentDock {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.7fr) minmax(0, 1.3fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba($color-accent, 0.16);
+  border-radius: 18px;
+  padding: 10px;
+  background:
+    linear-gradient(135deg, rgba($color-accent, 0.075), rgba($color-purple, 0.035)),
+    rgba($color-bg, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.intentIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.intentKicker {
+  color: $color-accent;
+  font-family: $font-mono;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.intentText {
+  color: $color-text-dim;
+  font-size: $font-size-xs;
+}
+
+.intentActions {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 1px;
+}
+
+.intentChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  color: $color-text;
+  padding: 7px 10px;
+  font-size: $font-size-xs;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color $transition-fast, background $transition-fast, transform $transition-fast;
+
+  &:hover:not(:disabled) {
+    border-color: rgba($color-accent, 0.38);
+    background: rgba($color-accent, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
 // === Toolbar (model + toggles) ===
 .toolbar {
   display: flex;
@@ -154,5 +223,18 @@
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+}
+
+@media (max-width: 760px) {
+  .intentDock {
+    grid-template-columns: 1fr;
+  }
+
+  .intentIntro {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
   }
 }

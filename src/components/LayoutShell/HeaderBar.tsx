@@ -19,6 +19,7 @@ interface HeaderBarProps {
   useRandomChats?: boolean;
   onToggleBrain?: () => void;
   onToggleRandomChats?: () => void;
+  onOpenCommandDeck?: (query?: string) => void;
 }
 
 export function HeaderBar({
@@ -28,11 +29,13 @@ export function HeaderBar({
   useRandomChats,
   onToggleBrain,
   onToggleRandomChats,
+  onOpenCommandDeck,
 }: HeaderBarProps) {
   const { toggle, setMobileOpen, mobileOpen } = useSidebar();
   const pathname = usePathname();
   const [models, setModels] = useState<AiModel[]>([]);
   const [mobileControlsExpanded, setMobileControlsExpanded] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState('');
 
   // Load models for the model selector
   useEffect(() => {
@@ -94,6 +97,34 @@ export function HeaderBar({
       </Link>
 
       <div className={styles.spacer} />
+
+      <form
+        className={styles.globalSearch}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onOpenCommandDeck?.(globalSearch.trim());
+        }}
+      >
+        <span className={styles.searchGlyph}>⌕</span>
+        <input
+          value={globalSearch}
+          onChange={(event) => setGlobalSearch(event.target.value)}
+          placeholder="Search everything..."
+          aria-label="Global search"
+        />
+        <span className={styles.searchKey}>⌘K</span>
+      </form>
+
+      <button
+        className={styles.commandButton}
+        onClick={() => onOpenCommandDeck?.(globalSearch.trim())}
+        title="Open command deck (Ctrl/Cmd+K)"
+        aria-label="Open command deck"
+      >
+        <span className={styles.commandMark}>⌘</span>
+        <span className={styles.commandLabel}>Command</span>
+        <span className={styles.commandKey}>K</span>
+      </button>
 
       {/* Controls */}
       <div className={`${styles.controls} ${mobileControlsExpanded ? styles.expanded : ''}`}>

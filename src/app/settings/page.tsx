@@ -386,12 +386,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[var(--color-bg)]">
-      <div className="mx-auto max-w-4xl p-8">
-        <h1 className="mb-2 text-2xl font-bold">Settings</h1>
-        <p className="mb-8 text-sm text-[var(--color-text-dim)]">
-          Strubloid configuration and AI provider management
-        </p>
+    <main className="cw-page settings-console flex-1 overflow-y-auto">
+      <div className="cw-container">
+        <div className="cw-shell cw-section mb-6">
+          <div className="cw-eyebrow">systems console / model routing</div>
+          <h1 className="cw-title">Settings</h1>
+          <p className="cw-subtitle">
+            Tune provider keys, model visibility, default routing, and random-memory hygiene without leaving the workbench.
+          </p>
+        </div>
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-700/50 bg-red-900/30 p-3 text-sm text-red-300">
@@ -400,15 +403,15 @@ export default function SettingsPage() {
         )}
 
         {/* Tabs */}
-        <div className="mb-8 flex gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-1">
+        <div className="mb-8 flex gap-1 rounded-full border border-white/10 bg-white/5 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           {TABS.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
               className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === key
-                  ? 'bg-blue-600 text-white'
-                  : 'text-[var(--color-text-dim)] hover:text-white'
+                  ? 'bg-[var(--color-accent)] text-black shadow-[0_0_24px_rgba(154,217,51,0.22)]'
+                  : 'text-[var(--color-text-dim)] hover:bg-white/5 hover:text-white'
               }`}
             >
               {label}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PageSkeleton } from '@/components/LoadingSkeleton';
+import { Badge, BentoCard, BentoGrid, Button, EmptyState } from '@/components/ui';
 
 interface Chat {
   id: string;
@@ -19,6 +20,10 @@ interface Project {
   isStarred: boolean;
   chatCount: number;
   chats: Chat[];
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export default function ProjectDetailPage() {
@@ -88,7 +93,7 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="flex flex-1 bg-[var(--color-bg)]">
+      <main className="cw-page flex flex-1">
         <PageSkeleton />
       </main>
     );
@@ -96,100 +101,117 @@ export default function ProjectDetailPage() {
 
   if (notFound || !project) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[var(--color-bg)]">
-        <div className="text-6xl font-bold text-[var(--color-text-dim)]">404</div>
-        <div className="text-[var(--color-text-dim)]">Project not found</div>
-        <Link href="/projects" className="btn-primary rounded-lg px-4 py-2">
-          Back to Projects
-        </Link>
+      <main className="cw-page flex flex-1 items-center justify-center p-8">
+        <EmptyState
+          icon="404"
+          title="Project brain not found"
+          description="This memory container no longer exists or could not be loaded."
+          action={<Button href="/projects" variant="primary">Back to workbench</Button>}
+        />
       </main>
     );
   }
 
+  const totalMessages = project.chats.reduce((sum, chat) => sum + (chat.messages?.length ?? 0), 0);
+  const latestChat = [...project.chats].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+
   return (
-    <main className="flex-1 overflow-y-auto bg-[var(--color-bg)]">
-      <div className="mx-auto max-w-4xl p-8">
-        {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
-          <div
-            className="h-6 w-6 flex-shrink-0 rounded-full"
-            style={{ backgroundColor: project.color }}
-          />
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">{project.name}</h1>
-            <p className="text-sm text-[var(--color-text-dim)]">
-              {project.chatCount} chat{project.chatCount !== 1 ? 's' : ''}
+    <main className="cw-page flex-1 overflow-y-auto">
+      <div className="cw-container">
+        <div className="cw-shell">
+          <header className="cw-section">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <Link href="/projects" className="cw-button">← Workbench</Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={toggleStar}
+                  className={`cw-button ${project.isStarred ? 'cw-button-primary' : ''}`}
+                  title={project.isStarred ? 'Unstar' : 'Star'}
+                >
+                  {project.isStarred ? '★ Priority brain' : '☆ Star brain'}
+                </button>
+                <Button variant="primary" onClick={createChat}>+ New chat</Button>
+              </div>
+            </div>
+
+            <div className="cw-eyebrow">
+              <span className="cw-dot" style={{ color: project.color, backgroundColor: project.color }} />
+              project command surface
+            </div>
+            <h1 className="cw-title">{project.name}</h1>
+            <p className="cw-subtitle">
+              This is the durable context surface for the project. Every project chat can become memory fuel for Brain mode,
+              so this page is optimized for continuing the right thread quickly.
             </p>
-          </div>
+          </header>
 
-          <button
-            onClick={toggleStar}
-            className={`star-btn p-2 ${project.isStarred ? 'starred' : 'text-[var(--color-text-dim)]'}`}
-            title={project.isStarred ? 'Unstar' : 'Star'}
-          >
-            <svg
-              className="h-6 w-6"
-              fill={project.isStarred ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-              />
-            </svg>
-          </button>
+          <section className="cw-section">
+            <BentoGrid>
+              <BentoCard span="featured" label="context state" title="Memory container status">
+                <div className="cw-metric-row">
+                  <div className="cw-metric"><span className="cw-metric-value">{project.chatCount}</span><span className="cw-metric-label">chat threads</span></div>
+                  <div className="cw-metric"><span className="cw-metric-value">{totalMessages}</span><span className="cw-metric-label">messages</span></div>
+                  <div className="cw-metric"><span className="cw-metric-value">{project.isStarred ? 'ON' : 'OFF'}</span><span className="cw-metric-label">priority pin</span></div>
+                </div>
+                <div className="cw-actions">
+                  <Button variant="primary" onClick={createChat}>Start project chat</Button>
+                  <Button href="/settings">Brain settings</Button>
+                </div>
+              </BentoCard>
 
-          <Link href="/projects" className="btn-secondary rounded-lg px-3 py-2">
-            Back
-          </Link>
-        </div>
+              <BentoCard span="third" label="latest signal" title={latestChat ? latestChat.title : 'No signal yet'}>
+                {latestChat ? (
+                  <>
+                    <p>{latestChat.messages?.length ?? 0} messages · updated {formatDate(latestChat.updatedAt)}</p>
+                    <div className="cw-actions"><Button href={`/chat/${latestChat.id}`}>Resume latest</Button></div>
+                  </>
+                ) : (
+                  <p>No chats exist yet. Create one to start feeding the project brain.</p>
+                )}
+              </BentoCard>
 
-        {/* New Chat Button */}
-        <button
-          onClick={createChat}
-          className="btn-primary mb-6 flex w-full items-center justify-center gap-2 rounded-lg py-3"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Chat
-        </button>
+              <BentoCard span="third" label="guidance" title="Use this when">
+                <p>You need continuity across chats: product decisions, implementation context, research threads, or anything the AI should recall later.</p>
+              </BentoCard>
 
-        {/* Chats List */}
-        {project.chats.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="mb-4 text-6xl opacity-20">💬</div>
-            <h3 className="mb-2 text-xl font-semibold">No chats yet</h3>
-            <p className="mb-6 text-[var(--color-text-dim)]">Start a conversation to see it here</p>
-            <button onClick={createChat} className="btn-primary rounded-lg px-4 py-2">
-              Create First Chat
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <h2 className="section-header">Chats</h2>
-            {project.chats.map((chat) => (
-              <Link
-                key={chat.id}
-                href={`/chat/${chat.id}`}
-                className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 transition-colors hover:border-[var(--color-accent)]"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">{chat.title}</div>
-                  <div className="mt-1 text-xs text-[var(--color-text-dim)]">
-                    {chat.messages?.length} messages
+              <section className="cw-card cw-card-full">
+                <div className="cw-card-body">
+                  <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                      <div className="cw-card-label">thread registry</div>
+                      <h2 className="cw-card-title">Project chats</h2>
+                      <p className="cw-card-copy">Choose a thread to continue the context, or create a fresh one when the topic changes.</p>
+                    </div>
+                    <Badge>{project.chats.length} thread{project.chats.length !== 1 ? 's' : ''}</Badge>
                   </div>
+
+                  {project.chats.length === 0 ? (
+                    <EmptyState
+                      icon="💬"
+                      title="No chats in this brain yet"
+                      description="Start a project chat and Strubloid will begin forming useful context around this memory container."
+                      action={<Button variant="primary" onClick={createChat}>Create first chat</Button>}
+                    />
+                  ) : (
+                    <div className="cw-list">
+                      {project.chats.map((chat) => (
+                        <Link key={chat.id} href={`/chat/${chat.id}`} className="cw-list-item">
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-semibold">{chat.title}</span>
+                            <span className="block text-xs text-[var(--cw-muted)]">
+                              {chat.messages?.length} messages · updated {formatDate(chat.updatedAt)}
+                            </span>
+                          </span>
+                          <span className="cw-pill">Open →</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="ml-4 text-xs text-[var(--color-text-dim)]">
-                  {new Date(chat.updatedAt).toLocaleDateString()}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+              </section>
+            </BentoGrid>
+          </section>
+        </div>
       </div>
     </main>
   );

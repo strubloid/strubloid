@@ -22,6 +22,39 @@ interface ChatComposerProps {
   previousMessages?: string[];
 }
 
+const INTENT_DOCK = [
+  {
+    id: 'study',
+    label: 'Study',
+    icon: '◇',
+    prompt: 'Study this with me. First map the topic, then teach it in layers, then quiz me:\n\n',
+  },
+  {
+    id: 'debug',
+    label: 'Debug',
+    icon: '⌁',
+    prompt: 'Debug this systematically. Start with likely root causes, ask for missing evidence only if needed, then propose a minimal fix:\n\n',
+  },
+  {
+    id: 'build',
+    label: 'Build',
+    icon: '▣',
+    prompt: 'Help me build this. Give me the smallest working slice first, then the next safe iteration:\n\n',
+  },
+  {
+    id: 'compare',
+    label: 'Compare',
+    icon: '⇄',
+    prompt: 'Compare these options like a senior product/engineering partner. Use tradeoffs, risks, and a recommendation:\n\n',
+  },
+  {
+    id: 'remember',
+    label: 'Remember',
+    icon: '◌',
+    prompt: 'Extract what should be remembered from this and separate durable facts from temporary notes:\n\n',
+  },
+] as const;
+
 export function ChatComposer({
   onSend,
   disabled = false,
@@ -102,6 +135,11 @@ export function ChatComposer({
     }
   }, [input, disabled, isSending, onSend, selectedModelId]);
 
+  const applyIntent = useCallback((prompt: string) => {
+    setInput((current) => current.trim() ? `${prompt}${current}` : prompt);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  }, []);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -157,6 +195,28 @@ export function ChatComposer({
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
+        <div className={styles.intentDock} aria-label="Conversation intent shortcuts">
+          <div className={styles.intentIntro}>
+            <span className={styles.intentKicker}>intent dock</span>
+            <span className={styles.intentText}>Start with a mode, not a blank box.</span>
+          </div>
+          <div className={styles.intentActions}>
+            {INTENT_DOCK.map((intent) => (
+              <button
+                key={intent.id}
+                type="button"
+                className={styles.intentChip}
+                onClick={() => applyIntent(intent.prompt)}
+                disabled={disabled || isSending}
+                title={`Use ${intent.label} mode`}
+              >
+                <span>{intent.icon}</span>
+                {intent.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Toolbar row */}
         <div className={styles.toolbar}>
           {/* Model selector */}

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ProjectCard } from '@/components/ProjectCard';
 import { ListSkeleton } from '@/components/LoadingSkeleton';
+import { Badge, BentoCard, BentoGrid, Button, EmptyState } from '@/components/ui';
 
 interface ChatPreview {
   id: string;
@@ -27,15 +27,20 @@ interface ProjectDetail extends Project {
 }
 
 const PROJECT_COLORS = [
-  '#9ad933', // Green (default)
-  '#ff6b6b', // Red
-  '#4ecdc4', // Teal
-  '#ffe66d', // Yellow
-  '#95e1d3', // Mint
-  '#f38181', // Coral
-  '#aa96da', // Purple
-  '#fcbad3', // Pink
+  '#9ad933',
+  '#ff6b6b',
+  '#4ecdc4',
+  '#ffe66d',
+  '#95e1d3',
+  '#f38181',
+  '#aa96da',
+  '#fcbad3',
 ];
+
+function formatDate(value?: string | null) {
+  if (!value) return 'No recent signal';
+  return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -45,7 +50,6 @@ export default function ProjectsPage() {
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectColor, setNewProjectColor] = useState(PROJECT_COLORS[0]);
 
-  // Accordion state
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [expandedProjectData, setExpandedProjectData] = useState<ProjectDetail | null>(null);
   const [loadingExpanded, setLoadingExpanded] = useState(false);
@@ -101,14 +105,12 @@ export default function ProjectsPage() {
       });
 
       setProjects((prev) =>
-        prev.map((p) =>
-          p.id === projectId ? { ...p, isStarred } : p
-        )
+        prev.map((p) => (p.id === projectId ? { ...p, isStarred } : p))
       );
       window.dispatchEvent(new CustomEvent('sidebar-refresh'));
 
       if (expandedProjectData?.id === projectId) {
-        setExpandedProjectData((prev) => prev ? { ...prev, isStarred } : null);
+        setExpandedProjectData((prev) => (prev ? { ...prev, isStarred } : null));
       }
     } catch (error) {
       console.error('Failed to toggle star', error);
@@ -171,174 +173,226 @@ export default function ProjectsPage() {
     }
   }
 
+  const totalChats = projects.reduce((sum, p) => sum + p.chatCount, 0);
+  const starredProjects = projects.filter((p) => p.isStarred);
+  const recentProjects = [...projects]
+    .filter((p) => p.lastChat?.updatedAt)
+    .sort((a, b) => new Date(b.lastChat!.updatedAt).getTime() - new Date(a.lastChat!.updatedAt).getTime())
+    .slice(0, 4);
+
   return (
-    <main className="flex-1 overflow-y-auto bg-[var(--color-bg)]">
-      <div className="mx-auto max-w-4xl p-8">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Projects</h1>
-            <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-              Organize your conversations into projects
+    <main className="cw-page flex-1 overflow-y-auto">
+      <div className="cw-container">
+        <div className="cw-shell">
+          <header className="cw-section">
+            <div className="cw-eyebrow">strubloid / cognitive workbench</div>
+            <h1 className="cw-title">Project brains, random captures, and AI context in one cockpit.</h1>
+            <p className="cw-subtitle">
+              Projects are not folders here — they are memory containers. Open one to continue a thread,
+              star important contexts, or create a fresh chat already wired into the right brain.
             </p>
-          </div>
-
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="btn-primary flex items-center gap-2 rounded-lg px-4 py-2"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Project
-          </button>
-        </div>
-
-        {/* Create form */}
-        {showCreateForm && (
-          <div className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-            <h3 className="mb-4 font-semibold">Create New Project</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm text-[var(--color-text-dim)]">
-                  Project Name
-                </label>
-                <input
-                  type="text"
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  placeholder="My Awesome Project"
-                  className="w-full"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreateProject();
-                    if (e.key === 'Escape') setShowCreateForm(false);
-                  }}
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm text-[var(--color-text-dim)]">
-                  Color
-                </label>
-                <div className="flex gap-2">
-                  {PROJECT_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setNewProjectColor(color)}
-                      className={`h-8 w-8 rounded-full transition-transform ${
-                        newProjectColor === color ? 'scale-110 ring-2 ring-white' : ''
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCreateProject}
-                  className="btn-primary rounded-lg px-4 py-2"
-                  disabled={!newProjectName.trim()}
-                >
-                  Create
-                </button>
-                <button
-                  onClick={() => setShowCreateForm(false)}
-                  className="btn-secondary rounded-lg px-4 py-2"
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="cw-actions">
+              <Button variant="primary" onClick={() => setShowCreateForm((v) => !v)}>
+                + New memory container
+              </Button>
+              <Button href="/chat">Open random capture</Button>
+              <Button href="/settings">Tune model routing</Button>
             </div>
-          </div>
-        )}
+          </header>
 
-        {/* Projects list with accordion */}
-        {isLoading ? (
-          <ListSkeleton count={6} />
-        ) : projects.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="mb-4 text-6xl opacity-20">📁</div>
-            <h3 className="mb-2 text-xl font-semibold">No projects yet</h3>
-            <p className="mb-6 text-[var(--color-text-dim)]">
-              Create your first project to organize your conversations
-            </p>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="btn-primary rounded-lg px-4 py-2"
-            >
-              Create Project
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {projects.map((project) => {
-              const isExpanded = expandedProjectId === project.id;
-              return (
-                <div key={project.id} className="overflow-hidden rounded-lg">
-                  {/* Project card — clicking toggles expand */}
-                  <ProjectCard
-                    {...project}
-                    onToggleStar={(isStarred) => handleToggleStar(project.id, isStarred)}
-                    onClick={() => handleProjectClick(project.id)}
-                  />
-
-                  {/* Expanded chat list */}
-                  {isExpanded && (
-                    <div className="border-x border-b border-[var(--color-border)] rounded-b-lg bg-[var(--color-bg-secondary)] px-3 pb-3">
-                      {loadingExpanded ? (
-                        <div className="chat-item opacity-50">Loading chats...</div>
-                      ) : expandedProjectData ? (
-                        expandedProjectData.chats.length === 0 ? (
-                          <div className="py-4 text-center">
-                            <p className="mb-2 text-sm text-[var(--color-text-dim)]">
-                              No chats in this project yet
-                            </p>
-                            <button
-                              onClick={() => createChatInProject(project.id)}
-                              className="text-xs text-[var(--color-accent)] hover:underline"
-                            >
-                              Create first chat
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-0.5 pt-2">
-                            {expandedProjectData.chats.map((chat) => (
-                              <div key={chat.id} className="group flex items-center gap-1">
-                                <Link
-                                  href={`/chat/${chat.id}`}
-                                  className="chat-item block flex-1 truncate"
-                                >
-                                  {chat.title}
-                                </Link>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    handleDeleteChat(chat.id, project.id);
-                                  }}
-                                  className="flex-shrink-0 rounded p-1 text-[var(--color-text-dim)] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
-                                  title="Delete chat"
-                                  aria-label="Delete chat"
-                                >
-                                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      ) : null}
-                    </div>
-                  )}
+          <section className="cw-section">
+            {showCreateForm && (
+              <div className="cw-panel-form">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="cw-card-label">new context</div>
+                    <h2 className="cw-card-title">Create a project brain</h2>
+                    <p className="cw-card-copy">Give the AI a durable place to remember a domain, product, or experiment.</p>
+                  </div>
+                  <button className="cw-button" onClick={() => setShowCreateForm(false)}>Close</button>
                 </div>
-              );
-            })}
-          </div>
-        )}
+
+                <div className="space-y-4">
+                  <label className="block text-sm text-[var(--cw-muted)]">
+                    Project name
+                    <input
+                      type="text"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      placeholder="Research lab, Strubloid UI, Personal ops..."
+                      className="mt-2 w-full"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleCreateProject();
+                        if (e.key === 'Escape') setShowCreateForm(false);
+                      }}
+                    />
+                  </label>
+
+                  <div>
+                    <div className="mb-2 text-sm text-[var(--cw-muted)]">Signal color</div>
+                    <div className="flex flex-wrap gap-2">
+                      {PROJECT_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => setNewProjectColor(color)}
+                          aria-label={`Choose color ${color}`}
+                          className={`h-9 w-9 rounded-full border transition-transform ${
+                            newProjectColor === color ? 'scale-110 border-white' : 'border-white/20'
+                          }`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="cw-actions">
+                    <Button variant="primary" onClick={handleCreateProject} disabled={!newProjectName.trim()}>
+                      Create project brain
+                    </Button>
+                    <Button onClick={() => setShowCreateForm(false)}>Cancel</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isLoading ? (
+              <ListSkeleton count={6} />
+            ) : projects.length === 0 ? (
+              <EmptyState
+                icon="🧠"
+                title="No project brains yet"
+                description="Create your first memory container. Future chats in that project will become context the AI can reference when Brain is enabled."
+                action={<Button variant="primary" onClick={() => setShowCreateForm(true)}>Create first project</Button>}
+              />
+            ) : (
+              <BentoGrid>
+                <BentoCard span="featured" label="workspace telemetry" title="Your cognitive map is online">
+                  <div className="cw-metric-row">
+                    <div className="cw-metric"><span className="cw-metric-value">{projects.length}</span><span className="cw-metric-label">project brains</span></div>
+                    <div className="cw-metric"><span className="cw-metric-value">{totalChats}</span><span className="cw-metric-label">project chats</span></div>
+                    <div className="cw-metric"><span className="cw-metric-value">{starredProjects.length}</span><span className="cw-metric-label">starred contexts</span></div>
+                  </div>
+                  <div className="cw-actions">
+                    <Button variant="primary" onClick={() => setShowCreateForm(true)}>Add context</Button>
+                    <Button href="/settings">Memory hygiene</Button>
+                  </div>
+                </BentoCard>
+
+                <BentoCard span="third" label="priority contexts" title="Starred brains">
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {starredProjects.length > 0 ? starredProjects.slice(0, 8).map((project) => (
+                      <Link key={project.id} href={`/projects/${project.id}`} className="cw-pill">
+                        <span className="cw-dot" style={{ color: project.color, backgroundColor: project.color }} />
+                        {project.name}
+                      </Link>
+                    )) : <span className="text-sm text-[var(--cw-muted)]">Star a project to pin it into your cockpit.</span>}
+                  </div>
+                </BentoCard>
+
+                <BentoCard span="third" label="recent signal" title="Latest activity">
+                  <div className="mt-4 cw-list">
+                    {recentProjects.length > 0 ? recentProjects.map((project) => (
+                      <Link key={project.id} href={`/projects/${project.id}`} className="cw-list-item">
+                        <span className="min-w-0 truncate">{project.name}</span>
+                        <span className="text-xs text-[var(--cw-muted)]">{formatDate(project.lastChat?.updatedAt)}</span>
+                      </Link>
+                    )) : <span className="text-sm text-[var(--cw-muted)]">No recent project chats yet.</span>}
+                  </div>
+                </BentoCard>
+
+                <section className="cw-card cw-card-full">
+                  <div className="cw-card-body">
+                    <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+                      <div>
+                        <div className="cw-card-label">all containers</div>
+                        <h2 className="cw-card-title">Project brain registry</h2>
+                        <p className="cw-card-copy">Click a project row to inspect chats without leaving the cockpit. Use the title to open the full project command surface.</p>
+                      </div>
+                      <Badge>{projects.length} active</Badge>
+                    </div>
+
+                    <div className="cw-list">
+                      {projects.map((project) => {
+                        const isExpanded = expandedProjectId === project.id;
+                        return (
+                          <article key={project.id} className="rounded-2xl border border-white/10 bg-black/10">
+                            <div className="cw-list-item">
+                              <button
+                                type="button"
+                                onClick={() => handleProjectClick(project.id)}
+                                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                                aria-expanded={isExpanded}
+                              >
+                                <span className="cw-dot" style={{ color: project.color, backgroundColor: project.color }} />
+                                <span className="min-w-0">
+                                  <span className="block truncate font-semibold">{project.name}</span>
+                                  <span className="block truncate text-xs text-[var(--cw-muted)]">
+                                    {project.chatCount} chat{project.chatCount !== 1 ? 's' : ''} · {project.lastChat?.title ?? 'Awaiting first signal'}
+                                  </span>
+                                </span>
+                              </button>
+
+                              <div className="flex shrink-0 items-center gap-2">
+                                <button
+                                  onClick={() => handleToggleStar(project.id, !project.isStarred)}
+                                  className={`star-btn rounded-full p-2 ${project.isStarred ? 'starred' : 'text-[var(--cw-muted)]'}`}
+                                  aria-label={project.isStarred ? 'Unstar project' : 'Star project'}
+                                  title={project.isStarred ? 'Unstar' : 'Star'}
+                                >
+                                  ★
+                                </button>
+                                <Link href={`/projects/${project.id}`} className="cw-button">Open</Link>
+                              </div>
+                            </div>
+
+                            {isExpanded && (
+                              <div className="px-4 pb-4">
+                                {loadingExpanded ? (
+                                  <div className="py-3 text-sm text-[var(--cw-muted)]">Loading chat threads...</div>
+                                ) : expandedProjectData ? (
+                                  expandedProjectData.chats.length === 0 ? (
+                                    <div className="cw-empty py-6">
+                                      <p className="mb-4 text-sm text-[var(--cw-muted)]">No chats in this project yet.</p>
+                                      <Button variant="primary" onClick={() => createChatInProject(project.id)}>Create first chat</Button>
+                                    </div>
+                                  ) : (
+                                    <div className="cw-list pt-3">
+                                      {expandedProjectData.chats.map((chat) => (
+                                        <div key={chat.id} className="cw-list-item">
+                                          <Link href={`/chat/${chat.id}`} className="min-w-0 flex-1 truncate">
+                                            {chat.title}
+                                            <span className="ml-2 text-xs text-[var(--cw-muted)]">{chat.messages?.length ?? 0} msgs</span>
+                                          </Link>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              e.preventDefault();
+                                              handleDeleteChat(chat.id, project.id);
+                                            }}
+                                            className="cw-button cw-button-danger min-h-0 px-3 py-1 text-xs"
+                                            title="Delete chat"
+                                            aria-label="Delete chat"
+                                          >
+                                            Delete
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )
+                                ) : null}
+                              </div>
+                            )}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </section>
+              </BentoGrid>
+            )}
+          </section>
+        </div>
       </div>
     </main>
   );
