@@ -105,7 +105,14 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
               onClick={() => setMobileOpen(false)}
             />
           )}
-          <main className={styles['main-area']}>{children}</main>
+          <main
+            className={styles['main-area']}
+            onClick={() => {
+              setSidebarMode((current) => (current === 'full' ? 'icons' : current));
+            }}
+          >
+            {children}
+          </main>
         </div>
         <CommandDeck
           open={commandDeckOpen}

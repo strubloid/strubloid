@@ -19,6 +19,7 @@
   overflow: hidden;
   position: sticky;
   top: 0;
+  z-index: $z-sidebar;
   flex-shrink: 0;
   transition:
     width $transition-smooth,
@@ -29,9 +30,27 @@
 
   &.mode-full {
     width: $sidebar-width-full;
+    height: min(700px, 80vh);
+    align-self: center;
+
+    .sidebar-orbits {
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
 
     .orbit-section.expanded {
-      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .readable-list.expanded {
+      max-height: min(360px, 38vh);
+      overflow-y: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
   }
 
@@ -47,6 +66,7 @@
     box-shadow:
       8px 0 26px rgba(0, 0, 0, 0.2),
       inset -1px 0 0 rgba($color-accent, 0.12);
+    overflow: visible;
 
     .sidebar-label,
     .chat-title,
@@ -57,6 +77,7 @@
     .sidebar-brush {
       align-items: center;
       padding: 28px 5px 16px !important;
+      overflow: visible;
     }
 
     .sidebar-brush::before {
@@ -67,7 +88,12 @@
       background: linear-gradient(180deg, transparent, rgba($color-accent, 0.52), transparent);
     }
 
+    .sidebar-orbits {
+      overflow: visible !important;
+    }
+
     .orbit-section {
+      position: relative;
       width: 38px;
       border: 0;
       border-radius: 999px;
@@ -98,6 +124,64 @@
 
     .readable-list {
       display: none !important;
+    }
+
+    .orbit-section.expanded .readable-list {
+      position: absolute;
+      top: -34px;
+      left: 67px;
+      z-index: $z-sidebar + 1;
+      display: grid !important;
+      width: 224px;
+      max-height: 320px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      border: 1px solid rgba($color-accent, 0.18);
+      border-radius: 18px;
+      background: linear-gradient(90deg, rgba($color-accent, 0.08), transparent 58px),
+        rgba($color-bg-secondary, 0.94);
+      padding: 10px;
+      opacity: 1;
+      pointer-events: auto;
+      box-shadow:
+        18px 18px 52px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .orbit-section.expanded .orbit-node {
+      width: 100%;
+    }
+
+    .orbit-section.expanded .chat-item,
+    .orbit-section.expanded .project-item {
+      width: 100%;
+      height: auto;
+      min-height: 36px;
+      border-radius: 12px;
+      padding: 9px 11px;
+      display: block !important;
+      text-align: left;
+    }
+
+    .orbit-section.expanded .chat-title,
+    .orbit-section.expanded .project-name {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .orbit-section.expanded .project-item a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
     }
 
     .orbit-node {
@@ -340,6 +424,8 @@
   gap: 7px;
   overflow: hidden;
   padding: 4px 2px 2px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .readable-list {
@@ -355,7 +441,11 @@
     opacity: 1;
     overflow-y: auto;
     pointer-events: auto;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 

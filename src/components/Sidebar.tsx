@@ -50,7 +50,7 @@ export function Sidebar({
   const [starredProjects, setStarredProjects] = useState<ProjectPreview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<ChatPreview | null>(null);
-  const [randomChatsExpanded, setRandomChatsExpanded] = useState(true);
+  const [randomChatsExpanded, setRandomChatsExpanded] = useState(false);
   const [projectsExpanded, setProjectsExpanded] = useState(false);
   const [starredExpanded, setStarredExpanded] = useState(false);
 
@@ -66,6 +66,7 @@ export function Sidebar({
     projects: ProjectPreview[];
   } | null>(null);
   const [searching, setSearching] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
   const loadDataRef = useRef(loadData);
   const expandedProjectIdRef = useRef(expandedProjectId);
 
@@ -76,6 +77,21 @@ export function Sidebar({
   useEffect(() => {
     expandedProjectIdRef.current = expandedProjectId;
   }, [expandedProjectId]);
+
+  useEffect(() => {
+    if (mode !== 'icons' || (!randomChatsExpanded && !projectsExpanded)) return;
+
+    const closeDrawerOnOutsideClick = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (sidebarRef.current?.contains(target)) return;
+      setRandomChatsExpanded(false);
+      setProjectsExpanded(false);
+    };
+
+    document.addEventListener('pointerdown', closeDrawerOnOutsideClick);
+    return () => document.removeEventListener('pointerdown', closeDrawerOnOutsideClick);
+  }, [mode, randomChatsExpanded, projectsExpanded]);
 
   useEffect(() => {
     loadData();
@@ -168,6 +184,12 @@ export function Sidebar({
   }
 
   function toggleRandomChatsSection() {
+    if (isIconsMode) {
+      setRandomChatsExpanded((expanded) => !expanded);
+      setProjectsExpanded(false);
+      return;
+    }
+
     setRandomChatsExpanded((expanded) => {
       const nextExpanded = !expanded;
       if (nextExpanded) {
@@ -178,6 +200,12 @@ export function Sidebar({
   }
 
   function toggleProjectsSection() {
+    if (isIconsMode) {
+      setProjectsExpanded((expanded) => !expanded);
+      setRandomChatsExpanded(false);
+      return;
+    }
+
     setProjectsExpanded((expanded) => {
       const nextExpanded = !expanded;
       if (nextExpanded) {
@@ -301,10 +329,12 @@ export function Sidebar({
 
   const isIconsMode = mode === 'icons';
   const isHidden = mode === 'hidden';
+  const showRandomDrawer = isIconsMode && randomChatsExpanded;
+  const showProjectsDrawer = isIconsMode && projectsExpanded;
 
   return (
     <>
-      <aside className={`sidebar mode-${mode} ${mobileOpen ? 'open' : ''}`}>
+      <aside ref={sidebarRef} className={`sidebar mode-${mode} ${mobileOpen ? 'open' : ''}`}>
         <div className="sidebar-brush flex h-full flex-col p-4">
           <div className="brush-head">
             <span className="brush-kicker">Strub</span>
@@ -362,10 +392,10 @@ export function Sidebar({
               </button>
               <div hidden={!randomChatsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">{!isIconsMode && 'Loading...'}</div>
+                  <div className="chat-item opacity-50">{showRandomDrawer || !isIconsMode ? 'Loading...' : ''}</div>
                 ) : filteredChats.length === 0 ? (
                   <div className="chat-item opacity-50">
-                    {!isIconsMode &&
+                    {(showRandomDrawer || !isIconsMode) &&
                       (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No chats yet')}
                   </div>
                 ) : (
@@ -379,7 +409,7 @@ export function Sidebar({
                           else ctx.setMobileOpen(false);
                         }}
                       >
-                        {!isIconsMode && chat.title}
+                        {(showRandomDrawer || !isIconsMode) && chat.title}
                       </Link>
                       {!isIconsMode && (
                         <button
@@ -467,10 +497,10 @@ export function Sidebar({
               </div>
               <div hidden={!projectsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">{!isIconsMode && 'Loading...'}</div>
+                  <div className="chat-item opacity-50">{showProjectsDrawer || !isIconsMode ? 'Loading...' : ''}</div>
                 ) : filteredProjects.length === 0 ? (
                   <div className="chat-item opacity-50">
-                    {!isIconsMode &&
+                    {(showProjectsDrawer || !isIconsMode) &&
                       (searching ? 'Searching...' : searchQuery ? 'No matches' : 'No projects')}
                   </div>
                 ) : (
@@ -484,7 +514,7 @@ export function Sidebar({
                           <Link
                             href={`/projects/${project.id}`}
                             className={
-                              isIconsMode
+                              isIconsMode && !showProjectsDrawer
                                 ? 'flex items-center justify-center'
                                 : 'block truncate pr-10'
                             }
@@ -497,7 +527,7 @@ export function Sidebar({
                               className="inline-block h-2 w-2 rounded-full"
                               style={{ backgroundColor: project.color }}
                             />
-                            {!isIconsMode && <span className="project-name">{project.name}</span>}
+                            {(showProjectsDrawer || !isIconsMode) && <span className="project-name">{project.name}</span>}
                           </Link>
                           {!isIconsMode && (
                             <button
