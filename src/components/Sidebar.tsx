@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -54,10 +54,27 @@ export function Sidebar({ mode: externalMode, mobileOpen: externalMobileOpen, on
 
   // Search/filter
   const [searchQuery, setSearchQuery] = useState('');
+  const loadDataRef = useRef(loadData);
+
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  });
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Refresh sidebar data when custom event fires (e.g. after title edit, clean-random)
+  useEffect(() => {
+    const handler = () => loadDataRef.current();
+    window.addEventListener('sidebar-refresh', handler);
+    return () => window.removeEventListener('sidebar-refresh', handler);
+  }, []);
+
+  // Also refresh on pathname changes (navigate back to sidebar view)
+  useEffect(() => {
+    loadData();
+  }, [pathname]);
 
   // Auto-expand project based on current pathname
   useEffect(() => {

@@ -1,0 +1,126 @@
+@use '../styles/variables' as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba($color-bg-secondary, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid $color-border;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  transform: translateY(0);
+  transition: transform 0.25s ease;
+
+  // When hidden, translate out of view
+  &.hidden {
+    transform: translateY(-100%);
+  }
+}
+
+.titleSection {
+  min-width: 0;
+  flex: 1;
+  padding-right: 16px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: $color-text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+  border-radius: 4px;
+  padding: 0 4px;
+  transition: background 0.15s;
+
+  &:hover {
+    background: $color-bg-tertiary;
+  }
+}
+
+.subtitle {
+  font-size: $font-size-xs;
+  color: $color-text-dim;
+  margin-top: 2px;
+}
+
+.editGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.editInput {
+  width: 100%;
+  border: 1px solid $color-accent;
+  border-radius: 6px;
+  background: $color-bg;
+  color: $color-text;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+
+.error {
+  font-size: 11px;
+  color: $color-danger;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: $color-text-dim;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $color-bg-tertiary;
+    color: $color-text;
+  }
+}
+
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: $color-text-dim;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+  }
+}

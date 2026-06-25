@@ -1,0 +1,881 @@
+{
+  "date": "20260625",
+  "timestamp": "2026-06-25T11:12:51.095390",
+  "audit": {
+    "total_vulnerabilities": 14,
+    "critical": 2,
+    "high": 6,
+    "moderate": 6,
+    "low": 0,
+    "fixable": 4,
+    "fixable_breaking": 10,
+    "details": [
+      {
+        "package": "next",
+        "severity": "critical",
+        "via": [
+          {
+            "source": 1101438,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js Allows a Denial of Service (DoS) with Server Actions",
+            "url": "https://github.com/advisories/GHSA-7m27-7ghc-44w9",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-770"
+            ],
+            "cvss": {
+              "score": 5.3,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+            },
+            "range": ">=14.0.0 <14.2.21"
+          },
+          {
+            "source": 1105461,
+            "name": "next",
+            "dependency": "next",
+            "title": "Information exposure in Next.js dev server due to lack of origin verification",
+            "url": "https://github.com/advisories/GHSA-3h52-269p-cp9r",
+            "severity": "low",
+            "cwe": [
+              "CWE-1385"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": ">=13.0 <14.2.30"
+          },
+          {
+            "source": 1107226,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js Affected by Cache Key Confusion for Image Optimization API Routes",
+            "url": "https://github.com/advisories/GHSA-g5qg-72qw-gw5v",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-524"
+            ],
+            "cvss": {
+              "score": 6.2,
+              "vectorString": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+            },
+            "range": ">=0.9.9 <14.2.31"
+          },
+          {
+            "source": 1107512,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js Improper Middleware Redirect Handling Leads to SSRF",
+            "url": "https://github.com/advisories/GHSA-4342-x723-ch2f",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-918"
+            ],
+            "cvss": {
+              "score": 6.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N"
+            },
+            "range": ">=0.9.9 <14.2.32"
+          },
+          {
+            "source": 1107513,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js Content Injection Vulnerability for Image Optimization",
+            "url": "https://github.com/advisories/GHSA-xv57-4mr9-wg8v",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-20"
+            ],
+            "cvss": {
+              "score": 4.3,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+            },
+            "range": ">=0.9.9 <14.2.31"
+          },
+          {
+            "source": 1108291,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js Race Condition to Cache Poisoning",
+            "url": "https://github.com/advisories/GHSA-qpjv-v59x-3qc4",
+            "severity": "low",
+            "cwe": [
+              "CWE-362"
+            ],
+            "cvss": {
+              "score": 3.7,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"
+            },
+            "range": ">=0.9.9 <14.2.24"
+          },
+          {
+            "source": 1111391,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next Vulnerable to Denial of Service with Server Components",
+            "url": "https://github.com/advisories/GHSA-mwv6-3258-q52c",
+            "severity": "high",
+            "cwe": [
+              "CWE-400",
+              "CWE-502",
+              "CWE-1395"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=13.3.0 <14.2.34"
+          },
+          {
+            "source": 1112182,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next has a Denial of Service with Server Components - Incomplete Fix Follow-Up",
+            "url": "https://github.com/advisories/GHSA-5j59-xgg2-r9c4",
+            "severity": "high",
+            "cwe": [
+              "CWE-400",
+              "CWE-502",
+              "CWE-1395"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=13.3.1-canary.0 <14.2.35"
+          },
+          {
+            "source": 1112593,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js self-hosted applications vulnerable to DoS via Image Optimizer remotePatterns configuration",
+            "url": "https://github.com/advisories/GHSA-9g9p-9gw9-jx7f",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-400",
+              "CWE-770"
+            ],
+            "cvss": {
+              "score": 5.9,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=10.0.0 <15.5.10"
+          },
+          {
+            "source": 1112653,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components",
+            "url": "https://github.com/advisories/GHSA-h25m-26qc-wcjf",
+            "severity": "high",
+            "cwe": [
+              "CWE-400",
+              "CWE-502"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=13.0.0 <15.0.8"
+          },
+          {
+            "source": 1113689,
+            "name": "next",
+            "dependency": "next",
+            "title": "Authorization Bypass in Next.js Middleware",
+            "url": "https://github.com/advisories/GHSA-f82v-jwr5-mffw",
+            "severity": "critical",
+            "cwe": [
+              "CWE-285",
+              "CWE-863"
+            ],
+            "cvss": {
+              "score": 9.1,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+            },
+            "range": ">=14.0.0 <14.2.25"
+          },
+          {
+            "source": 1114897,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js: HTTP request smuggling in rewrites",
+            "url": "https://github.com/advisories/GHSA-ggv3-7p47-pfv8",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-444"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": ">=9.5.0 <15.5.13"
+          },
+          {
+            "source": 1114940,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js: Unbounded next/image disk cache growth can exhaust storage",
+            "url": "https://github.com/advisories/GHSA-3x4c-7xq6-9pq8",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-400"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": ">=10.0.0 <15.5.14"
+          },
+          {
+            "source": 1116376,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js has a Denial of Service with Server Components",
+            "url": "https://github.com/advisories/GHSA-q4gf-8mx6-v5v3",
+            "severity": "high",
+            "cwe": [
+              "CWE-770"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=13.0.0 <15.5.15"
+          },
+          {
+            "source": 1117931,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js Vulnerable to Denial of Service with Server Components",
+            "url": "https://github.com/advisories/GHSA-8h8q-6873-q5fj",
+            "severity": "high",
+            "cwe": [
+              "CWE-770"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=13.0.0 <15.5.16"
+          },
+          {
+            "source": 1118942,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js's Middleware / Proxy redirects can be cache-poisoned",
+            "url": "https://github.com/advisories/GHSA-3g8h-86w9-wvmq",
+            "severity": "low",
+            "cwe": [
+              "CWE-349"
+            ],
+            "cvss": {
+              "score": 3.7,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L"
+            },
+            "range": ">=12.2.0 <15.5.16"
+          },
+          {
+            "source": 1118944,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js vulnerable to cross-site scripting in App Router applications using CSP nonces",
+            "url": "https://github.com/advisories/GHSA-ffhc-5mcf-pf4q",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-79"
+            ],
+            "cvss": {
+              "score": 4.7,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N"
+            },
+            "range": ">=13.4.0 <15.5.16"
+          },
+          {
+            "source": 1118946,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js vulnerable to cache poisoning via collisions in React Server Component cache-busting",
+            "url": "https://github.com/advisories/GHSA-vfv6-92ff-j949",
+            "severity": "low",
+            "cwe": [
+              "CWE-328"
+            ],
+            "cvss": {
+              "score": 3.7,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"
+            },
+            "range": ">=13.4.6 <15.5.16"
+          },
+          {
+            "source": 1118948,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js has cross-site scripting in beforeInteractive scripts with untrusted input",
+            "url": "https://github.com/advisories/GHSA-gx5p-jg67-6x7h",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-79"
+            ],
+            "cvss": {
+              "score": 6.1,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+            },
+            "range": ">=13.0.0 <15.5.16"
+          },
+          {
+            "source": 1118952,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js has a Denial of Service in the Image Optimization API",
+            "url": "https://github.com/advisories/GHSA-h64f-5h5j-jqjh",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-770"
+            ],
+            "cvss": {
+              "score": 5.9,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=10.0.0 <15.5.16"
+          },
+          {
+            "source": 1118954,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades",
+            "url": "https://github.com/advisories/GHSA-c4j6-fc7j-m34r",
+            "severity": "high",
+            "cwe": [
+              "CWE-918"
+            ],
+            "cvss": {
+              "score": 8.6,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N"
+            },
+            "range": ">=13.4.13 <15.5.16"
+          },
+          {
+            "source": 1118958,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js vulnerable to cache poisoning in React Server Component responses",
+            "url": "https://github.com/advisories/GHSA-wfc6-r584-vfw7",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-436"
+            ],
+            "cvss": {
+              "score": 5.4,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:N/I:L/A:L"
+            },
+            "range": ">=14.2.0 <15.5.16"
+          },
+          {
+            "source": 1118962,
+            "name": "next",
+            "dependency": "next",
+            "title": "Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n",
+            "url": "https://github.com/advisories/GHSA-36qx-fr4f-26g5",
+            "severity": "high",
+            "cwe": [
+              "CWE-863"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+            },
+            "range": ">=12.2.0 <15.5.16"
+          },
+          "postcss"
+        ],
+        "fix_available": "16.2.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "vitest",
+        "severity": "critical",
+        "via": [
+          "@vitest/mocker",
+          {
+            "source": 1117402,
+            "name": "vitest",
+            "dependency": "vitest",
+            "title": "Vitest allows Remote Code Execution when accessing a malicious website while Vitest API server is listening",
+            "url": "https://github.com/advisories/GHSA-9crc-q9x8-hgqq",
+            "severity": "critical",
+            "cwe": [
+              "CWE-1385"
+            ],
+            "cvss": {
+              "score": 9.6,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+            },
+            "range": ">=2.0.0 <2.1.9"
+          },
+          {
+            "source": 1120126,
+            "name": "vitest",
+            "dependency": "vitest",
+            "title": "When Vitest UI server is listening, arbitrary file can be read and executed",
+            "url": "https://github.com/advisories/GHSA-5xrq-8626-4rwp",
+            "severity": "critical",
+            "cwe": [
+              "CWE-862"
+            ],
+            "cvss": {
+              "score": 9.8,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+            },
+            "range": "<3.2.6"
+          },
+          "vite",
+          "vite-node"
+        ],
+        "fix_available": "4.1.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "@next/eslint-plugin-next",
+        "severity": "high",
+        "via": [
+          "glob"
+        ],
+        "fix_available": "16.2.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "@playwright/test",
+        "severity": "high",
+        "via": [
+          "playwright"
+        ],
+        "fix_available": "1.61.1",
+        "fix_breaking": false
+      },
+      {
+        "package": "eslint-config-next",
+        "severity": "high",
+        "via": [
+          "@next/eslint-plugin-next"
+        ],
+        "fix_available": "16.2.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "glob",
+        "severity": "high",
+        "via": [
+          {
+            "source": 1109842,
+            "name": "glob",
+            "dependency": "glob",
+            "title": "glob CLI: Command injection via -c/--cmd executes matches with shell:true",
+            "url": "https://github.com/advisories/GHSA-5j98-mcp5-4vw2",
+            "severity": "high",
+            "cwe": [
+              "CWE-78"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+            },
+            "range": ">=10.2.0 <10.5.0"
+          }
+        ],
+        "fix_available": "16.2.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "playwright",
+        "severity": "high",
+        "via": [
+          {
+            "source": 1109208,
+            "name": "playwright",
+            "dependency": "playwright",
+            "title": "Playwright downloads and installs browsers without verifying the authenticity of the SSL certificate",
+            "url": "https://github.com/advisories/GHSA-7mvr-c777-76hp",
+            "severity": "high",
+            "cwe": [
+              "CWE-347"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<1.55.1"
+          }
+        ],
+        "fix_available": "1.61.1",
+        "fix_breaking": false
+      },
+      {
+        "package": "vite",
+        "severity": "high",
+        "via": [
+          {
+            "source": 1116229,
+            "name": "vite",
+            "dependency": "vite",
+            "title": "Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling",
+            "url": "https://github.com/advisories/GHSA-4w7w-66w2-5vf9",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-22",
+              "CWE-200"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<=6.4.1"
+          },
+          {
+            "source": 1120784,
+            "name": "vite",
+            "dependency": "vite",
+            "title": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+            "url": "https://github.com/advisories/GHSA-v6wh-96g9-6wx3",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-73",
+              "CWE-522"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<=6.4.2"
+          },
+          {
+            "source": 1120789,
+            "name": "vite",
+            "dependency": "vite",
+            "title": "vite: `server.fs.deny` bypass on Windows alternate paths",
+            "url": "https://github.com/advisories/GHSA-fx2h-pf6j-xcff",
+            "severity": "high",
+            "cwe": [
+              "CWE-22",
+              "CWE-200"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<=6.4.2"
+          },
+          "esbuild"
+        ],
+        "fix_available": "4.1.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "@vitejs/plugin-react",
+        "severity": "moderate",
+        "via": [
+          "vite"
+        ],
+        "fix_available": "4.7.0",
+        "fix_breaking": false
+      },
+      {
+        "package": "@vitest/mocker",
+        "severity": "moderate",
+        "via": [
+          "vite"
+        ],
+        "fix_available": "4.1.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "esbuild",
+        "severity": "moderate",
+        "via": [
+          {
+            "source": 1102341,
+            "name": "esbuild",
+            "dependency": "esbuild",
+            "title": "esbuild enables any website to send any requests to the development server and read the response",
+            "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-346"
+            ],
+            "cvss": {
+              "score": 5.3,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+            },
+            "range": "<=0.24.2"
+          }
+        ],
+        "fix_available": "4.1.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "postcss",
+        "severity": "moderate",
+        "via": [
+          {
+            "source": 1117015,
+            "name": "postcss",
+            "dependency": "postcss",
+            "title": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+            "url": "https://github.com/advisories/GHSA-qx2v-qp2m-jg93",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-79"
+            ],
+            "cvss": {
+              "score": 6.1,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+            },
+            "range": "<8.5.10"
+          }
+        ],
+        "fix_available": "16.2.9",
+        "fix_breaking": true
+      },
+      {
+        "package": "tsx",
+        "severity": "moderate",
+        "via": [
+          "esbuild"
+        ],
+        "fix_available": "4.22.4",
+        "fix_breaking": false
+      },
+      {
+        "package": "vite-node",
+        "severity": "moderate",
+        "via": [
+          "vite"
+        ],
+        "fix_available": "4.1.9",
+        "fix_breaking": true
+      }
+    ]
+  },
+  "outdated": {
+    "total": 25,
+    "major_gaps": [
+      "@playwright/test:1.48.2\u21921.61.1",
+      "@prisma/client:5.22.0\u21927.8.0",
+      "@testing-library/jest-dom:6.6.3\u21926.9.1",
+      "@testing-library/react:16.0.1\u219216.3.2",
+      "@testing-library/user-event:14.5.2\u219214.6.1",
+      "@types/node:20.17.6\u219226.0.1",
+      "@types/react-dom:18.3.1\u219219.2.3",
+      "@types/react:18.3.12\u219219.2.17",
+      "@vitejs/plugin-react:4.3.3\u21926.0.3",
+      "autoprefixer:10.4.20\u219210.5.2",
+      "eslint-config-next:14.2.18\u219216.2.9",
+      "eslint:8.57.1\u219210.5.0",
+      "jsdom:25.0.1\u219229.1.1",
+      "next:14.2.18\u219216.2.9",
+      "postcss:8.4.49\u21928.5.15",
+      "prettier-plugin-tailwindcss:0.6.8\u21920.8.0",
+      "prettier:3.3.3\u21923.8.4",
+      "prisma:5.22.0\u21927.8.0",
+      "react-dom:18.3.1\u219219.2.7",
+      "react:18.3.1\u219219.2.7",
+      "tailwindcss:3.4.14\u21924.3.1",
+      "tsx:4.19.2\u21924.22.4",
+      "typescript:5.6.3\u21926.0.3",
+      "vitest:2.1.5\u21924.1.9",
+      "zod:3.23.8\u21924.4.3"
+    ],
+    "safe_updates": [],
+    "details": [
+      {
+        "package": "@playwright/test",
+        "current": "1.48.2",
+        "wanted": "1.48.2",
+        "latest": "1.61.1"
+      },
+      {
+        "package": "@prisma/client",
+        "current": "5.22.0",
+        "wanted": "5.22.0",
+        "latest": "7.8.0"
+      },
+      {
+        "package": "@testing-library/jest-dom",
+        "current": "6.6.3",
+        "wanted": "6.6.3",
+        "latest": "6.9.1"
+      },
+      {
+        "package": "@testing-library/react",
+        "current": "16.0.1",
+        "wanted": "16.0.1",
+        "latest": "16.3.2"
+      },
+      {
+        "package": "@testing-library/user-event",
+        "current": "14.5.2",
+        "wanted": "14.5.2",
+        "latest": "14.6.1"
+      },
+      {
+        "package": "@types/node",
+        "current": "20.17.6",
+        "wanted": "20.17.6",
+        "latest": "26.0.1"
+      },
+      {
+        "package": "@types/react",
+        "current": "18.3.12",
+        "wanted": "18.3.12",
+        "latest": "19.2.17"
+      },
+      {
+        "package": "@types/react-dom",
+        "current": "18.3.1",
+        "wanted": "18.3.1",
+        "latest": "19.2.3"
+      },
+      {
+        "package": "@vitejs/plugin-react",
+        "current": "4.3.3",
+        "wanted": "4.3.3",
+        "latest": "6.0.3"
+      },
+      {
+        "package": "autoprefixer",
+        "current": "10.4.20",
+        "wanted": "10.4.20",
+        "latest": "10.5.2"
+      },
+      {
+        "package": "eslint",
+        "current": "8.57.1",
+        "wanted": "8.57.1",
+        "latest": "10.5.0"
+      },
+      {
+        "package": "eslint-config-next",
+        "current": "14.2.18",
+        "wanted": "14.2.18",
+        "latest": "16.2.9"
+      },
+      {
+        "package": "jsdom",
+        "current": "25.0.1",
+        "wanted": "25.0.1",
+        "latest": "29.1.1"
+      },
+      {
+        "package": "next",
+        "current": "14.2.18",
+        "wanted": "14.2.18",
+        "latest": "16.2.9"
+      },
+      {
+        "package": "postcss",
+        "current": "8.4.49",
+        "wanted": "8.4.49",
+        "latest": "8.5.15"
+      },
+      {
+        "package": "prettier",
+        "current": "3.3.3",
+        "wanted": "3.3.3",
+        "latest": "3.8.4"
+      },
+      {
+        "package": "prettier-plugin-tailwindcss",
+        "current": "0.6.8",
+        "wanted": "0.6.8",
+        "latest": "0.8.0"
+      },
+      {
+        "package": "prisma",
+        "current": "5.22.0",
+        "wanted": "5.22.0",
+        "latest": "7.8.0"
+      },
+      {
+        "package": "react",
+        "current": "18.3.1",
+        "wanted": "18.3.1",
+        "latest": "19.2.7"
+      },
+      {
+        "package": "react-dom",
+        "current": "18.3.1",
+        "wanted": "18.3.1",
+        "latest": "19.2.7"
+      },
+      {
+        "package": "tailwindcss",
+        "current": "3.4.14",
+        "wanted": "3.4.14",
+        "latest": "4.3.1"
+      },
+      {
+        "package": "tsx",
+        "current": "4.19.2",
+        "wanted": "4.19.2",
+        "latest": "4.22.4"
+      },
+      {
+        "package": "typescript",
+        "current": "5.6.3",
+        "wanted": "5.6.3",
+        "latest": "6.0.3"
+      },
+      {
+        "package": "vitest",
+        "current": "2.1.5",
+        "wanted": "2.1.5",
+        "latest": "4.1.9"
+      },
+      {
+        "package": "zod",
+        "current": "3.23.8",
+        "wanted": "3.23.8",
+        "latest": "4.4.3"
+      }
+    ]
+  },
+  "fix_attempted": false,
+  "fix_result": null,
+  "recommendations": [
+    "CRITICAL: next \u2192 16.2.9 (BREAKING \u2014 plan migration)",
+    "CRITICAL: vitest \u2192 4.1.9 (BREAKING \u2014 plan migration)",
+    "HIGH: @next/eslint-plugin-next \u2192 16.2.9 (BREAKING \u2014 plan migration)",
+    "HIGH: @playwright/test \u2192 1.61.1 (safe update \u2014 run now)",
+    "HIGH: eslint-config-next \u2192 16.2.9 (BREAKING \u2014 plan migration)",
+    "HIGH: glob \u2192 16.2.9 (BREAKING \u2014 plan migration)",
+    "HIGH: playwright \u2192 1.61.1 (safe update \u2014 run now)",
+    "HIGH: vite \u2192 4.1.9 (BREAKING \u2014 plan migration)",
+    "PLAN: @playwright/test:1.48.2\u21921.61.1 \u2014 review changelog before updating",
+    "PLAN: @prisma/client:5.22.0\u21927.8.0 \u2014 review changelog before updating",
+    "PLAN: @testing-library/jest-dom:6.6.3\u21926.9.1 \u2014 review changelog before updating",
+    "PLAN: @testing-library/react:16.0.1\u219216.3.2 \u2014 review changelog before updating",
+    "PLAN: @testing-library/user-event:14.5.2\u219214.6.1 \u2014 review changelog before updating",
+    "PLAN: @types/node:20.17.6\u219226.0.1 \u2014 review changelog before updating",
+    "PLAN: @types/react-dom:18.3.1\u219219.2.3 \u2014 review changelog before updating",
+    "PLAN: @types/react:18.3.12\u219219.2.17 \u2014 review changelog before updating",
+    "PLAN: @vitejs/plugin-react:4.3.3\u21926.0.3 \u2014 review changelog before updating",
+    "PLAN: autoprefixer:10.4.20\u219210.5.2 \u2014 review changelog before updating",
+    "PLAN: eslint-config-next:14.2.18\u219216.2.9 \u2014 review changelog before updating",
+    "PLAN: eslint:8.57.1\u219210.5.0 \u2014 review changelog before updating",
+    "PLAN: jsdom:25.0.1\u219229.1.1 \u2014 review changelog before updating",
+    "PLAN: next:14.2.18\u219216.2.9 \u2014 review changelog before updating",
+    "PLAN: postcss:8.4.49\u21928.5.15 \u2014 review changelog before updating",
+    "PLAN: prettier-plugin-tailwindcss:0.6.8\u21920.8.0 \u2014 review changelog before updating",
+    "PLAN: prettier:3.3.3\u21923.8.4 \u2014 review changelog before updating",
+    "PLAN: prisma:5.22.0\u21927.8.0 \u2014 review changelog before updating",
+    "PLAN: react-dom:18.3.1\u219219.2.7 \u2014 review changelog before updating",
+    "PLAN: react:18.3.1\u219219.2.7 \u2014 review changelog before updating",
+    "PLAN: tailwindcss:3.4.14\u21924.3.1 \u2014 review changelog before updating",
+    "PLAN: tsx:4.19.2\u21924.22.4 \u2014 review changelog before updating",
+    "PLAN: typescript:5.6.3\u21926.0.3 \u2014 review changelog before updating",
+    "PLAN: vitest:2.1.5\u21924.1.9 \u2014 review changelog before updating",
+    "PLAN: zod:3.23.8\u21924.4.3 \u2014 review changelog before updating"
+  ]
+}

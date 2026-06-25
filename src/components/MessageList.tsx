@@ -68,6 +68,8 @@ export function MessageList({
 
   return (
     <div className={styles.container}>
+      {/* Flex spacer — pushes messages to the bottom when list is short */}
+      <div className={styles.spacer} />
       {messages.map((message) => {
         const isUser = message.role === 'user';
         const isAssistant = message.role === 'assistant';

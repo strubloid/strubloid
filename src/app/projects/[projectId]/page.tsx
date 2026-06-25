@@ -80,6 +80,7 @@ export default function ProjectDetailPage() {
       });
 
       setProject({ ...project, isStarred: !project.isStarred });
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
     } catch (error) {
       console.error('Failed to toggle star', error);
     }

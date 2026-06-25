@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MessageList, Message } from '@/components/MessageList';
 import { ChatComposer } from '@/components/ChatComposer';
+import { ChatHeaderBar } from '@/components/ChatHeaderBar';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ChatSkeleton } from '@/components/LoadingSkeleton';
@@ -40,6 +41,7 @@ export default function ChatByIdPage() {
   const [editedTitle, setEditedTitle] = useState('');
   const [titleError, setTitleError] = useState<string | null>(null);
   const [selectedModelId, setSelectedModelId] = useState('big-pickle');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     checkAiStatus();
@@ -239,6 +241,7 @@ export default function ChatByIdPage() {
       });
       if (!res.ok) throw new Error('Failed to delete chat');
       router.push('/chat');
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
     } catch (err) {
       setError('Failed to delete chat');
       console.error(err);
@@ -290,6 +293,7 @@ export default function ChatByIdPage() {
       const data = await res.json();
       setChat(data);
       cancelEditingTitle();
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update title';
       setTitleError(message);
@@ -327,103 +331,29 @@ export default function ChatByIdPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-[--color-bg]">
-      <header className="flex items-center justify-between border-b border-[--color-border] px-4 py-3">
-        <div className="min-w-0 flex-1 pr-4">
-          {isEditingTitle ? (
-            <div className="flex flex-col gap-1">
-              <input
-                type="text"
-                value={editedTitle}
-                onChange={(e) => {
-                  setEditedTitle(e.target.value);
-                  if (titleError) setTitleError(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    saveTitle();
-                  } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    cancelEditingTitle();
-                  }
-                }}
-                onBlur={() => {
-                  if (editedTitle.trim() && editedTitle.trim() !== chat.title) {
-                    saveTitle();
-                  } else {
-                    cancelEditingTitle();
-                  }
-                }}
-                autoFocus
-                maxLength={200}
-                className="w-full rounded border border-blue-500 bg-[--color-bg] px-2 py-1 font-semibold outline-none"
-                aria-label="Edit chat title"
-              />
-              {titleError && (
-                <p className="text-xs text-red-400" role="alert">
-                  {titleError}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <h1
-                className="cursor-text truncate rounded px-1 font-semibold transition-colors hover:bg-[--color-bg-tertiary]"
-                title={chat.title}
-                onDoubleClick={startEditingTitle}
-              >
-                {chat.title}
-              </h1>
-              <button
-                onClick={startEditingTitle}
-                className="rounded p-1 text-[--color-text-dim] transition-colors hover:bg-[--color-bg-tertiary] hover:text-[--color-text]"
-                title="Rename chat"
-                aria-label="Rename chat"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3zM4 20h4l10-10-4-4L4 16v4z"
-                  />
-                </svg>
-              </button>
-            </div>
-          )}
-          <p className="text-xs text-[--color-text-dim]">
-            {chat.isRandom ? 'Random Chat' : 'Project Chat'}
-          </p>
-        </div>
+    <main className="flex min-h-0 flex-1 flex-col bg-[--color-bg]">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <ChatHeaderBar
+          title={chat.title}
+          isEditing={isEditingTitle}
+          editedTitle={editedTitle}
+          onEditedTitleChange={setEditedTitle}
+          titleError={titleError}
+          onStartEdit={startEditingTitle}
+          onSave={saveTitle}
+          onCancelEdit={cancelEditingTitle}
+          onDelete={() => setShowDeleteConfirm(true)}
+          isRandom={chat.isRandom}
+          scrollContainerRef={scrollRef}
+        />
 
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="rounded-lg p-2 text-[--color-text-dim] transition-colors hover:bg-red-500/10 hover:text-red-400"
-          title="Delete chat"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-        </button>
-      </header>
-
-      <MessageList
-        messages={chat.messages}
-        devMode={devMode}
-        onDelete={handleDeleteMessage}
-        onRefresh={handleRefreshMessage}
-      />
+        <MessageList
+          messages={chat.messages}
+          devMode={devMode}
+          onDelete={handleDeleteMessage}
+          onRefresh={handleRefreshMessage}
+        />
+      </div>
 
       <ErrorBanner error={error} onRetry={() => setError(null)} />
 

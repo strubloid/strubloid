@@ -86,6 +86,7 @@ export default function ProjectsPage() {
       setNewProjectName('');
       setShowCreateForm(false);
       handleProjectClick(project.id);
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
     } catch (error) {
       console.error('Failed to create project', error);
     }
@@ -104,6 +105,7 @@ export default function ProjectsPage() {
           p.id === projectId ? { ...p, isStarred } : p
         )
       );
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
 
       if (expandedProjectData?.id === projectId) {
         setExpandedProjectData((prev) => prev ? { ...prev, isStarred } : null);

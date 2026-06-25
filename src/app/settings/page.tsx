@@ -296,6 +296,7 @@ export default function SettingsPage() {
         if (data.emptyChatsCount > 0) parts.push(`${data.emptyChatsCount} empty skipped`);
         if (data.deletedCount > 0) parts.push(`${data.deletedCount} deleted`);
         setCleanResult(`✓ ${parts.join(', ')}`);
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'));
       } else {
         setCleanError(`✗ ${data.error || 'Failed to clean random chats'}`);
       }

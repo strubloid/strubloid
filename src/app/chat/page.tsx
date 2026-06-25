@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageList, Message } from '@/components/MessageList';
 import { ChatComposer } from '@/components/ChatComposer';
+import { ChatHeaderBar } from '@/components/ChatHeaderBar';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ChatSkeleton } from '@/components/LoadingSkeleton';
@@ -33,6 +34,10 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     checkAiStatus();
@@ -203,6 +208,7 @@ export default function ChatPage() {
       });
       if (!res.ok) throw new Error('Failed to delete chat');
       router.push('/chat');
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
     } catch (err) {
       setError('Failed to delete chat');
       console.error(err);
@@ -215,6 +221,56 @@ export default function ChatPage() {
     ?.filter((m) => m.role === 'user')
     .map((m) => m.content) ?? [];
 
+  function startEditingTitle() {
+    if (!chat) return;
+    setEditedTitle(chat.title);
+    setTitleError(null);
+    setIsEditingTitle(true);
+  }
+
+  function cancelEditingTitle() {
+    setIsEditingTitle(false);
+    setEditedTitle('');
+    setTitleError(null);
+  }
+
+  async function saveTitle() {
+    if (!chat) return;
+    const trimmed = editedTitle.trim();
+    if (trimmed.length === 0) {
+      setTitleError('Title cannot be empty');
+      return;
+    }
+    if (trimmed.length > 200) {
+      setTitleError('Title is too long (200 max)');
+      return;
+    }
+    if (trimmed === chat.title) {
+      cancelEditingTitle();
+      return;
+    }
+
+    setTitleError(null);
+    try {
+      const res = await fetch(`/api/chats/${chat.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: trimmed }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update title');
+      }
+      const data = await res.json();
+      setChat(data);
+      cancelEditingTitle();
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update title';
+      setTitleError(message);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="flex flex-1 bg-[--color-bg]">
@@ -224,32 +280,24 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-[--color-bg]">
-      {/* Header — just title + delete */}
-      <header className="flex items-center justify-between border-b border-[--color-border] px-4 py-3">
-        <div>
-          <h1 className="font-semibold">
-            {chat?.title ?? 'Random Chat'}
-          </h1>
-          <p className="text-xs text-[--color-text-dim]">
-            {chat?.isRandom ? 'Random Chat' : 'Project Chat'}
-          </p>
-        </div>
+    <main className="flex min-h-0 flex-1 flex-col bg-[--color-bg]">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <ChatHeaderBar
+          title={chat?.title ?? 'Random Chat'}
+          isEditing={isEditingTitle}
+          editedTitle={editedTitle}
+          onEditedTitleChange={setEditedTitle}
+          titleError={titleError}
+          onStartEdit={startEditingTitle}
+          onSave={saveTitle}
+          onCancelEdit={cancelEditingTitle}
+          onDelete={() => setShowDeleteConfirm(true)}
+          isRandom={chat?.isRandom ?? false}
+          scrollContainerRef={scrollRef}
+        />
 
-        {chat && (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="rounded-lg p-2 text-[--color-text-dim] transition-colors hover:bg-red-500/10 hover:text-red-400"
-            title="Delete chat"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        )}
-      </header>
-
-      <MessageList messages={chat?.messages ?? []} devMode={devMode} />
+        <MessageList messages={chat?.messages ?? []} devMode={devMode} />
+      </div>
 
       <ErrorBanner
         error={error}

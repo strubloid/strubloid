@@ -2,13 +2,21 @@
 @use '../styles/mixins' as *;
 
 .container {
-  flex: 1;
-  overflow-y: auto;
+  min-height: 100%;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   scroll-behavior: smooth;
+}
+
+// Pushes messages to the bottom when list is short
+.spacer {
+  flex: 1;
+  min-height: 0;
+}
+
+.row:not(:last-child) {
+  margin-bottom: 16px;
 }
 
 // === Empty state ===
