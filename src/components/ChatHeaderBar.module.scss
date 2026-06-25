@@ -1,20 +1,53 @@
 @use '../styles/variables' as *;
 
 .header {
+  position: sticky;
+  top: 0;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba($color-bg-secondary, 0.85);
+  margin-left: 5px;
+  padding: 12px 16px 12px 72px;
+  border-bottom: 1px solid rgba($color-border, 0.82);
+  border-left: 1px solid rgba($color-accent, 0.12);
+  border-bottom-left-radius: 28px;
+  background: linear-gradient(90deg, rgba($color-accent, 0.055), transparent 118px),
+    rgba($color-bg-secondary, 0.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid $color-border;
-  position: sticky;
-  top: 0;
   z-index: 10;
   flex-shrink: 0;
   transform: translateY(0);
   transition: transform 0.25s ease;
+  box-shadow: -10px 10px 34px rgba(0, 0, 0, 0.18);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: -1;
+    width: 60px;
+    border-bottom-left-radius: inherit;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba($color-accent, 0.18) 0 2px,
+        transparent 2px 7px,
+        rgba($color-accent, 0.08) 7px 9px,
+        transparent 9px 14px
+      ),
+      repeating-linear-gradient(90deg, transparent 0 4px, rgba($color-accent, 0.13) 4px 5px),
+      linear-gradient(
+        90deg,
+        rgba($color-accent, 0.03) 0 20px,
+        rgba($color-accent, 0.055) 20px 40px,
+        rgba($color-accent, 0.08) 40px 60px,
+        rgba($color-accent, 0.115) 60px 80px,
+        rgba($color-accent, 0.16) 80px 100px
+      );
+    box-shadow: inset 10px 0 18px rgba($color-accent, 0.08);
+    pointer-events: none;
+  }
 
   // When hidden, translate out of view
   &.hidden {

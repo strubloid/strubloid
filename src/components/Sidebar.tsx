@@ -307,14 +307,13 @@ export function Sidebar({
       <aside className={`sidebar mode-${mode} ${mobileOpen ? 'open' : ''}`}>
         <div className="sidebar-brush flex h-full flex-col p-4">
           <div className="brush-head">
-            <span className="brush-kicker">orbit rail</span>
-            <span className="brush-title">Spin contexts</span>
+            <span className="brush-kicker">Strub</span>
           </div>
 
           {/* New Chat Button */}
           <button
             onClick={createNewChat}
-            className="btn-primary mb-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
+            className="brush-new-chat btn-primary mb-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
             title={isIconsMode ? 'New Chat' : undefined}
           >
             <svg
@@ -416,7 +415,7 @@ export function Sidebar({
 
             {/* Projects */}
             <div className={`orbit-section mb-6 ${projectsExpanded ? 'expanded' : ''}`}>
-              <div className="flex items-center justify-between justify-center px-3">
+              <div className="flex items-center justify-between justify-center">
                 <button
                   type="button"
                   className="sidebar-section-toggle compact"

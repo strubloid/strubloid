@@ -30,7 +30,7 @@ export function useSidebar() {
 }
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
-  const [sidebarMode, setSidebarMode] = useState<SidebarMode>('full');
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>('icons');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [commandDeckOpen, setCommandDeckOpen] = useState(false);
   const [commandDeckQuery, setCommandDeckQuery] = useState('');
@@ -54,7 +54,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       } else if (window.innerWidth < 1024) {
         setSidebarMode('icons');
       } else {
-        setSidebarMode('full');
+        setSidebarMode('icons');
       }
     };
 
