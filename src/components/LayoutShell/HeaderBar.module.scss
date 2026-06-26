@@ -160,21 +160,6 @@
     pointer-events: none;
   }
 
-  &::after {
-    content: '/dev/hack';
-    position: absolute;
-    inset: auto 12px 2px 42px;
-    color: rgba($color-accent, 0.28);
-    font-family: $font-mono;
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    white-space: nowrap;
-    animation: matrixTicker 9s linear infinite;
-    pointer-events: none;
-    margin-left: 52px;
-  }
-
   input {
     position: relative;
     z-index: 1;
@@ -410,19 +395,5 @@
   }
   to {
     transform: translateX(58%);
-  }
-}
-
-@keyframes matrixTicker {
-  from {
-    transform: translateX(18%);
-    opacity: 0.18;
-  }
-  35% {
-    opacity: 0.36;
-  }
-  to {
-    transform: translateX(-42%);
-    opacity: 0.18;
   }
 }

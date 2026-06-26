@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { HeaderBar } from '@/components/LayoutShell/HeaderBar';
 import { CommandDeck } from '@/components/CommandDeck';
+import { usePortalStore } from '@/stores/portal.store';
 import styles from './LayoutShell.module.scss';
 
 export type SidebarMode = 'full' | 'icons' | 'hidden';
@@ -35,6 +36,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   const [commandDeckOpen, setCommandDeckOpen] = useState(false);
   const [commandDeckQuery, setCommandDeckQuery] = useState('');
   const pathname = usePathname();
+  const portalPhase = usePortalStore((s) => s.phase);
+
+  // During portal entry phases (landing, auth, transition), don't render
+  // the layout chrome at all — just pass children through. The portal
+  // (from page.tsx via createPortal) covers the entire viewport.
+  const isPortalEntry = portalPhase !== 'interior';
 
   useEffect(() => {
     const open = (event: Event) => {
@@ -76,6 +83,13 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // During portal entry: just render children (the portal lives in a
+  // createPortal to body from page.tsx — this wrapper is invisible).
+  // No sidebar, no header, no chrome — the portal IS the entrance.
+  if (isPortalEntry) {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarContext.Provider
       value={{
@@ -86,13 +100,22 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         setMobileOpen,
       }}
     >
-      <div className={styles['layout-shell']}>
+      <div
+        className={styles['layout-shell']}
+        data-portal-interior
+      >
         <HeaderBar
           onOpenCommandDeck={(query) => {
             setCommandDeckQuery(query ?? '');
             setCommandDeckOpen(true);
           }}
         />
+
+        {/* Decorative /dev/hack strapline below header */}
+        <div className={styles['devhack-bar']}>
+          <span className={styles['devhack-text']}>/dev/hack</span>
+        </div>
+
         <div className={styles['layout-body']}>
           <Sidebar
             mode={sidebarMode}

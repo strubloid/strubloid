@@ -5,6 +5,56 @@
   flex-direction: column;
   height: 100vh;
   background: $color-bg;
+
+  // When inside the portal (after entrance), add a subtle green glow pool
+  // that makes the app feel like it's still inside the portal environment
+  &[data-portal-interior] {
+    background: radial-gradient(
+      ellipse at 50% 30%,
+      rgba(0, 80, 20, 0.04) 0%,
+      rgba(0, 60, 15, 0.02) 30%,
+      transparent 60%
+    ),
+    $color-bg;
+  }
+}
+
+/* ── /dev/hack strapline ── */
+.devhack-bar {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  height: 24px;
+  padding: 0 16px;
+  background: rgba($color-accent, 0.03);
+  border-bottom: 1px solid rgba($color-accent, 0.08);
+  flex-shrink: 0;
+
+  &::before {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba($color-accent, 0.15), transparent);
+    margin-right: 12px;
+  }
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba($color-accent, 0.15), transparent);
+    margin-left: 12px;
+  }
+}
+
+.devhack-text {
+  font-family: $font-mono;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgba($color-accent, 0.25);
+  white-space: nowrap;
+  text-transform: uppercase;
 }
 
 .layout-body {
@@ -23,4 +73,14 @@
   min-width: 0;    // prevent flex overflow
   overflow: hidden; // children control their own scroll
   background: $color-bg;
+
+  // Subtle green glow pool in the main content area after portal entrance
+  [data-portal-interior] & {
+    background: radial-gradient(
+      ellipse at 50% 25%,
+      rgba(0, 100, 25, 0.04) 0%,
+      transparent 50%
+    ),
+    $color-bg;
+  }
 }

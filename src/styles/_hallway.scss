@@ -1,0 +1,299 @@
+/* Hallway — the interior spatial navigation surface */
+.hallway-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    /* main surface */
+    linear-gradient(
+      180deg,
+      var(--portal-bg-top, #e8e8ed) 0%,
+      var(--portal-bg-bottom, #f5f5f7) 60%,
+      var(--portal-bg-bottom, #f5f5f7) 100%
+    ),
+    /* subtle green glow from below */
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(0, 255, 65, 0.04) 0%,
+      transparent 50%
+    );
+}
+
+/* Persistent portal glow — visible in the distance */
+.hallway-portal-glint {
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 255, 65, 0.08) 0%,
+    rgba(0, 255, 65, 0.02) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* The 3D perspective scene */
+.hallway-scene {
+  position: absolute;
+  inset: 0;
+  perspective: var(--hallway-perspective, 1200px);
+  perspective-origin: center 45%;
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+/* Corner gradient vignettes — add depth to the scene */
+.hallway-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(0, 255, 65, 0.04) 0%,
+      transparent 60%
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hallway floor gradient */
+.hallway-floor {
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 35%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.03) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* === WALL PANELS (glassmorphism) === */
+.wall-left,
+.wall-right {
+  /* glass panel base */
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 65, 0.08);
+  border-radius: 16px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  isolation: isolate;
+}
+
+/* Wall label — subtle text identifying each wall */
+.wall-label {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--portal-text-dim, #6b7280);
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+/* Wall content scroll container */
+.wall-content {
+  position: absolute;
+  top: 76px;
+  bottom: 20px;
+  left: 12px;
+  right: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.wall-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Empty state inside walls */
+.wall-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 180px;
+  text-align: center;
+  cursor: pointer;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--portal-text-dim, #6b7280);
+  transition: opacity 0.2s;
+}
+
+.wall-empty-state:hover {
+  opacity: 0.8;
+}
+
+/* Card base — shared between random and project */
+.wall-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.wall-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.wall-card h3 {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--portal-text, #1a1a2e);
+  margin: 0 0 4px 0;
+}
+
+.wall-card p {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--portal-text-dim, #6b7280);
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--portal-text-dim, #6b7280);
+}
+
+.memory-badge {
+  font-size: 12px;
+}
+
+/* Project-specific card styling */
+.wall-card--project {
+  background: rgba(255, 255, 255, 0.75);
+  padding: 16px;
+}
+
+.project-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--portal-text-dim, #6b7280);
+  margin-bottom: 6px;
+}
+
+.health-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.health--green { background: #22c55e; }
+.health--yellow { background: #eab308; }
+.health--red { background: #ef4444; }
+
+/* Center focus area — the vanishing point */
+.hallway-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateZ(var(--center-z, 0px));
+  z-index: 5;
+  width: 480px;
+  max-width: 85vw;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hallway-center h1 {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 28px;
+  color: var(--portal-text, #1a1a2e);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.hallway-center p {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--portal-text-dim, #6b7280);
+  line-height: 1.6;
+}
+
+/* Keyboard and touch hint bar */
+.hallway-hints {
+  display: flex;
+  gap: 16px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11px;
+  color: var(--portal-text-dim, #6b7280);
+  opacity: 0.3;
+}
+
+/* === Mobile === */
+@media (max-width: 768px) {
+  .hallway-center {
+    width: 300px;
+  }
+
+  .hallway-center h1 {
+    font-size: 22px;
+  }
+
+  .wall-label {
+    font-size: 9px;
+    top: 20px;
+  }
+
+  .wall-content {
+    top: 48px;
+    bottom: 12px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .wall-left,
+  .wall-right {
+    border-radius: 12px;
+  }
+}
+
+/* Flat layout for very small screens */
+@media (max-width: 480px) {
+  .hallway-wrapper {
+    overflow-y: auto;
+  }
+}

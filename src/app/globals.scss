@@ -9,6 +9,11 @@
 @use '../styles/scrollbar';
 @use '../styles/sidebar-layout';
 @use '../styles/brain-panel';
+@use '../styles/portal-variables';
+@use '../styles/landing';
+@use '../styles/hallway';
+@use '../styles/wall-cards';
+@use '../styles/glass';
 
 // === CSS CUSTOM PROPERTIES ===
 :root {

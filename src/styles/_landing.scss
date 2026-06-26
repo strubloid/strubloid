@@ -1,0 +1,350 @@
+/* Landing page — Portal entrance */
+
+/* Background image layer — the generated ChatGPT backdrop */
+.portal-bg-image {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url('/images/portal/bg-main.jpg') center center / cover no-repeat;
+}
+
+/* Ambient light rays overlay */
+.portal-rays {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: url('/images/portal/rays.png') center center / cover no-repeat;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+}
+
+/* Deep ambient gradients for richness (darkens over bg-image on scroll) */
+.portal-bg-deep {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    /* Center glow pool — darker area behind the portal */
+    radial-gradient(ellipse at 50% 42%, rgba(0, 60, 15, 0.12) 0%, rgba(0, 40, 10, 0.06) 20%, transparent 45%),
+    /* Side washes */
+    radial-gradient(ellipse at 20% 60%, rgba(0, 80, 20, 0.05) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 35%, rgba(0, 100, 25, 0.04) 0%, transparent 35%);
+}
+
+/* Subtle vignette overlay for depth */
+.portal-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    transparent 25%,
+    rgba(0, 0, 0, 0.04) 50%,
+    rgba(0, 0, 0, 0.10) 80%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+}
+
+/* Portal glow ring container */
+.portal-glow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Large ambient glow behind rings */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 120px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at center,
+      rgba(0, 255, 65, 0.12) 0%,
+      rgba(0, 200, 50, 0.04) 30%,
+      transparent 60%
+    );
+    filter: blur(40px);
+    animation: portal-pulse 5s ease-in-out infinite;
+  }
+}
+
+/* Wide glow wash behind the rings */
+.portal-glow-wash {
+  position: absolute;
+  inset: 40px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 200, 50, 0.06) 0%,
+    transparent 60%
+  );
+  filter: blur(30px);
+  animation: portal-pulse 6s ease-in-out infinite 0.5s;
+  pointer-events: none;
+}
+
+@keyframes portal-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+/* Dark aperture — deep void at the portal center
+ * This creates a "window into space" so the green glow has maximum contrast.
+ * Uses the generated core.png for the detailed deep-space texture,
+ * with a radial gradient for smooth edge fade-out. */
+.portal-aperture {
+  position: absolute;
+  inset: 50px;
+  border-radius: 50%;
+  background:
+    url('/images/portal/core.png') center center / cover no-repeat,
+    radial-gradient(
+      circle at center,
+      rgba(0, 0, 0, 0.65) 0%,
+      rgba(0, 0, 0, 0.35) 30%,
+      rgba(0, 0, 0, 0.12) 55%,
+      rgba(0, 0, 0, 0.04) 75%,
+      transparent 100%
+    );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* SVG ring base style */
+.portal-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* Center dot — the portal core */
+.portal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00ff41;
+  box-shadow:
+    0 0 15px rgba(0, 255, 65, 0.8),
+    0 0 40px rgba(0, 255, 65, 0.4),
+    0 0 80px rgba(0, 255, 65, 0.2),
+    0 0 120px rgba(0, 255, 65, 0.08);
+  z-index: 3;
+  animation: dot-breathe 3s ease-in-out infinite;
+}
+
+@keyframes dot-breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 15px rgba(0, 255, 65, 0.7),
+      0 0 40px rgba(0, 255, 65, 0.3),
+      0 0 80px rgba(0, 255, 65, 0.15);
+  }
+  50% {
+    transform: scale(1.6);
+    box-shadow:
+      0 0 25px rgba(0, 255, 65, 0.9),
+      0 0 60px rgba(0, 255, 65, 0.5),
+      0 0 100px rgba(0, 255, 65, 0.25),
+      0 0 150px rgba(0, 255, 65, 0.1);
+  }
+}
+
+/* Branding */
+.portal-branding {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #6e6e73;
+  margin-top: 40px;
+  user-select: none;
+}
+
+/* Tagline under brand */
+.portal-tagline {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: #aeaeb2;
+  margin-top: 8px;
+  user-select: none;
+}
+
+/* Auth input — glassmorphism input */
+.portal-auth-input {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #1a1a2e;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 14px 20px;
+  width: 260px;
+  max-width: 85vw;
+  outline: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  &::placeholder {
+    color: #aeaeb2;
+    font-weight: 300;
+  }
+
+  &:focus {
+    border-color: rgba(0, 180, 40, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(0, 200, 50, 0.2);
+  }
+}
+
+/* Glass button */
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a2e;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 12px 24px;
+  cursor: pointer;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.99);
+  }
+}
+
+/* Scroll hint animation */
+.portal-scroll-hint {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  animation: hint-fadein 2s ease 2.5s forwards;
+
+  .scroll-hint-text {
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: #aeaeb2;
+  }
+
+  .mouse-icon {
+    animation: mouse-bounce 2s ease-in-out infinite;
+    width: 18px;
+    height: 28px;
+    opacity: 0.5;
+  }
+}
+
+@keyframes hint-fadein {
+  to { opacity: 0.6; }
+}
+
+@keyframes mouse-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+/* Status bar at bottom-right */
+.portal-status {
+  position: fixed;
+  bottom: 16px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #aeaeb2;
+  opacity: 0;
+  animation: hint-fadein 2s ease 3s forwards;
+  z-index: 3;
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00cc33;
+    box-shadow: 0 0 8px rgba(0, 204, 51, 0.6);
+    animation: dot-status 2s ease-in-out infinite;
+  }
+}
+
+@keyframes dot-status {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.6); }
+}
+
+/* Auth area layout */
+.portal-auth-area {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 36px;
+  min-height: 100px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .portal-glow {
+    width: 280px;
+    height: 280px;
+  }
+
+  .portal-branding {
+    font-size: 13px;
+    margin-top: 32px;
+  }
+
+  .portal-auth-input {
+    font-size: 14px;
+    padding: 12px 16px;
+    width: 220px;
+  }
+
+  .portal-scroll-hint {
+    bottom: 24px;
+  }
+
+  .portal-aperture {
+    inset: 30px;
+  }
+}
