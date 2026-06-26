@@ -522,12 +522,7 @@ export function Sidebar({
                                 ? 'flex items-center justify-center'
                                 : 'block truncate pr-10'
                             }
-                            onClick={(e) => {
-                              if (showProjectsDrawer) {
-                                e.preventDefault();
-                                toggleProjectExpand(project.id);
-                                return;
-                              }
+                            onClick={() => {
                               if (isEmbedded && onMobileToggle) onMobileToggle(false);
                               else ctx.setMobileOpen(false);
                             }}
