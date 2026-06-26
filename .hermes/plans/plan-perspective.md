@@ -126,6 +126,35 @@ Once through the portal, the user stands in a **spatial hallway**:
 
 The user is in the middle. Walls recede into the distance. Scrolling makes the user move forward — walls slide past naturally.
 
+### 2.4.1 Updated Reference: Five-Step Portal Corridor
+
+The latest target reference is a **five-beat spatial website**, not a static dashboard after the portal:
+
+1. **Landing / portal approach** — the user starts in the clean portal scene, scrolls a bit, and the portal fills the viewport.
+2. **Crossing threshold** — a short flash/bloom hides the seam while the UI moves from outside to inside.
+3. **Hacker-zone corridor** — after entry, the center says the user is inside, but the main experience is the pair of angled walls. The walls must visibly read as 3D planes, not flat columns. The user should feel they are standing in a corridor looking forward.
+4. **Random chat pull-out** — clicking a card on the left wall pulls that chat toward the center so it becomes readable, while the right project wall remains visible in perspective behind it. It should feel like the card came out of the wall, not like a modal opened on a webpage.
+5. **Project pull-out from the right** — clicking a project or project chat pulls it from the right wall toward the center, mirroring step 4. The reference image shows this behavior from the left; in Strubloid, project detail comes from the right.
+
+### 2.4.2 Corridor Pagination / Infinite Depth Behavior
+
+After the initial interior screen, scrolling should continue moving the camera forward through repeated wall segments:
+
+- The **left side** is a sequence of random-chat slabs. Because random chats can grow indefinitely, split them into screen-sized wall groups (for example 6–10 cards per wall). Scrolling forward moves the current slab past the viewer and reveals the next slab deeper in the corridor. Scrolling backward returns to previous random-chat slabs.
+- The **right side** starts with an **all-projects index wall**. After the first wall, each subsequent depth segment is dedicated to a single project, showing that project's chats mounted on the right wall.
+- The two walls move together at the same camera speed, but their contents differ: left keeps paginating random chats; right progresses from projects overview into per-project chat walls.
+- The depth model should support beginning → end and end → beginning navigation. A user can scroll forward through the archive, then reverse back to the initial projects/randoms screen.
+- Motion should imply speed and depth: vanishing line, background glint, wall opacity falloff, `translateZ`, and spring easing between depth stages.
+
+### 2.4.3 Interaction Rule
+
+The click behavior is directional:
+
+- Left-wall random chat click: card travels from left perspective toward the center and becomes a readable preview. Primary action opens `/chat/[chatId]`.
+- Right-wall project click: card travels from right perspective toward the center and becomes a readable project preview. Primary action opens `/projects/[projectId]`.
+- Right-wall project-chat click: chat plaque travels from right perspective toward center. Primary action opens `/chat/[chatId]`.
+- While a focus card is open, both walls remain visible behind it so the space still feels physical.
+
 ### 2.5 Emotional Architecture
 
 The space communicates through visual language, not labels:

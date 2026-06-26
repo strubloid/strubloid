@@ -203,6 +203,7 @@ export function Hallway() {
   const [stage, setStage] = useState(0)
   const [focusItem, setFocusItem] = useState<FocusItem | null>(null)
   const [wheelLocked, setWheelLocked] = useState(false)
+  const [isCompactViewport, setIsCompactViewport] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -238,6 +239,14 @@ export function Hallway() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 720px)')
+    const update = () => setIsCompactViewport(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
   }, [])
 
   const randomPages = useMemo(() => chunk(data.randomChats, RANDOMS_PER_WALL), [data.randomChats])
@@ -294,11 +303,13 @@ export function Hallway() {
             const offsetZ = -index * DEPTH_GAP
             const isActive = index === stage
             const projectForStage = data.projects[index - 1]
+            const wallX = isCompactViewport ? 58 : 42
+            const wallRotate = isCompactViewport ? 50 : 58
             return (
               <div key={index} className={`corridor-slice ${isActive ? 'corridor-slice--active' : ''}`}>
                 <motion.div
                   className="corridor-wall corridor-wall--left"
-                  style={{ transform: isFlat ? undefined : `translate3d(-42vw, 0, ${offsetZ}px) rotateY(58deg)` }}
+                  style={{ transform: isFlat ? undefined : `translate3d(-${wallX}vw, 0, ${offsetZ}px) rotateY(${wallRotate}deg)` }}
                   animate={{ opacity: Math.abs(index - stage) > 2 ? 0 : isActive ? 1 : 0.38 }}
                 >
                   <RandomWall chats={randomPages[index] || []} pageIndex={index} onFocus={setFocusItem} />
@@ -306,7 +317,7 @@ export function Hallway() {
 
                 <motion.div
                   className="corridor-wall corridor-wall--right"
-                  style={{ transform: isFlat ? undefined : `translate3d(42vw, 0, ${offsetZ}px) rotateY(-58deg)` }}
+                  style={{ transform: isFlat ? undefined : `translate3d(${wallX}vw, 0, ${offsetZ}px) rotateY(-${wallRotate}deg)` }}
                   animate={{ opacity: Math.abs(index - stage) > 2 ? 0 : isActive ? 1 : 0.38 }}
                 >
                   {index === 0 ? (

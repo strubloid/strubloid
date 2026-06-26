@@ -12,7 +12,7 @@ export function PortalGlow() {
   const ringDuration = [80, 50, 28, 18, 10]
 
   return (
-    <div className="portal-glow" style={{ width: 420, height: 420 }}>
+    <div className="portal-glow">
       {/* Deep void aperture — the portal opening */}
       <div className="portal-aperture" />
 

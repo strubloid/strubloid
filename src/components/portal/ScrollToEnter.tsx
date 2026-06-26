@@ -38,20 +38,20 @@ export function ScrollToEnter() {
 
   // --- Cinematic transform values ---
 
-  // Portal scale: 1→6 over scroll 0→0.70 (fills the viewport by the end)
-  const portalScale = useTransform(scrollYProgress, [0, 0.70], [1, 6])
+  // Portal scale: smaller + slower so entry takes longer and stays visually centered.
+  const portalScale = useTransform(scrollYProgress, [0, 0.86], [1, 4.85])
 
   // Camera depth (z-translate): moves forward through the portal
-  const cameraDepth = useTransform(scrollYProgress, [0, 0.70], [0, -400])
+  const cameraDepth = useTransform(scrollYProgress, [0, 0.86], [0, -520])
 
   // Background darkens as you approach the portal
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.60], [0, 0.85])
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.78], [0, 0.82])
 
   // Outer elements (tagline, scroll hint, status) fade out
-  const uiOpacity = useTransform(scrollYProgress, [0, 0.50], [1, 0])
+  const uiOpacity = useTransform(scrollYProgress, [0, 0.66], [1, 0])
 
   // Portal aperture glow intensifies as you approach
-  const glowIntensity = useTransform(scrollYProgress, [0, 0.70], [1, 2.5])
+  const glowIntensity = useTransform(scrollYProgress, [0, 0.86], [1, 1.35])
 
   // Smooth everything
   const smoothScale = useSpring(portalScale, { stiffness: 40, damping: 18 })
@@ -65,7 +65,7 @@ export function ScrollToEnter() {
       const depth = cameraDepth.get()
       setScrollProgress(latest, scale, depth)
 
-      if (latest >= 0.70 && !transitioned) {
+      if (latest >= 0.86 && !transitioned) {
         setTransitioned(true)
         setFlash(true)
         setTimeout(() => {
@@ -79,8 +79,8 @@ export function ScrollToEnter() {
 
   return (
     <>
-      {/* Scroll spacer — allows 250vh of scroll distance */}
-      <div style={{ height: '250vh', pointerEvents: 'none' }} />
+      {/* Scroll spacer — longer runway so entering the portal takes time */}
+      <div style={{ height: '380vh', pointerEvents: 'none' }} />
 
       {/* Background image layer — ChatGPT-generated backdrop */}
       <div className="portal-bg-image" />
@@ -99,14 +99,11 @@ export function ScrollToEnter() {
 
       {/* Portal content — fixed overlay */}
       <div
+        className="portal-stage"
         style={{
           position: 'fixed',
           inset: 0,
           zIndex: 100,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
           pointerEvents: 'none',
         }}
       >
@@ -117,22 +114,23 @@ export function ScrollToEnter() {
 
         {/* Portal glow with cinematic animation */}
         <motion.div
+          className="portal-core-stage"
           style={{
-            scale: smoothScale,
-            position: 'relative',
             zIndex: 2,
             pointerEvents: 'none',
           }}
         >
-          <motion.div style={{ scale: glowIntensity }}>
+          <motion.div style={{ scale: smoothScale, transformOrigin: 'center center' }}>
+          <motion.div style={{ scale: glowIntensity, transformOrigin: 'center center' }}>
             <PortalGlow />
+          </motion.div>
           </motion.div>
         </motion.div>
 
         {/* Branding — fades out during approach */}
         <motion.div
+          className="portal-copy-stage"
           style={{
-            position: 'relative',
             zIndex: 2,
             pointerEvents: 'none',
             opacity: uiOpacity,

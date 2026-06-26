@@ -49,12 +49,30 @@
   );
 }
 
+/* Portal stage: the aperture is the real viewport center.
+ * Branding/auth are positioned below it so they do not push the portal upward. */
+.portal-stage {
+  --portal-size: min(34vw, 360px);
+  overflow: hidden;
+}
+
+.portal-core-stage {
+  position: fixed;
+  left: calc(50% - (var(--portal-size) / 2));
+  top: calc(50% - (var(--portal-size) / 2));
+  transform-origin: center center;
+  width: var(--portal-size);
+  height: var(--portal-size);
+}
+
 /* Portal glow ring container */
 .portal-glow {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: var(--portal-size);
+  height: var(--portal-size);
 
   /* Large ambient glow behind rings */
   &::before {
@@ -163,12 +181,24 @@
   letter-spacing: 0.35em;
   text-transform: uppercase;
   color: #6e6e73;
-  margin-top: 40px;
+  margin-top: 0;
   user-select: none;
+}
+
+.portal-copy-stage {
+  position: fixed;
+  left: 50%;
+  top: calc(50% + (var(--portal-size) / 2) + 26px);
+  transform: translateX(-50%);
+  text-align: center;
 }
 
 /* Tagline under brand */
 .portal-tagline {
+  position: fixed;
+  left: 50%;
+  top: calc(50% + (var(--portal-size) / 2) + 74px);
+  transform: translateX(-50%);
   font-family: Inter, system-ui, sans-serif;
   font-weight: 400;
   font-size: 12px;
@@ -312,26 +342,34 @@
 
 /* Auth area layout */
 .portal-auth-area {
-  position: relative;
+  position: fixed;
+  left: 50%;
+  top: calc(50% + (var(--portal-size) / 2) + 112px);
+  transform: translateX(-50%);
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  margin-top: 36px;
+  margin-top: 0;
   min-height: 100px;
+}
+
+@media (max-width: 1100px) {
+  .portal-stage {
+    --portal-size: min(42vw, 340px);
+  }
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .portal-glow {
-    width: 280px;
-    height: 280px;
+  .portal-stage {
+    --portal-size: min(58vw, 300px);
   }
 
   .portal-branding {
     font-size: 13px;
-    margin-top: 32px;
+    margin-top: 0;
   }
 
   .portal-auth-input {
@@ -346,5 +384,23 @@
 
   .portal-aperture {
     inset: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .portal-stage {
+    --portal-size: min(68vw, 260px);
+  }
+
+  .portal-copy-stage {
+    top: calc(50% + (var(--portal-size) / 2) + 20px);
+  }
+
+  .portal-tagline {
+    top: calc(50% + (var(--portal-size) / 2) + 58px);
+  }
+
+  .portal-auth-area {
+    top: calc(50% + (var(--portal-size) / 2) + 90px);
   }
 }
