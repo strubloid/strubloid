@@ -47,7 +47,7 @@ interface HallwayData {
 
 const RANDOMS_PER_WALL = 8
 const PROJECT_CHATS_PER_WALL = 6
-const DEPTH_GAP = 620
+const DEPTH_GAP = 1100
 
 function getPreview(chat: ApiChat): string {
   const message = chat.messages?.[0]
@@ -276,6 +276,26 @@ export function Hallway() {
       <div className="corridor-vanishing-line" />
       <div className="hallway-portal-glint" />
 
+      <motion.div
+        className="corridor-architecture"
+        aria-hidden="true"
+        animate={{ z: isFlat ? 0 : stage * 110 }}
+        transition={{ type: 'spring', stiffness: 72, damping: 24 }}
+      >
+        <div className="corridor-arch-wall corridor-arch-wall--left" />
+        <div className="corridor-arch-wall corridor-arch-wall--right" />
+        <div className="corridor-arch-ribs corridor-arch-ribs--left" />
+        <div className="corridor-arch-ribs corridor-arch-ribs--right" />
+        <div className="corridor-arch-floor" />
+        <div className="corridor-arch-ceiling" />
+        <div className="corridor-depth-frame corridor-depth-frame--1" />
+        <div className="corridor-depth-frame corridor-depth-frame--2" />
+        <div className="corridor-depth-frame corridor-depth-frame--3" />
+        <div className="corridor-depth-frame corridor-depth-frame--4" />
+        <div className="corridor-depth-frame corridor-depth-frame--5" />
+        <div className="corridor-depth-frame corridor-depth-frame--6" />
+      </motion.div>
+
       <div className="corridor-depth-meter">
         <span>depth {stage + 1}/{totalStages}</span>
         <div>
@@ -293,7 +313,7 @@ export function Hallway() {
         </div>
       </div>
 
-      <div className="corridor-scene" style={{ perspective: isFlat ? 'none' : '1300px' }}>
+      <div className="corridor-scene" style={{ perspective: isFlat ? 'none' : '900px' }}>
         <motion.div
           className="corridor-track"
           animate={{ z: isFlat ? 0 : stage * DEPTH_GAP }}
@@ -303,22 +323,21 @@ export function Hallway() {
             const offsetZ = -index * DEPTH_GAP
             const isActive = index === stage
             const projectForStage = data.projects[index - 1]
-            const wallX = isCompactViewport ? 58 : 42
-            const wallRotate = isCompactViewport ? 50 : 58
+            const wallRotate = isCompactViewport ? 66 : 74
             return (
               <div key={index} className={`corridor-slice ${isActive ? 'corridor-slice--active' : ''}`}>
                 <motion.div
-                  className="corridor-wall corridor-wall--left"
-                  style={{ transform: isFlat ? undefined : `translate3d(-${wallX}vw, 0, ${offsetZ}px) rotateY(${wallRotate}deg)` }}
-                  animate={{ opacity: Math.abs(index - stage) > 2 ? 0 : isActive ? 1 : 0.38 }}
+                  className={`corridor-wall corridor-wall--left ${isActive ? 'corridor-wall--current' : 'corridor-wall--hidden'}`}
+                  style={{ transform: isFlat ? undefined : `translate3d(0, 0, ${offsetZ}px) rotateY(${wallRotate}deg)` }}
+                  animate={{ opacity: isActive ? 1 : 0 }}
                 >
                   <RandomWall chats={randomPages[index] || []} pageIndex={index} onFocus={setFocusItem} />
                 </motion.div>
 
                 <motion.div
-                  className="corridor-wall corridor-wall--right"
-                  style={{ transform: isFlat ? undefined : `translate3d(${wallX}vw, 0, ${offsetZ}px) rotateY(-${wallRotate}deg)` }}
-                  animate={{ opacity: Math.abs(index - stage) > 2 ? 0 : isActive ? 1 : 0.38 }}
+                  className={`corridor-wall corridor-wall--right ${isActive ? 'corridor-wall--current' : 'corridor-wall--hidden'}`}
+                  style={{ transform: isFlat ? undefined : `translate3d(0, 0, ${offsetZ}px) rotateY(-${wallRotate}deg)` }}
+                  animate={{ opacity: isActive ? 1 : 0 }}
                 >
                   {index === 0 ? (
                     <ProjectsOverviewWall projects={data.projects} onFocus={setFocusItem} />

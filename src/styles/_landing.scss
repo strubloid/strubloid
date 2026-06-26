@@ -28,9 +28,13 @@
   pointer-events: none;
   background:
     /* Center glow pool — darker area behind the portal */
-    radial-gradient(ellipse at 50% 42%, rgba(0, 60, 15, 0.12) 0%, rgba(0, 40, 10, 0.06) 20%, transparent 45%),
-    /* Side washes */
-    radial-gradient(ellipse at 20% 60%, rgba(0, 80, 20, 0.05) 0%, transparent 40%),
+    radial-gradient(
+      ellipse at 50% 42%,
+      rgba(0, 60, 15, 0.12) 0%,
+      rgba(0, 40, 10, 0.06) 20%,
+      transparent 45%
+    ),
+    /* Side washes */ radial-gradient(ellipse at 20% 60%, rgba(0, 80, 20, 0.05) 0%, transparent 40%),
     radial-gradient(ellipse at 80% 35%, rgba(0, 100, 25, 0.04) 0%, transparent 35%);
 }
 
@@ -44,7 +48,7 @@
     ellipse at 50% 40%,
     transparent 25%,
     rgba(0, 0, 0, 0.04) 50%,
-    rgba(0, 0, 0, 0.10) 80%,
+    rgba(0, 0, 0, 0.1) 80%,
     rgba(0, 0, 0, 0.15) 100%
   );
 }
@@ -52,14 +56,14 @@
 /* Portal stage: the aperture is the real viewport center.
  * Branding/auth are positioned below it so they do not push the portal upward. */
 .portal-stage {
-  --portal-size: min(34vw, 360px);
+  --portal-size: min(30vw, 270px);
   overflow: hidden;
 }
 
 .portal-core-stage {
   position: fixed;
   left: calc(50% - (var(--portal-size) / 2));
-  top: calc(50% - (var(--portal-size) / 2));
+  top: calc(47% - (var(--portal-size) / 2));
   transform-origin: center center;
   width: var(--portal-size);
   height: var(--portal-size);
@@ -96,19 +100,22 @@
   position: absolute;
   inset: 40px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle at center,
-    rgba(0, 200, 50, 0.06) 0%,
-    transparent 60%
-  );
+  background: radial-gradient(circle at center, rgba(0, 200, 50, 0.06) 0%, transparent 60%);
   filter: blur(30px);
   animation: portal-pulse 6s ease-in-out infinite 0.5s;
   pointer-events: none;
 }
 
 @keyframes portal-pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
 }
 
 /* Dark aperture — deep void at the portal center
@@ -156,7 +163,8 @@
 }
 
 @keyframes dot-breathe {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     box-shadow:
       0 0 15px rgba(0, 255, 65, 0.7),
@@ -234,7 +242,9 @@
 
   &:focus {
     border-color: rgba(0, 180, 40, 0.6);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(0, 200, 50, 0.2);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.06),
+      0 0 0 3px rgba(0, 200, 50, 0.2);
   }
 }
 
@@ -300,12 +310,19 @@
 }
 
 @keyframes hint-fadein {
-  to { opacity: 0.6; }
+  to {
+    opacity: 0.6;
+  }
 }
 
 @keyframes mouse-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(5px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
 }
 
 /* Status bar at bottom-right */
@@ -336,8 +353,15 @@
 }
 
 @keyframes dot-status {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.6); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
 }
 
 /* Auth area layout */

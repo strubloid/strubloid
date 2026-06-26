@@ -1,17 +1,52 @@
-/* Hallway — scroll-through 3D archive corridor */
+/* Hallway — dark 3D archive corridor */
 .hallway-wrapper {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 12%, rgba(0, 255, 65, 0.08), transparent 34%),
-    linear-gradient(180deg, #e8e8ed 0%, #f5f5f7 62%, #ececf2 100%);
+    radial-gradient(ellipse at 50% 45%, rgba(0, 255, 65, 0.14), transparent 18%),
+    radial-gradient(ellipse at 50% 78%, rgba(70, 255, 120, 0.08), transparent 42%),
+    linear-gradient(180deg, #020604 0%, #061008 48%, #010302 100%);
 }
 
 .corridor-wrapper {
-  color: var(--portal-text, #1a1a2e);
+  color: rgba(214, 255, 220, 0.9);
   user-select: none;
+}
+
+/* Ceiling/floor perspective planes so this reads as a tunnel, not a dashboard. */
+.corridor-wrapper::before,
+.corridor-wrapper::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 92%;
+  height: 44%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.corridor-wrapper::before {
+  top: -11%;
+  clip-path: polygon(12% 0, 88% 0, 62% 100%, 38% 100%);
+  background:
+    linear-gradient(90deg, transparent, rgba(118, 255, 150, 0.16), transparent),
+    repeating-linear-gradient(90deg, transparent 0 52px, rgba(119, 255, 142, 0.12) 53px 54px),
+    linear-gradient(180deg, rgba(0, 255, 65, 0.1), transparent 70%);
+  opacity: 0.42;
+}
+
+.corridor-wrapper::after {
+  bottom: -8%;
+  clip-path: polygon(38% 0, 62% 0, 96% 100%, 4% 100%);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.22), transparent 34%),
+    repeating-linear-gradient(90deg, transparent 0 54px, rgba(118, 255, 150, 0.2) 55px 56px),
+    repeating-linear-gradient(0deg, rgba(118, 255, 150, 0.12) 0 1px, transparent 1px 28px);
+  opacity: 0.55;
+  filter: blur(0.2px);
 }
 
 .corridor-bg {
@@ -20,9 +55,20 @@
   pointer-events: none;
   background:
     url('/images/portal/bg-main.jpg') center center / cover no-repeat,
-    linear-gradient(180deg, #e8e8ed, #f5f5f7);
-  opacity: 0.42;
-  filter: saturate(0.72) contrast(0.92);
+    linear-gradient(180deg, #020604, #061008);
+  opacity: 0.24;
+  filter: saturate(1.45) contrast(1.22) brightness(0.38);
+}
+
+.corridor-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 0 17%, rgba(0, 255, 65, 0.1) 17.3%, transparent 17.8% 30%, rgba(0, 255, 65, 0.05) 30.2%, transparent 30.8%),
+    linear-gradient(65deg, transparent 0 17%, rgba(0, 255, 65, 0.1) 17.3%, transparent 17.8% 30%, rgba(0, 255, 65, 0.05) 30.2%, transparent 30.8%),
+    radial-gradient(ellipse at 50% 48%, rgba(0, 255, 65, 0.22), transparent 9%, rgba(0, 0, 0, 0.48) 27%, transparent 46%);
+  opacity: 0.72;
 }
 
 .corridor-bg::after {
@@ -30,59 +76,192 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(245, 245, 247, 0.82), transparent 22%, transparent 78%, rgba(245, 245, 247, 0.82)),
-    radial-gradient(ellipse at 50% 45%, transparent 0%, rgba(0, 0, 0, 0.05) 58%, rgba(0, 0, 0, 0.16) 100%);
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.9),
+      transparent 22%,
+      transparent 78%,
+      rgba(0, 0, 0, 0.9)
+    ),
+    radial-gradient(
+      ellipse at 50% 45%,
+      transparent 0%,
+      rgba(0, 0, 0, 0.44) 58%,
+      rgba(0, 0, 0, 0.92) 100%
+    );
 }
 
 .corridor-vanishing-line {
   position: absolute;
   left: 50%;
-  top: 8%;
-  bottom: 8%;
+  top: 7%;
+  bottom: 7%;
   width: 1px;
   transform: translateX(-50%);
   pointer-events: none;
-  background: linear-gradient(180deg, transparent, rgba(0, 255, 65, 0.32), transparent);
-  box-shadow: 0 0 80px rgba(0, 255, 65, 0.18);
-  opacity: 0.5;
+  background: linear-gradient(180deg, transparent, rgba(0, 255, 65, 0.45), transparent);
+  box-shadow: 0 0 120px rgba(0, 255, 65, 0.32);
+  opacity: 0.72;
+  z-index: 2;
 }
 
-/* Persistent portal glow — visible in the distance */
 .hallway-portal-glint {
   position: absolute;
-  top: 42%;
+  top: 41%;
   left: 50%;
+  width: min(18vw, 190px);
+  height: min(18vw, 190px);
   transform: translate(-50%, -50%);
-  width: min(34vw, 360px);
-  height: min(34vw, 360px);
   border-radius: 50%;
   background:
     url('/images/portal/core.png') center center / cover no-repeat,
-    radial-gradient(ellipse at center, rgba(0, 255, 65, 0.14) 0%, rgba(0, 255, 65, 0.04) 32%, transparent 72%);
-  filter: blur(0.4px);
-  opacity: 0.22;
+    radial-gradient(
+      ellipse at center,
+      rgba(0, 255, 65, 0.18) 0%,
+      rgba(0, 255, 65, 0.06) 36%,
+      transparent 72%
+    );
+  box-shadow: 0 0 70px rgba(0, 255, 65, 0.22);
+  opacity: 0.4;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
+
+.corridor-architecture {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  perspective: 820px;
+  perspective-origin: 50% 46%;
+  transform-style: preserve-3d;
+}
+
+.corridor-arch-wall {
+  position: absolute;
+  top: -10%;
+  width: 72%;
+  height: 112%;
+  transform-style: preserve-3d;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 255, 65, 0.16),
+      rgba(0, 255, 65, 0.035) 38%,
+      rgba(0, 0, 0, 0.68)
+    ),
+    repeating-linear-gradient(0deg, rgba(128, 255, 150, 0.1) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, rgba(128, 255, 150, 0.12) 0 1px, transparent 1px 58px),
+    linear-gradient(180deg, rgba(4, 18, 8, 0.96), rgba(0, 5, 2, 0.98));
+  border: 1px solid rgba(0, 255, 65, 0.12);
+  box-shadow:
+    inset 0 0 70px rgba(0, 255, 65, 0.08),
+    0 0 90px rgba(0, 0, 0, 0.75);
+  opacity: 0.96;
+}
+
+.corridor-arch-wall--left {
+  left: -16%;
+  transform-origin: left center;
+  transform: rotateY(72deg) translateZ(-150px);
+  clip-path: polygon(0 0, 100% 10%, 100% 90%, 0 100%);
+}
+
+.corridor-arch-wall--right {
+  right: -16%;
+  transform-origin: right center;
+  transform: rotateY(-72deg) translateZ(-150px);
+  clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 90%);
+}
+
+.corridor-arch-ribs {
+  position: absolute;
+  top: 4%;
+  width: 38%;
+  height: 92%;
+  opacity: 0.5;
+  background:
+    repeating-linear-gradient(180deg, rgba(110, 255, 135, 0.26) 0 2px, transparent 2px 94px),
+    repeating-linear-gradient(90deg, transparent 0 90px, rgba(110, 255, 135, 0.22) 91px 93px);
+  filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.16));
+}
+
+.corridor-arch-ribs--left {
+  left: -1%;
+  transform-origin: left center;
+  transform: rotateY(73deg) translateZ(-70px);
+}
+
+.corridor-arch-ribs--right {
+  right: -1%;
+  transform-origin: right center;
+  transform: rotateY(-73deg) translateZ(-70px);
+}
+
+.corridor-arch-floor,
+.corridor-arch-ceiling {
+  position: absolute;
+  left: 50%;
+  width: 88%;
+  height: 52%;
+  transform-style: preserve-3d;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.22), transparent 32%),
+    repeating-linear-gradient(90deg, transparent 0 58px, rgba(126, 255, 150, 0.16) 59px 61px),
+    repeating-linear-gradient(0deg, rgba(126, 255, 150, 0.12) 0 1px, transparent 1px 34px);
+}
+
+.corridor-arch-floor {
+  bottom: -22%;
+  transform: translateX(-50%) rotateX(72deg);
+  transform-origin: center top;
+}
+
+.corridor-arch-ceiling {
+  top: -24%;
+  transform: translateX(-50%) rotateX(-72deg);
+  transform-origin: center bottom;
+  opacity: 0.42;
+}
+
+.corridor-depth-frame {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 82%;
+  height: 78%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(104, 255, 132, 0.18);
+  box-shadow:
+    0 0 28px rgba(0, 255, 65, 0.07),
+    inset 0 0 28px rgba(0, 255, 65, 0.05);
+  clip-path: polygon(5% 0, 95% 0, 80% 100%, 20% 100%);
+  opacity: 0.68;
+}
+
+.corridor-depth-frame--1 { transform: translate(-50%, -50%) scale(1); opacity: 0.22; }
+.corridor-depth-frame--2 { transform: translate(-50%, -50%) scale(0.82); opacity: 0.28; }
+.corridor-depth-frame--3 { transform: translate(-50%, -50%) scale(0.66); opacity: 0.34; }
+.corridor-depth-frame--4 { transform: translate(-50%, -50%) scale(0.5); opacity: 0.42; }
+.corridor-depth-frame--5 { transform: translate(-50%, -50%) scale(0.35); opacity: 0.5; }
+.corridor-depth-frame--6 { transform: translate(-50%, -50%) scale(0.22); opacity: 0.62; }
 
 .corridor-scene {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   transform-style: preserve-3d;
-  perspective-origin: 50% 46%;
+  perspective-origin: 50% 47%;
 }
 
-.corridor-track {
+.corridor-track,
+.corridor-slice {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
 }
 
 .corridor-slice {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
   pointer-events: none;
 }
 
@@ -92,59 +271,77 @@
 
 .corridor-wall {
   position: absolute;
-  top: 9%;
-  width: min(40vw, 520px);
-  height: 74%;
+  top: 24%;
+  width: min(22vw, 300px);
+  height: 36%;
   transform-style: preserve-3d;
-  border: 1px solid rgba(0, 255, 65, 0.16);
-  border-radius: 22px;
+  border: 1px solid rgba(80, 255, 115, 0.28);
+  border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.42)),
-    radial-gradient(circle at 50% 0%, rgba(0, 255, 65, 0.11), transparent 45%);
+    linear-gradient(135deg, rgb(5, 15, 8), rgb(2, 8, 4)),
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 65, 0.18), transparent 48%);
   box-shadow:
-    0 24px 90px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 0 42px rgba(0, 255, 65, 0.035);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+    0 0 1px rgba(126, 255, 150, 0.85),
+    0 18px 48px rgba(0, 0, 0, 0.62),
+    0 0 34px rgba(0, 255, 65, 0.1),
+    inset 0 1px 0 rgba(160, 255, 180, 0.22),
+    inset 0 0 48px rgba(0, 255, 65, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   overflow: hidden;
 }
 
-.corridor-wall::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(90deg, rgba(0, 255, 65, 0.08) 0 1px, transparent 1px 44px),
-    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.035) 0 1px, transparent 1px 36px);
-  opacity: 0.42;
-}
-
+.corridor-wall::before,
 .corridor-wall::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.08), transparent 28%, transparent 72%, rgba(0, 0, 0, 0.08));
-  mix-blend-mode: multiply;
+}
+
+.corridor-wall::before {
+  background:
+    repeating-linear-gradient(90deg, rgba(90, 255, 115, 0.13) 0 1px, transparent 1px 42px),
+    repeating-linear-gradient(180deg, rgba(90, 255, 115, 0.09) 0 1px, transparent 1px 34px),
+    linear-gradient(
+      90deg,
+      rgba(0, 255, 65, 0.1),
+      transparent 34%,
+      transparent 66%,
+      rgba(0, 255, 65, 0.1)
+    );
+  opacity: 0.72;
+}
+
+.corridor-wall::after {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.5),
+      transparent 28%,
+      transparent 72%,
+      rgba(0, 0, 0, 0.5)
+    ),
+    radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(0, 0, 0, 0.42));
 }
 
 .corridor-wall--left {
-  left: 50%;
-  transform-origin: right center;
+  left: 17%;
+  transform-origin: left center;
+  clip-path: polygon(0 8%, 100% 0, 100% 100%, 0 92%);
 }
 
 .corridor-wall--right {
-  right: 50%;
-  transform-origin: left center;
+  right: 17%;
+  transform-origin: right center;
+  clip-path: polygon(0 0, 100% 8%, 100% 92%, 0 100%);
 }
 
 .corridor-wall-content {
   position: relative;
   z-index: 1;
   height: 100%;
-  padding: 22px;
+  padding: 12px 13px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -164,20 +361,21 @@
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(0, 160, 45, 0.68);
+  color: rgba(126, 255, 144, 0.85);
+  text-shadow: 0 0 16px rgba(0, 255, 65, 0.25);
 }
 
 .corridor-wall-heading strong {
   font-size: 17px;
   line-height: 1.1;
-  color: #1a1a2e;
+  color: rgba(228, 255, 230, 0.94);
 }
 
 .corridor-wall-note {
   margin: -4px 0 4px;
   font-size: 12px;
   line-height: 1.45;
-  color: rgba(26, 26, 46, 0.58);
+  color: rgba(210, 255, 216, 0.54);
 }
 
 .corridor-card-grid {
@@ -191,7 +389,7 @@
 
 .corridor-card-grid--randoms,
 .corridor-card-grid--project-chats {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .corridor-card-grid--projects {
@@ -203,15 +401,17 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-height: 92px;
-  padding: 13px;
-  border: 1px solid rgba(0, 0, 0, 0.065);
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.68);
-  color: #1a1a2e;
+  min-height: 46px;
+  padding: 8px 9px;
+  border: 1px solid rgba(100, 255, 125, 0.16);
+  border-radius: 9px;
+  background: rgb(3, 12, 7);
+  color: rgba(234, 255, 236, 0.88);
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.055);
+  box-shadow:
+    inset 0 1px 0 rgba(126, 255, 150, 0.1),
+    0 12px 24px rgba(0, 0, 0, 0.32);
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -221,15 +421,15 @@
 
 .corridor-card:hover {
   transform: translateY(-4px) translateZ(20px);
-  border-color: rgba(0, 255, 65, 0.32);
-  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(0, 255, 65, 0.42);
+  background: rgba(7, 24, 12, 0.92);
   box-shadow:
-    0 18px 36px rgba(0, 0, 0, 0.11),
-    0 0 34px rgba(0, 255, 65, 0.09);
+    0 18px 36px rgba(0, 0, 0, 0.42),
+    0 0 34px rgba(0, 255, 65, 0.18);
 }
 
 .corridor-card strong {
-  font-size: 13px;
+  font-size: 10px;
   line-height: 1.22;
 }
 
@@ -237,16 +437,16 @@
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  font-size: 11px;
+  -webkit-line-clamp: 1;
+  font-size: 9px;
   line-height: 1.35;
-  color: rgba(26, 26, 46, 0.58);
+  color: rgba(218, 255, 224, 0.56);
 }
 
 .corridor-card__kicker {
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 9px;
-  color: rgba(0, 150, 38, 0.56);
+  font-size: 7px;
+  color: rgba(126, 255, 144, 0.68);
 }
 
 .corridor-empty,
@@ -254,9 +454,9 @@
   display: grid;
   place-items: center;
   min-height: 160px;
-  border: 1px dashed rgba(0, 180, 40, 0.18);
-  border-radius: 16px;
-  color: rgba(26, 26, 46, 0.52);
+  border: 1px dashed rgba(0, 180, 40, 0.28);
+  border-radius: 12px;
+  color: rgba(210, 255, 216, 0.52);
   font-size: 13px;
   text-align: center;
 }
@@ -269,16 +469,16 @@
   min-height: 0;
   padding: 18px 22px;
   transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(6, 16, 8, 0.82);
   backdrop-filter: blur(16px);
 }
 
 .corridor-center-copy {
   position: absolute;
   left: 50%;
-  top: 46%;
+  top: 47%;
   z-index: 4;
-  width: min(440px, 48vw);
+  width: min(190px, 20vw);
   transform: translate(-50%, -50%);
   text-align: center;
   pointer-events: none;
@@ -286,17 +486,19 @@
 
 .corridor-center-copy h1 {
   margin: 8px 0;
-  font-size: clamp(24px, 3vw, 42px);
+  font-size: clamp(13px, 1.35vw, 20px);
   font-weight: 300;
   letter-spacing: -0.04em;
-  color: #101020;
+  color: rgba(230, 255, 232, 0.92);
+  text-shadow: 0 0 28px rgba(0, 255, 65, 0.28);
 }
 
 .corridor-center-copy p {
+  display: none;
   margin: 0;
-  font-size: 14px;
-  line-height: 1.65;
-  color: rgba(26, 26, 46, 0.62);
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(210, 255, 216, 0.58);
 }
 
 .corridor-focus {
@@ -308,15 +510,15 @@
   min-height: 300px;
   transform-style: preserve-3d;
   padding: 30px;
-  border: 1px solid rgba(0, 255, 65, 0.28);
-  border-radius: 26px;
+  border: 1px solid rgba(0, 255, 65, 0.34);
+  border-radius: 18px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(235, 255, 242, 0.82)),
+    linear-gradient(135deg, rgba(8, 22, 13, 0.96), rgba(4, 12, 7, 0.9)),
     radial-gradient(circle at 50% 0%, rgba(0, 255, 65, 0.18), transparent 54%);
   box-shadow:
-    0 34px 100px rgba(0, 0, 0, 0.22),
-    0 0 70px rgba(0, 255, 65, 0.13),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+    0 34px 100px rgba(0, 0, 0, 0.72),
+    0 0 70px rgba(0, 255, 65, 0.2),
+    inset 0 1px 0 rgba(126, 255, 150, 0.24);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
 }
@@ -326,12 +528,12 @@
   font-size: clamp(24px, 3vw, 38px);
   line-height: 1;
   letter-spacing: -0.04em;
-  color: #101020;
+  color: rgba(236, 255, 238, 0.96);
 }
 
 .corridor-focus p {
   margin: 0;
-  color: rgba(26, 26, 46, 0.7);
+  color: rgba(220, 255, 224, 0.72);
   font-size: 14px;
   line-height: 1.7;
 }
@@ -340,7 +542,7 @@
   margin-top: 18px;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 11px;
-  color: rgba(0, 150, 38, 0.72);
+  color: rgba(126, 255, 144, 0.78);
 }
 
 .corridor-focus__open,
@@ -352,10 +554,10 @@
 
 .corridor-focus__open {
   margin-top: 22px;
-  border: 1px solid rgba(0, 160, 45, 0.3);
+  border: 1px solid rgba(0, 255, 65, 0.36);
   border-radius: 999px;
-  background: rgba(0, 255, 65, 0.11);
-  color: #0a581e;
+  background: rgba(0, 255, 65, 0.12);
+  color: rgba(220, 255, 224, 0.92);
   padding: 10px 16px;
   cursor: pointer;
 }
@@ -368,7 +570,8 @@
   height: 32px;
   border: 0;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(126, 255, 150, 0.1);
+  color: rgba(230, 255, 232, 0.9);
   cursor: pointer;
   font-size: 22px;
   line-height: 1;
@@ -384,11 +587,11 @@
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  border: 1px solid rgba(0, 180, 40, 0.16);
+  border: 1px solid rgba(0, 255, 65, 0.26);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.58);
+  background: rgba(4, 14, 7, 0.72);
   backdrop-filter: blur(14px);
-  color: rgba(26, 26, 46, 0.62);
+  color: rgba(218, 255, 224, 0.7);
   font-size: 11px;
 }
 
@@ -403,13 +606,13 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.16);
+  background: rgba(210, 255, 216, 0.24);
   cursor: pointer;
 }
 
 .corridor-depth-meter button.active {
-  background: #00cc33;
-  box-shadow: 0 0 12px rgba(0, 204, 51, 0.55);
+  background: #00ff41;
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.72);
 }
 
 .corridor-controls {
@@ -421,15 +624,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: rgba(26, 26, 46, 0.5);
+  color: rgba(218, 255, 224, 0.5);
   font-size: 11px;
 }
 
 .corridor-controls button {
-  border: 1px solid rgba(0, 180, 40, 0.18);
+  border: 1px solid rgba(0, 255, 65, 0.24);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.58);
-  color: rgba(26, 26, 46, 0.7);
+  background: rgba(4, 14, 7, 0.72);
+  color: rgba(218, 255, 224, 0.74);
   padding: 8px 11px;
   cursor: pointer;
 }
@@ -439,11 +642,11 @@
   opacity: 0.42;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .corridor-wall {
-    top: 12%;
-    width: 46vw;
-    height: 68%;
+    top: 14%;
+    width: 37vw;
+    height: 64%;
   }
 
   .corridor-card-grid--randoms,
@@ -452,7 +655,7 @@
   }
 
   .corridor-center-copy {
-    width: 52vw;
+    width: min(260px, 30vw);
   }
 }
 
@@ -465,15 +668,36 @@
     perspective-origin: 50% 48%;
   }
 
+  .hallway-portal-glint {
+    width: min(30vw, 120px);
+    height: min(30vw, 120px);
+  }
+
+  .corridor-arch-wall--left {
+    left: 20%;
+  }
+
+  .corridor-arch-wall--right {
+    right: 20%;
+  }
+
+  .corridor-arch-ribs--left {
+    left: 17%;
+  }
+
+  .corridor-arch-ribs--right {
+    right: 17%;
+  }
+
   .corridor-wall {
-    top: 18%;
+    top: 19%;
     width: 58vw;
-    height: 58%;
-    border-radius: 18px;
+    height: 55%;
+    border-radius: 8px;
   }
 
   .corridor-wall-content {
-    padding: 14px;
+    padding: 12px;
     gap: 10px;
   }
 
@@ -492,8 +716,8 @@
   }
 
   .corridor-card {
-    min-height: 74px;
-    padding: 10px;
+    min-height: 66px;
+    padding: 9px;
   }
 
   .corridor-card strong {
@@ -507,12 +731,11 @@
 
   .corridor-center-copy {
     top: 50%;
-    width: min(52vw, 260px);
-    pointer-events: none;
+    width: min(180px, 44vw);
   }
 
   .corridor-center-copy h1 {
-    font-size: clamp(18px, 5vw, 28px);
+    font-size: clamp(16px, 4.7vw, 24px);
   }
 
   .corridor-center-copy p {
@@ -538,17 +761,9 @@
 
 @media (max-width: 480px) {
   .corridor-wall {
-    top: 20%;
+    top: 21%;
     width: 64vw;
-    height: 54%;
-  }
-
-  .corridor-wall--left {
-    transform-origin: right center;
-  }
-
-  .corridor-wall--right {
-    transform-origin: left center;
+    height: 52%;
   }
 
   .corridor-depth-meter {
@@ -557,7 +772,7 @@
   }
 
   .corridor-center-copy {
-    width: 48vw;
+    width: 42vw;
   }
 }
 
