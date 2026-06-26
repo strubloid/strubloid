@@ -224,6 +224,7 @@ export function ChatComposer({
 
   return (
     <div className={styles.wrapper}>
+      <span className={styles.codeDrift}>Strubloid</span>
       <div className={styles.inner}>
         {isRandomChat && matchingProjects.length > 0 && (
           <div className={styles.projectSuggestion} aria-label="Project suggestion">

@@ -42,6 +42,12 @@ export interface StreamEvent {
   full?: string;
   /** Provider model identifier. */
   model?: string;
+  /** Token usage (only on done). */
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
   /** Persisted assistant message id (only on done). */
   assistantId?: string;
   /** Phase label for thinking indicator. */

@@ -121,7 +121,7 @@ export class ZenAIClient {
     // For non-OpenAI providers, fall back to non-streaming
     if (model.provider !== 'openai') {
       const result = await this.sendMessage(options, activeModelId, model);
-      yield { type: 'done', full: result.content, model: result.model };
+      yield { type: 'done', full: result.content, model: result.model, usage: result.usage };
       return;
     }
 
@@ -174,6 +174,7 @@ export class ZenAIClient {
       const decoder = new TextDecoder();
       let buffer = '';
       let fullContent = '';
+      let finalUsage: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined;
 
       function resetIdleTimer() {
         if (idleTimer) clearTimeout(idleTimer);
@@ -223,6 +224,13 @@ export class ZenAIClient {
 
             // If finish_reason is present, this is the last chunk
             if (parsed.choices?.[0]?.finish_reason) {
+              if (parsed.usage) {
+                finalUsage = {
+                  promptTokens: parsed.usage.prompt_tokens ?? parsed.usage.input_tokens ?? 0,
+                  completionTokens: parsed.usage.completion_tokens ?? parsed.usage.output_tokens ?? 0,
+                  totalTokens: parsed.usage.total_tokens ?? 0,
+                };
+              }
               break;
             }
           } catch {
@@ -235,6 +243,7 @@ export class ZenAIClient {
         type: 'done',
         full: fullContent,
         model: model.modelId,
+        usage: finalUsage,
       };
     } catch (error) {
       if ((error as Error).name === 'AbortError' && idleFired) {

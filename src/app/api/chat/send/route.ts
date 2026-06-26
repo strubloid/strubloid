@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
           // ── Stream from provider ───────────────────────────
           let fullContent = '';
           let usedModel = activeModelId;
+          let finalUsage: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined;
 
           try {
             const gen = client.streamMessage(
@@ -210,6 +211,10 @@ export async function POST(request: NextRequest) {
               } else if (event.type === 'done') {
                 fullContent = event.full ?? fullContent;
                 usedModel = event.model ?? usedModel;
+                // capture token usage from the done event
+                if (event.usage) {
+                  finalUsage = event.usage;
+                }
                 write(event);
               }
             }
@@ -239,6 +244,10 @@ export async function POST(request: NextRequest) {
                 chatId: chat.id,
                 role: 'assistant',
                 content: fullContent,
+                modelUsed: usedModel,
+                promptTokens: finalUsage?.promptTokens ?? 0,
+                completionTokens: finalUsage?.completionTokens ?? 0,
+                totalTokens: finalUsage?.totalTokens ?? 0,
               },
             });
           } catch (persistError) {

@@ -6,43 +6,72 @@
   position: relative;
   isolation: isolate;
   margin-left: 5px;
-  border-top: 1px solid rgba($color-border, 0.84);
+  border-top: 1px solid rgba($color-accent, 0.16);
   border-left: 1px solid rgba($color-accent, 0.12);
   border-top-left-radius: 28px;
-  background: linear-gradient(90deg, rgba($color-accent, 0.06), transparent 118px),
-    rgba($color-bg-secondary, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: radial-gradient(circle at 18% 50%, rgba($color-accent, 0.16), transparent 18rem),
+    linear-gradient(90deg, rgba($color-accent, 0.05), transparent 32%, rgba($color-accent, 0.035)),
+    rgba($color-bg-secondary, 0.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 12px 16px 12px 72px;
   flex-shrink: 0;
-  box-shadow: -10px -10px 34px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  box-shadow: -10px -10px 34px rgba(0, 0, 0, 0.18);
 
+  // ── Matrix grid background (matching ChatHeaderBar) ──
   &::before {
     content: '';
     position: absolute;
-    inset: 0 auto 0 0;
-    z-index: -1;
-    width: 60px;
-    border-top-left-radius: inherit;
+    inset: 0;
+    z-index: -2;
     background: repeating-linear-gradient(
-        180deg,
-        rgba($color-accent, 0.18) 0 2px,
-        transparent 2px 7px,
-        rgba($color-accent, 0.08) 7px 9px,
-        transparent 9px 14px
-      ),
-      repeating-linear-gradient(90deg, transparent 0 4px, rgba($color-accent, 0.13) 4px 5px),
-      linear-gradient(
         90deg,
-        rgba($color-accent, 0.03) 0 20px,
-        rgba($color-accent, 0.055) 20px 40px,
-        rgba($color-accent, 0.08) 40px 60px,
-        rgba($color-accent, 0.115) 60px 80px,
-        rgba($color-accent, 0.16) 80px 100px
-      );
-    box-shadow: inset 10px 0 18px rgba($color-accent, 0.08);
+        rgba($color-accent, 0.07) 0 1px,
+        transparent 1px 18px
+      ),
+      repeating-linear-gradient(180deg, rgba($color-accent, 0.045) 0 1px, transparent 1px 12px);
+    opacity: 0.32;
+    animation: composerGrid 18s linear infinite;
     pointer-events: none;
   }
+
+  // ── Neon sweep (matching ChatHeaderBar) ──
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -40% -15%;
+    z-index: -1;
+    background: linear-gradient(
+        105deg,
+        transparent 0 42%,
+        rgba($color-accent, 0.1) 48%,
+        rgba($color-neon, 0.08) 52%,
+        transparent 58% 100%
+      ),
+      radial-gradient(circle at 78% 50%, rgba($color-accent, 0.12), transparent 12rem);
+    opacity: 0.75;
+    animation: composerSweep 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+// ── Code drift text (matching ChatHeaderBar) ──
+.codeDrift {
+  position: absolute;
+  inset: auto 3.5rem auto auto;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  color: rgba($color-accent, 0.18);
+  font-family: $font-mono;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgba($color-accent, 0.24);
+  animation: composerCodeDrift 12s linear infinite;
+  pointer-events: none;
 }
 
 .inner {
@@ -298,5 +327,47 @@
   .projectSuggestionActions {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+@keyframes composerGrid {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      72px 0,
+      0 48px;
+  }
+}
+
+@keyframes composerSweep {
+  0%,
+  100% {
+    transform: translateX(-16%) skewX(-10deg);
+    opacity: 0.45;
+  }
+  48% {
+    opacity: 0.78;
+  }
+  58% {
+    transform: translateX(18%) skewX(-10deg);
+    opacity: 0.62;
+  }
+}
+
+@keyframes composerCodeDrift {
+  from {
+    transform: translateX(24%);
+    opacity: 0.1;
+  }
+  40% {
+    opacity: 0.22;
+  }
+  to {
+    transform: translateX(-42%);
+    opacity: 0.1;
   }
 }

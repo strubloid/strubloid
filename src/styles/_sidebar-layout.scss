@@ -314,6 +314,44 @@
   box-shadow: 0 12px 34px rgba($color-accent, 0.18);
 }
 
+// Sidebar search — matches the header search bar aesthetics
+.sidebar-search {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba($color-accent, 0.2);
+  background: linear-gradient(
+      90deg,
+      rgba($color-accent, 0.14),
+      rgba(92, 242, 194, 0.05),
+      rgba($color-purple, 0.03)
+    ),
+    rgba($color-bg, 0.62);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18),
+    0 0 20px rgba($color-accent, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:focus-within {
+    border-color: rgba($color-accent, 0.52);
+    box-shadow:
+      0 0 0 3px rgba($color-accent, 0.08),
+      0 12px 32px rgba(0, 0, 0, 0.26);
+  }
+
+  input::placeholder {
+    opacity: 0.75;
+  }
+}
+
+// Icons mode: hide the search bar
+.mode-icons .sidebar-search {
+  display: none;
+}
+
 .sidebar-orbits {
   display: flex;
   flex-direction: column;

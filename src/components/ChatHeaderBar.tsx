@@ -76,6 +76,7 @@ export function ChatHeaderBar({
 
   return (
     <header className={`${styles.header} ${hidden ? styles.hidden : ''}`}>
+      <span className={styles.codeDrift}>Strubloid</span>
       <div className={styles.titleSection}>
         {isEditing ? (
           <div className={styles.editGroup}>

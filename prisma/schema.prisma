@@ -50,14 +50,19 @@ model Chat {
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  role      String
-  content   String
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  chatId          String
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role            String
+  content         String
+  modelUsed       String?            // actual model that generated this response
+  promptTokens    Int      @default(0)
+  completionTokens Int     @default(0)
+  totalTokens     Int      @default(0)
+  createdAt       DateTime @default(now())
 
   @@index([chatId, createdAt])
+  @@index([modelUsed])
 }
 
 model MemoryEntry {

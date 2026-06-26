@@ -9,6 +9,10 @@ export interface Message {
   role: string;
   content: string;
   createdAt: string;
+  modelUsed?: string | null;
+  promptTokens?: number | null;
+  completionTokens?: number | null;
+  totalTokens?: number | null;
 }
 
 interface MessageListProps {
@@ -179,6 +183,20 @@ export function MessageList({
                       </button>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Token usage for assistant messages */}
+              {isAssistant && !isStreaming && message.totalTokens && message.totalTokens > 0 && (
+                <div className={styles.tokenUsage}>
+                  <span className={styles.tokenLabel}>Δ</span>
+                  <span>{message.totalTokens} tok</span>
+                  {message.modelUsed && message.modelUsed !== 'big-pickle' && (
+                    <span className={styles.tokenModel}>{message.modelUsed}</span>
+                  )}
+                  <span className={styles.tokenCost}>
+                    ~${((message.promptTokens ?? 0) * 0.00015 + (message.completionTokens ?? 0) * 0.0006).toFixed(5)}
+                  </span>
                 </div>
               )}
             </div>

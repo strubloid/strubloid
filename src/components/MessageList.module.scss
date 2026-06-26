@@ -193,3 +193,41 @@
     font-size: $font-size-xs;
   }
 }
+
+// === Token usage footer ===
+.tokenUsage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba($color-accent, 0.10);
+  font-family: $font-mono;
+  font-size: 10px;
+  color: rgba($color-accent, 0.45);
+  letter-spacing: 0.02em;
+}
+
+.tokenLabel {
+  font-weight: 800;
+  font-size: 11px;
+  color: rgba($color-accent, 0.55);
+}
+
+.tokenModel {
+  margin-left: auto;
+  color: rgba($color-text-dim, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.tokenCost {
+  color: rgba($color-text-dim, 0.35);
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -86,6 +86,30 @@ export default function SettingsPage() {
   const [cleanResult, setCleanResult] = useState<string | null>(null);
   const [cleanError, setCleanError] = useState<string | null>(null);
 
+  // Token usage stats
+  const [usageData, setUsageData] = useState<{
+    perModel: {
+      modelId: string;
+      name: string;
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      messageCount: number;
+      cost: number;
+      percentage: number;
+      inputPrice: number | null;
+      outputPrice: number | null;
+    }[];
+    totals: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      totalMessages: number;
+      totalCost: number;
+    };
+  } | null>(null);
+  const [usageLoading, setUsageLoading] = useState(false);
+
   const info = activeTab !== 'chat' ? PROVIDER_INFO[activeTab] : null;
   const activeApiUrl = info ? configs[info.configBaseUrlKey] || info.defaultApiUrl : '';
 
@@ -131,9 +155,24 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const fetchUsage = useCallback(async () => {
+    setUsageLoading(true);
+    try {
+      const res = await fetch('/api/usage');
+      if (res.ok) {
+        setUsageData(await res.json());
+      }
+    } catch {
+      // non-critical
+    } finally {
+      setUsageLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    fetchUsage();
+  }, [loadData, fetchUsage]);
 
   // Sync form fields when switching between provider tabs
   useEffect(() => {
@@ -726,6 +765,137 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
+                </section>
+
+                {/* Token Usage */}
+                <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">Token Usage</h2>
+                      <p className="mt-1 text-sm text-[var(--color-text-dim)]">
+                        Aggregate token consumption and cost across all models.
+                      </p>
+                    </div>
+                    <button
+                      onClick={fetchUsage}
+                      disabled={usageLoading}
+                      className="flex items-center gap-2 rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-600 disabled:opacity-50"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16" height="16" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"
+                        className={usageLoading ? 'animate-spin' : ''}
+                      >
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                        <path d="M16 21h5v-5" />
+                      </svg>
+                      {usageLoading ? 'Loading...' : 'Refresh'}
+                    </button>
+                  </div>
+
+                  {usageData && usageData.totals.totalTokens > 0 ? (
+                    <>
+                      {/* Summary card */}
+                      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-center">
+                          <div className="font-mono text-lg font-bold text-[var(--color-accent)]">
+                            {usageData.totals.totalTokens.toLocaleString()}
+                          </div>
+                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">Total Tokens</div>
+                        </div>
+                        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-center">
+                          <div className="font-mono text-lg font-bold text-[var(--color-accent)]">
+                            {usageData.totals.totalMessages}
+                          </div>
+                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">Messages</div>
+                        </div>
+                        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-center">
+                          <div className="font-mono text-lg font-bold text-blue-300">
+                            {usageData.totals.promptTokens.toLocaleString()}
+                          </div>
+                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">Prompt Tokens</div>
+                        </div>
+                        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-center">
+                          <div className="font-mono text-lg font-bold text-purple-300">
+                            {usageData.totals.completionTokens.toLocaleString()}
+                          </div>
+                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">Completion Tokens</div>
+                        </div>
+                      </div>
+
+                      {/* Total cost */}
+                      <div className="mb-6 rounded-lg border border-yellow-700/30 bg-yellow-900/15 px-4 py-3 text-sm">
+                        <span className="text-yellow-300">Total Estimated Cost: </span>
+                        <span className="font-mono font-bold text-yellow-200">
+                          ${usageData.totals.totalCost.toFixed(6)}
+                        </span>
+                      </div>
+
+                      {/* Per-model breakdown */}
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-dim)]">
+                            <th className="pb-2 pr-3 font-medium">Model</th>
+                            <th className="pb-2 pr-3 font-medium">Messages</th>
+                            <th className="pb-2 pr-3 font-medium">Tokens</th>
+                            <th className="pb-2 pr-3 font-medium">% Used</th>
+                            <th className="pb-2 pr-3 font-medium">Cost</th>
+                            <th className="pb-2 font-medium">Price / 1M tok</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {usageData.perModel.map((m) => (
+                            <tr key={m.modelId} className="border-b border-[var(--color-border)]/40">
+                              <td className="py-3 pr-3">
+                                <div className="font-medium text-white">{m.name}</div>
+                                <div className="font-mono text-xs text-[var(--color-text-dim)]">{m.modelId}</div>
+                              </td>
+                              <td className="py-3 pr-3 font-mono text-xs text-[var(--color-text-dim)]">
+                                {m.messageCount}
+                              </td>
+                              <td className="py-3 pr-3 font-mono text-xs">
+                                <span className="text-blue-300">{m.promptTokens.toLocaleString()}p</span>
+                                {' / '}
+                                <span className="text-purple-300">{m.completionTokens.toLocaleString()}c</span>
+                                {' = '}
+                                <span className="text-white">{m.totalTokens.toLocaleString()}</span>
+                              </td>
+                              <td className="py-3 pr-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 w-20 overflow-hidden rounded-full bg-[var(--color-bg)]">
+                                    <div
+                                      className="h-full rounded-full bg-[var(--color-accent)] transition-all"
+                                      style={{ width: `${Math.max(m.percentage, 2)}%` }}
+                                    />
+                                  </div>
+                                  <span className="font-mono text-xs text-[var(--color-text-dim)]">
+                                    {m.percentage}%
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 pr-3 font-mono text-xs text-yellow-300">
+                                ${m.cost.toFixed(6)}
+                              </td>
+                              <td className="py-3 font-mono text-xs text-[var(--color-text-dim)]">
+                                {m.inputPrice != null ? `$${m.inputPrice} / $${m.outputPrice}` : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  ) : (
+                    <div className="rounded-lg bg-[var(--color-bg)] px-4 py-8 text-center">
+                      <div className="font-mono text-lg opacity-20">[ no token data yet ]</div>
+                      <p className="mt-2 text-sm text-[var(--color-text-dim)]">
+                        Token usage will appear here after you send messages.
+                      </p>
+                    </div>
+                  )}
                 </section>
               </>
             )}

@@ -343,7 +343,7 @@ export function Sidebar({
           {/* New Chat Button */}
           <button
             onClick={createNewChat}
-            className="brush-new-chat btn-primary mb-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
+            className="brush-new-chat btn-primary mb-2 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2"
             title={isIconsMode ? 'New Chat' : undefined}
           >
             <svg
@@ -362,11 +362,29 @@ export function Sidebar({
             {!isIconsMode && <span>New Chat</span>}
           </button>
 
+          {/* Search — styled like the header search bar */}
+          {!isIconsMode && (
+            <div className="sidebar-search mb-3 flex items-center gap-2 rounded-full border px-3 py-1.5">
+              <span className="sidebar-search-glyph text-sm font-extrabold text-[var(--color-accent)] drop-shadow-[0_0_6px_rgba(154,217,51,0.5)]" style={{fontFamily: 'var(--font-mono)'}}>⌕</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search chats..."
+                aria-label="Search chats and projects"
+                className="min-w-0 flex-1 border-0 bg-transparent text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-dim)]/80"
+              />
+              <kbd className="flex-shrink-0 rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-[var(--color-text-dim)]">⌘K</kbd>
+            </div>
+          )}
+
           {/* Navigation */}
           <nav className="sidebar-orbits -mx-4 flex-1 overflow-y-auto px-4">
             {/* Random Chats */}
-            <div className={`orbit-section mb-6 ${randomChatsExpanded ? 'expanded' : ''}`}>
+            {/* suppressHydrationWarning: toggle state is client-only; server and client always start collapsed */}
+            <div suppressHydrationWarning className={`orbit-section mb-6 ${randomChatsExpanded ? 'expanded' : ''}`}>
               <button
+                suppressHydrationWarning
                 type="button"
                 className="sidebar-section-toggle"
                 onClick={toggleRandomChatsSection}
@@ -390,7 +408,7 @@ export function Sidebar({
                 </span>
                 {!isIconsMode && <span className="sidebar-count">{filteredChats.length}</span>}
               </button>
-              <div hidden={!randomChatsExpanded} className="orbit-strip readable-list expanded">
+              <div suppressHydrationWarning hidden={!randomChatsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
                   <div className="chat-item opacity-50">
                     {showRandomDrawer || !isIconsMode ? 'Loading...' : ''}
@@ -446,9 +464,10 @@ export function Sidebar({
             </div>
 
             {/* Projects */}
-            <div className={`orbit-section mb-6 ${projectsExpanded ? 'expanded' : ''}`}>
+            <div suppressHydrationWarning className={`orbit-section mb-6 ${projectsExpanded ? 'expanded' : ''}`}>
               <div className="flex items-center justify-between justify-center">
                 <button
+                  suppressHydrationWarning
                   type="button"
                   className="sidebar-section-toggle compact"
                   onClick={toggleProjectsSection}
@@ -497,7 +516,7 @@ export function Sidebar({
                   </Link>
                 )}
               </div>
-              <div hidden={!projectsExpanded} className="orbit-strip readable-list expanded">
+              <div suppressHydrationWarning hidden={!projectsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
                   <div className="chat-item opacity-50">
                     {showProjectsDrawer || !isIconsMode ? 'Loading...' : ''}
@@ -654,8 +673,9 @@ export function Sidebar({
 
             {/* Starred Projects */}
             {starredProjects.length > 0 && !isIconsMode && (
-              <div className="orbit-section mb-6">
+              <div suppressHydrationWarning className="orbit-section mb-6">
                 <button
+                  suppressHydrationWarning
                   type="button"
                   className="sidebar-section-toggle"
                   onClick={() => setStarredExpanded((value) => !value)}
@@ -669,7 +689,7 @@ export function Sidebar({
                   </span>
                   <span className="sidebar-count">{starredProjects.length}</span>
                 </button>
-                <div hidden={!starredExpanded} className="orbit-strip readable-list expanded">
+                <div suppressHydrationWarning hidden={!starredExpanded} className="orbit-strip readable-list expanded">
                   {starredProjects.map((project) => (
                     <Link
                       key={project.id}
