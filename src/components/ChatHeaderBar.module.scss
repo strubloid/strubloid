@@ -17,6 +17,7 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 10;
+  overflow: hidden;
   flex-shrink: 0;
   transform: translateY(0);
   transition: transform 0.25s ease;
@@ -47,6 +48,28 @@
       );
     box-shadow: inset 10px 0 18px rgba($color-accent, 0.08);
     pointer-events: none;
+  }
+
+  &::after {
+    content: 'Strubloid';
+    // position: absolute;
+    // inset: 10px 58px auto 92px;
+    z-index: -1;
+    color: rgba($color-accent, 0.18);
+    font-family: $font-mono;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.24em;
+    white-space: nowrap;
+    text-shadow: 0 0 10px rgba($color-accent, 0.24);
+    animation: chatHeaderCodeDrift 12s linear infinite;
+    pointer-events: none;
+    display: flex;
+    justify-content: flex-end;
+    position: fixed;
+    right: 3.5rem;
+    align-items: center;
+    align-content: center;
   }
 
   // When hidden, translate out of view
@@ -155,5 +178,19 @@
   &:hover {
     background: rgba($color-danger, 0.1);
     color: $color-danger;
+  }
+}
+
+@keyframes chatHeaderCodeDrift {
+  from {
+    transform: translateX(24%);
+    opacity: 0.1;
+  }
+  40% {
+    opacity: 0.22;
+  }
+  to {
+    transform: translateX(-42%);
+    opacity: 0.1;
   }
 }
