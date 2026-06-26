@@ -392,7 +392,9 @@ export function Sidebar({
               </button>
               <div hidden={!randomChatsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">{showRandomDrawer || !isIconsMode ? 'Loading...' : ''}</div>
+                  <div className="chat-item opacity-50">
+                    {showRandomDrawer || !isIconsMode ? 'Loading...' : ''}
+                  </div>
                 ) : filteredChats.length === 0 ? (
                   <div className="chat-item opacity-50">
                     {(showRandomDrawer || !isIconsMode) &&
@@ -497,7 +499,9 @@ export function Sidebar({
               </div>
               <div hidden={!projectsExpanded} className="orbit-strip readable-list expanded">
                 {isLoading ? (
-                  <div className="chat-item opacity-50">{showProjectsDrawer || !isIconsMode ? 'Loading...' : ''}</div>
+                  <div className="chat-item opacity-50">
+                    {showProjectsDrawer || !isIconsMode ? 'Loading...' : ''}
+                  </div>
                 ) : filteredProjects.length === 0 ? (
                   <div className="chat-item opacity-50">
                     {(showProjectsDrawer || !isIconsMode) &&
@@ -518,7 +522,12 @@ export function Sidebar({
                                 ? 'flex items-center justify-center'
                                 : 'block truncate pr-10'
                             }
-                            onClick={() => {
+                            onClick={(e) => {
+                              if (showProjectsDrawer) {
+                                e.preventDefault();
+                                toggleProjectExpand(project.id);
+                                return;
+                              }
                               if (isEmbedded && onMobileToggle) onMobileToggle(false);
                               else ctx.setMobileOpen(false);
                             }}
@@ -527,9 +536,11 @@ export function Sidebar({
                               className="inline-block h-2 w-2 rounded-full"
                               style={{ backgroundColor: project.color }}
                             />
-                            {(showProjectsDrawer || !isIconsMode) && <span className="project-name">{project.name}</span>}
+                            {(showProjectsDrawer || !isIconsMode) && (
+                              <span className="project-name">{project.name}</span>
+                            )}
                           </Link>
-                          {!isIconsMode && (
+                          {(!isIconsMode || showProjectsDrawer) && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -561,8 +572,8 @@ export function Sidebar({
                           )}
                         </div>
 
-                        {isExpanded && !isIconsMode && (
-                          <div className="m-2 border-l border-[var(--color-border)] pl-2 opacity-50">
+                        {isExpanded && (!isIconsMode || showProjectsDrawer) && (
+                          <div className="border-l border-[var(--color-border)] pl-2 opacity-50">
                             {loadingProjectChats ? (
                               <div className="chat-item opacity-50">Loading...</div>
                             ) : expandedProjectChats.length === 0 ? (
