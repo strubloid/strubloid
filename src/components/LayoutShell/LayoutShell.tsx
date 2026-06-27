@@ -23,7 +23,7 @@ const SidebarContext = createContext<SidebarContextValue>({
   toggle: () => {},
   setMode: () => {},
   mobileOpen: false,
-  setMobileOpen: () => {},
+  setMobileOpen: () => {}
 });
 
 export function useSidebar() {
@@ -38,10 +38,11 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const portalPhase = usePortalStore((s) => s.phase);
 
-  // During portal entry phases (landing, auth, transition), don't render
-  // the layout chrome at all — just pass children through. The portal
-  // (from page.tsx via createPortal) covers the entire viewport.
-  const isPortalEntry = portalPhase !== 'interior';
+  // During portal entry phases on the root route, don't render layout chrome.
+  // On direct app routes like /chat or /projects, a hard refresh resets the
+  // in-memory portal store back to "landing"; those routes must still render
+  // the normal app shell/sidebar.
+  const isPortalEntry = pathname === '/' && portalPhase !== 'interior';
 
   useEffect(() => {
     const open = (event: Event) => {
@@ -97,13 +98,10 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         toggle,
         setMode: setSidebarMode,
         mobileOpen,
-        setMobileOpen,
+        setMobileOpen
       }}
     >
-      <div
-        className={styles['layout-shell']}
-        data-portal-interior
-      >
+      <div className={styles['layout-shell']} data-portal-interior>
         <HeaderBar
           onOpenCommandDeck={(query) => {
             setCommandDeckQuery(query ?? '');
@@ -117,17 +115,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className={styles['layout-body']}>
-          <Sidebar
-            mode={sidebarMode}
-            mobileOpen={mobileOpen}
-            onMobileToggle={setMobileOpen}
-          />
-          {mobileOpen && (
-            <div
-              className="sidebar-overlay"
-              onClick={() => setMobileOpen(false)}
-            />
-          )}
+          <Sidebar mode={sidebarMode} mobileOpen={mobileOpen} onMobileToggle={setMobileOpen} />
+          {mobileOpen && <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />}
           <main
             className={styles['main-area']}
             onClick={() => {

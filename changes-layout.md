@@ -382,6 +382,7 @@ The third reference image is the target direction:
 - Keep travel speed slow enough that cards pass one by one. Avoid large wheel multipliers; prefer about `deltaY * 0.45` and a softer lerp around `0.055` so the corridor feels walkable, not like a fast carousel.
 - Wall-card hit testing must be forgiving. Do not make only tiny, deeply angled text areas clickable. Visible/near cards and the center inspector should both be actionable.
 - Right-wall project cards and project-chat cards must carry the project color as a visual grouping marker. Use a right-edge color strip/dot/glow sourced from `project.color`, so chats from different projects are distinguishable while moving through the corridor.
+- Keep hallway colors aligned with the app/chat theme: warm lime `#9ad933` and dark graphite/olive surfaces, not harsh cyan/blue neon or crushed pure black. The corridor image should remain visible, with overlays darkening edges but not blacking out the whole scene.
 - The center portal stays visually embedded at the far vanishing point. It should not read as a normal centered UI element.
 
 Previous wall-display sizing notes are secondary and only apply if they do not conflict with the continuous Z-world model:
