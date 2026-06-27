@@ -9,13 +9,7 @@
   // When inside the portal (after entrance), add a subtle green glow pool
   // that makes the app feel like it's still inside the portal environment
   &[data-portal-interior] {
-    background: radial-gradient(
-      ellipse at 50% 30%,
-      rgba(0, 80, 20, 0.04) 0%,
-      rgba(0, 60, 15, 0.02) 30%,
-      transparent 60%
-    ),
-    $color-bg;
+    background: #020604;
   }
 }
 
@@ -62,6 +56,7 @@
   flex: 1;
   min-height: 0; // flex child shrink fix
   position: relative;
+  overflow: hidden;
 }
 
 .main-area {
@@ -70,17 +65,17 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0;    // prevent flex overflow
+  min-width: 0; // prevent flex overflow
   overflow: hidden; // children control their own scroll
   background: $color-bg;
 
-  // Subtle green glow pool in the main content area after portal entrance
+  // In the portal interior, the hallway owns the full content plane.
+  // The sidebar floats above this instead of reserving a flex column.
   [data-portal-interior] & {
-    background: radial-gradient(
-      ellipse at 50% 25%,
-      rgba(0, 100, 25, 0.04) 0%,
-      transparent 50%
-    ),
-    $color-bg;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
   }
 }

@@ -5,33 +5,40 @@
 // === SIDEBAR STRUCTURE ===
 .sidebar {
   width: $sidebar-width-full;
-  height: 100%;
-  background: radial-gradient(circle at 95% 8%, rgba($color-accent, 0.16), transparent 8rem),
+  height: min(760px, 82vh);
+  background:
+    radial-gradient(circle at 95% 8%, rgba($color-accent, 0.16), transparent 8rem),
     linear-gradient(
       180deg,
-      rgba($color-accent, 0.065),
-      rgba(255, 255, 255, 0.015) 35%,
-      rgba($color-accent, 0.035)
+      rgba($color-accent, 0.085),
+      rgba(255, 255, 255, 0.018) 35%,
+      rgba($color-accent, 0.045)
     ),
-    rgba($color-bg-secondary, 0.74);
-  border-right: 1px solid rgba($color-accent, 0.18);
+    rgba(4, 14, 7, 0.58);
+  border-right: 1px solid rgba($color-accent, 0.22);
   border-radius: 0 42px 42px 0;
   overflow: hidden;
-  position: sticky;
-  top: 0;
+  position: absolute;
+  left: 0;
+  top: 50%;
   z-index: $z-sidebar;
   flex-shrink: 0;
+  transform: translateY(-50%);
   transition:
     width $transition-smooth,
-    transform $transition-smooth;
+    transform $transition-smooth,
+    background $transition-smooth,
+    box-shadow $transition-smooth;
   box-shadow:
     22px 0 70px rgba(0, 0, 0, 0.24),
     inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
 
   &.mode-full {
-    width: $sidebar-width-full;
-    height: min(700px, 80vh);
-    align-self: center;
+    width: min($sidebar-width-full, 82vw);
+    height: min(760px, 82vh);
+    align-self: auto;
 
     .sidebar-orbits {
       overflow-x: hidden;
@@ -55,17 +62,17 @@
   }
 
   &.mode-icons {
-    width: $sidebar-width-icons;
+    width: 58px;
 
-    height: min(700px, 80vh);
-    align-self: center;
-    border-radius: 0 28px 28px 0;
-    border-right-color: rgba($color-accent, 0.22);
-    background: linear-gradient(90deg, rgba($color-accent, 0.105), transparent 26px),
-      rgba(13, 19, 17, 0.82);
+    height: min(700px, 74vh);
+    align-self: auto;
+    border-radius: 0 32px 32px 0;
+    border-right-color: rgba($color-accent, 0.28);
+    background:
+      linear-gradient(90deg, rgba($color-accent, 0.14), transparent 28px), rgba(4, 14, 7, 0.58);
     box-shadow:
-      8px 0 26px rgba(0, 0, 0, 0.2),
-      inset -1px 0 0 rgba($color-accent, 0.12);
+      12px 0 34px rgba(0, 0, 0, 0.26),
+      inset -1px 0 0 rgba($color-accent, 0.16);
     overflow: visible;
 
     .sidebar-label,
@@ -138,7 +145,8 @@
       scrollbar-width: none;
       border: 1px solid rgba($color-accent, 0.18);
       border-radius: 18px;
-      background: linear-gradient(90deg, rgba($color-accent, 0.08), transparent 58px),
+      background:
+        linear-gradient(90deg, rgba($color-accent, 0.08), transparent 58px),
         rgba($color-bg-secondary, 0.94);
       padding: 10px;
       opacity: 1;
@@ -238,6 +246,8 @@
   // Mobile: overlay
   @include respond-below('md') {
     position: fixed;
+    left: 0;
+    top: 0;
     height: 100vh;
     z-index: $z-sidebar;
     transform: translateX(-100%);
@@ -320,7 +330,8 @@
   isolation: isolate;
   overflow: hidden;
   border: 1px solid rgba($color-accent, 0.2);
-  background: linear-gradient(
+  background:
+    linear-gradient(
       90deg,
       rgba($color-accent, 0.14),
       rgba(92, 242, 194, 0.05),
