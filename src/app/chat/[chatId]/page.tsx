@@ -369,7 +369,7 @@ export default function ChatByIdPage() {
   }
 
   return (
-    <div className="rounded-left-side ml-4 flex min-h-0 flex-1 rounded-tr-[50%] rounded-br-[50%]">
+    <div className="rounded-left-side flex min-h-0 flex-1 rounded-tr-[50%] rounded-br-[50%]">
       <main className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg)]">
         <div ref={scrollRef} className="mb-2 flex min-h-0 flex-1 flex-col overflow-y-auto">
           <ChatHeaderBar

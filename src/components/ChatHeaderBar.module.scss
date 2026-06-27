@@ -7,12 +7,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-left: 5px;
+  margin-left: 4%;
   padding: 12px 16px 12px 72px;
   border-bottom: 1px solid rgba($color-accent, 0.16);
   border-left: 1px solid rgba($color-accent, 0.12);
   border-bottom-left-radius: 28px;
-  background: radial-gradient(circle at 18% 50%, rgba($color-accent, 0.16), transparent 18rem),
+  background:
+    radial-gradient(circle at 18% 50%, rgba($color-accent, 0.16), transparent 18rem),
     linear-gradient(90deg, rgba($color-accent, 0.05), transparent 32%, rgba($color-accent, 0.035)),
     rgba($color-bg-secondary, 0.86);
   backdrop-filter: blur(12px);
@@ -30,11 +31,8 @@
     position: absolute;
     inset: 0;
     z-index: -2;
-    background: repeating-linear-gradient(
-        90deg,
-        rgba($color-accent, 0.07) 0 1px,
-        transparent 1px 18px
-      ),
+    background:
+      repeating-linear-gradient(90deg, rgba($color-accent, 0.07) 0 1px, transparent 1px 18px),
       repeating-linear-gradient(180deg, rgba($color-accent, 0.045) 0 1px, transparent 1px 12px);
     opacity: 0.32;
     animation: chatHeaderGrid 18s linear infinite;
@@ -47,7 +45,8 @@
     position: absolute;
     inset: -40% -15%;
     z-index: -1;
-    background: linear-gradient(
+    background:
+      linear-gradient(
         105deg,
         transparent 0 42%,
         rgba($color-accent, 0.1) 48%,

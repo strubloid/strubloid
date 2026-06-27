@@ -161,12 +161,16 @@ function WallTravelCard({
   card,
   travel,
   isNearest,
-  onFocus
+  onFocus,
+  onPreview,
+  onPreviewEnd
 }: {
   card: CorridorCard;
   travel: number;
   isNearest: boolean;
   onFocus: (item: FocusItem) => void;
+  onPreview: (key: string) => void;
+  onPreviewEnd: (key: string) => void;
 }) {
   const style = cardVars(card, travel, isNearest);
 
@@ -174,7 +178,12 @@ function WallTravelCard({
     <button
       className={`corridor-travel-card corridor-travel-card--${card.side} ${isNearest ? 'corridor-travel-card--nearest' : ''}`}
       style={style}
+      onPointerDown={() => onFocus(card.item)}
       onClick={() => onFocus(card.item)}
+      onMouseEnter={() => onPreview(card.key)}
+      onMouseLeave={() => onPreviewEnd(card.key)}
+      onFocus={() => onPreview(card.key)}
+      onBlur={() => onPreviewEnd(card.key)}
       aria-label={`Open ${card.item.title}`}
     >
       <span className="corridor-travel-card__bezel" aria-hidden="true" />
@@ -353,6 +362,7 @@ export function Hallway() {
   const [data, setData] = useState<HallwayData>({ randomChats: [], projects: [] });
   const [loading, setLoading] = useState(true);
   const [focusItem, setFocusItem] = useState<FocusItem | null>(null);
+  const [hoverCardKey, setHoverCardKey] = useState<string | null>(null);
   const [cameraTilt, setCameraTilt] = useState(0);
 
   useEffect(() => {
@@ -409,6 +419,11 @@ export function Hallway() {
 
   const nearestCardKey = nearestCard?.key;
 
+  const previewCard = useMemo(() => {
+    if (hoverCardKey) return cards.find((card) => card.key === hoverCardKey) || nearestCard;
+    return nearestCard;
+  }, [cards, hoverCardKey, nearestCard]);
+
   const sectionCount = Math.ceil((maxTravel + FAR_LIMIT) / RIB_GAP);
   const sections = useMemo(
     () => Array.from({ length: sectionCount }, (_, index) => 360 - index * RIB_GAP),
@@ -434,8 +449,7 @@ export function Hallway() {
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       if (loading) return;
-      setFocusItem(null);
-      targetTravelRef.current = clamp(targetTravelRef.current + event.deltaY * 1.2, 0, maxTravel);
+      targetTravelRef.current = clamp(targetTravelRef.current + event.deltaY * 0.45, 0, maxTravel);
     };
 
     element.addEventListener('wheel', handleWheel, { passive: false });
@@ -446,7 +460,7 @@ export function Hallway() {
     const animate = () => {
       const target = reducedMotion === 'reduce' ? targetTravelRef.current : targetTravelRef.current;
       const current = currentTravelRef.current;
-      const next = reducedMotion === 'reduce' ? target : current + (target - current) * 0.08;
+      const next = reducedMotion === 'reduce' ? target : current + (target - current) * 0.055;
       currentTravelRef.current = Math.abs(next - target) < 0.1 ? target : next;
       setTravel(currentTravelRef.current);
       rafRef.current = requestAnimationFrame(animate);
@@ -500,13 +514,17 @@ export function Hallway() {
               travel={travel}
               isNearest={nearestCardKey === card.key}
               onFocus={setFocusItem}
+              onPreview={setHoverCardKey}
+              onPreviewEnd={(key) =>
+                setHoverCardKey((current) => (current === key ? null : current))
+              }
             />
           ))}
         </div>
       </motion.div>
 
-      {nearestCard && !focusItem ? (
-        <ReadableNearestPreview card={nearestCard} onInspect={setFocusItem} onOpen={openItem} />
+      {previewCard && !focusItem ? (
+        <ReadableNearestPreview card={previewCard} onInspect={setFocusItem} onOpen={openItem} />
       ) : (
         <motion.div className="corridor-center-copy" animate={{ opacity: focusItem ? 0.18 : 1 }}>
           <span className="corridor-kicker">hacker zone</span>
@@ -520,12 +538,11 @@ export function Hallway() {
             className={`corridor-focus corridor-focus--${focusItem.type === 'random' ? 'left' : 'right'}`}
             initial={{
               opacity: 0,
-              scale: 0.82,
-              x: focusItem.type === 'random' ? -160 : 160,
-              rotateY: focusItem.type === 'random' ? 18 : -18
+              scale: 0.86,
+              rotateY: focusItem.type === 'random' ? 10 : -10
             }}
-            animate={{ opacity: 1, scale: 1, x: 0, rotateY: 0 }}
-            exit={{ opacity: 0, scale: 0.86, x: focusItem.type === 'random' ? -120 : 120 }}
+            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 120, damping: 18 }}
           >
             <button

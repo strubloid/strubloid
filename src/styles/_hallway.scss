@@ -567,7 +567,7 @@
 .corridor-focus {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 46%;
   z-index: 12;
   width: min(480px, 50vw);
   min-height: 260px;
@@ -584,6 +584,7 @@
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
   transform-style: preserve-3d;
+  translate: -50% -50%;
 }
 
 .corridor-focus h2 {

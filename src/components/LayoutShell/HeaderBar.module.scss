@@ -9,7 +9,8 @@
   height: $header-height;
   padding: 0 16px;
   overflow: hidden;
-  background: radial-gradient(circle at 18% 50%, rgba($color-accent, 0.16), transparent 18rem),
+  background:
+    radial-gradient(circle at 18% 50%, rgba($color-accent, 0.16), transparent 18rem),
     linear-gradient(90deg, rgba($color-accent, 0.05), transparent 32%, rgba($color-accent, 0.035)),
     rgba($color-bg-secondary, 0.9);
   backdrop-filter: blur(12px);
@@ -25,11 +26,8 @@
     position: absolute;
     inset: 0;
     z-index: -2;
-    background: repeating-linear-gradient(
-        90deg,
-        rgba($color-accent, 0.07) 0 1px,
-        transparent 1px 18px
-      ),
+    background:
+      repeating-linear-gradient(90deg, rgba($color-accent, 0.07) 0 1px, transparent 1px 18px),
       repeating-linear-gradient(180deg, rgba($color-accent, 0.045) 0 1px, transparent 1px 12px);
     opacity: 0.32;
     animation: matrixHeaderGrid 18s linear infinite;
@@ -41,7 +39,8 @@
     position: absolute;
     inset: -40% -15%;
     z-index: -1;
-    background: linear-gradient(
+    background:
+      linear-gradient(
         105deg,
         transparent 0 42%,
         rgba($color-accent, 0.1) 48%,
@@ -130,7 +129,8 @@
   height: 38px;
   border: 1px solid rgba($color-accent, 0.2);
   border-radius: 999px;
-  background: linear-gradient(
+  background:
+    linear-gradient(
       90deg,
       rgba($color-accent, 0.16),
       rgba(92, 242, 194, 0.06),
@@ -148,11 +148,8 @@
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: repeating-linear-gradient(
-        90deg,
-        transparent 0 10px,
-        rgba($color-accent, 0.12) 10px 11px
-      ),
+    background:
+      repeating-linear-gradient(90deg, transparent 0 10px, rgba($color-accent, 0.12) 10px 11px),
       linear-gradient(90deg, transparent, rgba($color-accent, 0.12), transparent);
     opacity: 0.45;
     transform: translateX(-55%);
@@ -224,7 +221,8 @@
   height: 34px;
   border: 1px solid rgba($color-accent, 0.22);
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba($color-accent, 0.12), rgba(92, 242, 194, 0.05)),
+  background:
+    linear-gradient(135deg, rgba($color-accent, 0.12), rgba(92, 242, 194, 0.05)),
     rgba($color-bg, 0.56);
   color: $color-text;
   padding: 0 10px;

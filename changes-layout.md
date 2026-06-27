@@ -327,9 +327,9 @@ The third reference image is the target direction:
 - Do **not** implement the hallway as depth pages, pagination, tab switching, carousel steps, or fixed left/right panels with swapped content.
 - The hallway is a fixed 100vh viewport. Mouse wheel must not scroll the document. Wheel input updates a continuous `targetTravel` value. An animation loop lerps `currentTravel` toward it:
   ```ts
-  targetTravel += event.deltaY * 1.2;
+  targetTravel += event.deltaY * 0.45;
   targetTravel = clamp(targetTravel, 0, maxTravel);
-  currentTravel += (targetTravel - currentTravel) * 0.08;
+  currentTravel += (targetTravel - currentTravel) * 0.055;
   ```
 - The 3D structure should be:
 
@@ -378,6 +378,8 @@ The third reference image is the target direction:
   - behind-camera cards: opacity `0`, `pointer-events: none`.
 - Automatically highlight the nearest card by smallest distance from camera, not by page index.
 - The nearest card must also be mirrored into a readable center inspector/preview so the user can actually read the content without fighting the wall angle. Clicking this inspector opens the full focus panel.
+- Hovering a wall-mounted card should temporarily mirror that exact card into the center inspector, even if it is not the mathematically nearest card. Clicking a card or inspector locks the centered popup/focus so it does not immediately disappear or get replaced by travel movement.
+- Keep travel speed slow enough that cards pass one by one. Avoid large wheel multipliers; prefer about `deltaY * 0.45` and a softer lerp around `0.055` so the corridor feels walkable, not like a fast carousel.
 - Wall-card hit testing must be forgiving. Do not make only tiny, deeply angled text areas clickable. Visible/near cards and the center inspector should both be actionable.
 - Right-wall project cards and project-chat cards must carry the project color as a visual grouping marker. Use a right-edge color strip/dot/glow sourced from `project.color`, so chats from different projects are distinguishable while moving through the corridor.
 - The center portal stays visually embedded at the far vanishing point. It should not read as a normal centered UI element.
