@@ -6,8 +6,24 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 type FocusItem =
-  | { type: 'random'; id: string; title: string; subtitle: string; detail: string; meta: string }
-  | { type: 'project'; id: string; title: string; subtitle: string; detail: string; meta: string }
+  | {
+      type: 'random';
+      id: string;
+      title: string;
+      subtitle: string;
+      detail: string;
+      meta: string;
+      accentColor?: string;
+    }
+  | {
+      type: 'project';
+      id: string;
+      title: string;
+      subtitle: string;
+      detail: string;
+      meta: string;
+      accentColor?: string;
+    }
   | {
       type: 'projectChat';
       id: string;
@@ -16,6 +32,8 @@ type FocusItem =
       subtitle: string;
       detail: string;
       meta: string;
+      accentColor?: string;
+      projectName?: string;
     };
 
 type WallSide = 'left' | 'right';
@@ -124,7 +142,7 @@ function cardDepthStyle(
   const blur = mapRange(distance, 180, FAR_LIMIT, 0, 4.5);
   const scale = mapRange(distance, 0, FAR_LIMIT, 1, 0.74);
 
-  return { localZ, opacity, blur, scale, interactive: opacity > 0.28 && localZ < 180 };
+  return { localZ, opacity, blur, scale, interactive: opacity > 0.12 && localZ < BEHIND_CAMERA_Z };
 }
 
 function cardVars(card: CorridorCard, travel: number, isNearest: boolean): CSSProperties {
@@ -134,6 +152,7 @@ function cardVars(card: CorridorCard, travel: number, isNearest: boolean): CSSPr
     '--depth-opacity': `${depth.opacity}`,
     '--depth-blur': `${depth.blur}px`,
     '--depth-scale': `${depth.scale}`,
+    '--card-accent': card.item.accentColor || '#9ad933',
     pointerEvents: depth.interactive ? 'auto' : 'none'
   } as CSSProperties;
 }
@@ -159,8 +178,17 @@ function WallTravelCard({
       aria-label={`Open ${card.item.title}`}
     >
       <span className="corridor-travel-card__bezel" aria-hidden="true" />
+      {card.side === 'right' && (
+        <span className="corridor-travel-card__project-color" aria-hidden="true" />
+      )}
       <span className="corridor-travel-card__header">
-        <span>{card.side === 'left' ? 'Random Access Memory' : 'Project Index'}</span>
+        <span>
+          {card.side === 'left'
+            ? 'Random Access Memory'
+            : card.item.type === 'project'
+              ? 'Project Folder'
+              : 'Project Chat'}
+        </span>
         <span>{card.item.meta}</span>
       </span>
       <span className="corridor-travel-card__body">
@@ -171,6 +199,44 @@ function WallTravelCard({
         </span>
       </span>
     </button>
+  );
+}
+
+function ReadableNearestPreview({
+  card,
+  onInspect,
+  onOpen
+}: {
+  card: CorridorCard | undefined;
+  onInspect: (item: FocusItem) => void;
+  onOpen: (item: FocusItem) => void;
+}) {
+  if (!card) return null;
+
+  const wallLabel = (() => {
+    if (card.side === 'left') return 'nearest random memory';
+    if (card.item.type === 'project') return 'nearest project folder';
+    if (card.item.type === 'projectChat' && 'projectName' in card.item) {
+      return `${card.item.projectName || 'project'} chat signal`;
+    }
+    return 'nearest wall signal';
+  })();
+
+  return (
+    <div
+      className={`corridor-readable-preview corridor-readable-preview--${card.side}`}
+      style={{ '--card-accent': card.item.accentColor || '#9ad933' } as CSSProperties}
+    >
+      <button className="corridor-readable-preview__content" onClick={() => onInspect(card.item)}>
+        <span className="corridor-readable-preview__kicker">{wallLabel}</span>
+        <strong>{card.item.title}</strong>
+        <span>{card.item.detail}</span>
+        <small>{card.item.meta}</small>
+      </button>
+      <button className="corridor-readable-preview__open" onClick={() => onOpen(card.item)}>
+        Open →
+      </button>
+    </div>
   );
 }
 
@@ -202,18 +268,21 @@ function buildCards(data: HallwayData): CorridorCard[] {
       title: chat.title || 'Untitled random',
       subtitle: getPreview(chat),
       detail: getPreview(chat),
-      meta: `${timeAgo(chat.updatedAt)} · ${chat.messages?.length ?? 0} msgs`
+      meta: `${timeAgo(chat.updatedAt)} · ${chat.messages?.length ?? 0} msgs`,
+      accentColor: '#9ad933'
     }
   }));
 
   const rightItems: FocusItem[] = data.projects.flatMap((project) => {
+    const projectColor = project.color || '#9ad933';
     const projectItem: FocusItem = {
       type: 'project',
       id: project.id,
       title: project.name,
       subtitle: project.description || project.lastChat?.title || 'Project space',
       detail: project.description || 'Open this project wall to inspect its chats.',
-      meta: `${project.chatCount ?? project.chats.length} chats`
+      meta: `${project.chatCount ?? project.chats.length} chats`,
+      accentColor: projectColor
     };
 
     const chatItems: FocusItem[] = project.chats.slice(0, 5).map((chat) => ({
@@ -223,7 +292,9 @@ function buildCards(data: HallwayData): CorridorCard[] {
       title: chat.title || 'Untitled project chat',
       subtitle: getPreview(chat),
       detail: getPreview(chat),
-      meta: `${project.name} · ${timeAgo(chat.updatedAt)}`
+      meta: `${project.name} · ${timeAgo(chat.updatedAt)}`,
+      accentColor: projectColor,
+      projectName: project.name
     }));
 
     return [projectItem, ...chatItems];
@@ -247,7 +318,8 @@ function buildCards(data: HallwayData): CorridorCard[] {
         title: 'No random chats yet',
         subtitle: 'Create a random chat and it will become a wall-mounted memory display.',
         detail: 'This side of the corridor is reserved for Random Access Memory.',
-        meta: 'empty wall'
+        meta: 'empty wall',
+        accentColor: '#9ad933'
       }
     },
     {
@@ -260,7 +332,8 @@ function buildCards(data: HallwayData): CorridorCard[] {
         title: 'No projects yet',
         subtitle: 'Create a project and the right wall becomes your project index.',
         detail: 'This side of the corridor is reserved for project navigation.',
-        meta: 'empty index'
+        meta: 'empty index',
+        accentColor: '#9ad933'
       }
     }
   ];
@@ -324,15 +397,17 @@ export function Hallway() {
     return farthest + CARD_GAP;
   }, [cards]);
 
-  const nearestCardKey = useMemo(() => {
-    return cards.reduce<{ key: string; distance: number } | null>((nearest, card) => {
+  const nearestCard = useMemo(() => {
+    return cards.reduce<{ card: CorridorCard; distance: number } | null>((nearest, card) => {
       const localZ = card.z + travel;
       if (localZ > BEHIND_CAMERA_Z || localZ < -FAR_LIMIT) return nearest;
       const distance = Math.abs(localZ);
-      if (!nearest || distance < nearest.distance) return { key: card.key, distance };
+      if (!nearest || distance < nearest.distance) return { card, distance };
       return nearest;
-    }, null)?.key;
+    }, null)?.card;
   }, [cards, travel]);
+
+  const nearestCardKey = nearestCard?.key;
 
   const sectionCount = Math.ceil((maxTravel + FAR_LIMIT) / RIB_GAP);
   const sections = useMemo(
@@ -383,12 +458,16 @@ export function Hallway() {
     };
   }, [reducedMotion]);
 
+  const openItem = (item: FocusItem) => {
+    if (item.type === 'project') router.push(`/projects/${item.id}`);
+    else if (item.id === 'new') router.push('/chat');
+    else if (item.id === 'projects') router.push('/projects');
+    else router.push(`/chat/${item.id}`);
+  };
+
   const openFocusedItem = () => {
     if (!focusItem) return;
-    if (focusItem.type === 'project') router.push(`/projects/${focusItem.id}`);
-    else if (focusItem.id === 'new') router.push('/chat');
-    else if (focusItem.id === 'projects') router.push('/projects');
-    else router.push(`/chat/${focusItem.id}`);
+    openItem(focusItem);
   };
 
   const travelProgress = maxTravel > 0 ? Math.round((travel / maxTravel) * 100) : 0;
@@ -426,10 +505,14 @@ export function Hallway() {
         </div>
       </motion.div>
 
-      <motion.div className="corridor-center-copy" animate={{ opacity: focusItem ? 0.18 : 1 }}>
-        <span className="corridor-kicker">hacker zone</span>
-        <h1>You are inside.</h1>
-      </motion.div>
+      {nearestCard && !focusItem ? (
+        <ReadableNearestPreview card={nearestCard} onInspect={setFocusItem} onOpen={openItem} />
+      ) : (
+        <motion.div className="corridor-center-copy" animate={{ opacity: focusItem ? 0.18 : 1 }}>
+          <span className="corridor-kicker">hacker zone</span>
+          <h1>You are inside.</h1>
+        </motion.div>
+      )}
 
       <AnimatePresence>
         {focusItem && (

@@ -377,6 +377,9 @@ The third reference image is the target direction:
   - far cards: opacity `0.15–0.35`, blur `2–4px`, scale about `0.75`;
   - behind-camera cards: opacity `0`, `pointer-events: none`.
 - Automatically highlight the nearest card by smallest distance from camera, not by page index.
+- The nearest card must also be mirrored into a readable center inspector/preview so the user can actually read the content without fighting the wall angle. Clicking this inspector opens the full focus panel.
+- Wall-card hit testing must be forgiving. Do not make only tiny, deeply angled text areas clickable. Visible/near cards and the center inspector should both be actionable.
+- Right-wall project cards and project-chat cards must carry the project color as a visual grouping marker. Use a right-edge color strip/dot/glow sourced from `project.color`, so chats from different projects are distinguishable while moving through the corridor.
 - The center portal stays visually embedded at the far vanishing point. It should not read as a normal centered UI element.
 
 Previous wall-display sizing notes are secondary and only apply if they do not conflict with the continuous Z-world model:

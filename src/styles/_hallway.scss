@@ -279,7 +279,7 @@
   width: clamp(210px, 24vw, 390px);
   min-height: 118px;
   padding: 0;
-  border: 1px solid rgba(95, 255, 128, 0.18);
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 34%, transparent);
   border-radius: 14px;
   background:
     linear-gradient(180deg, rgba(0, 18, 6, 0.88), rgba(0, 5, 2, 0.78)),
@@ -293,7 +293,7 @@
   will-change: transform, opacity, filter;
   box-shadow:
     0 26px 70px rgba(0, 0, 0, 0.28),
-    0 0 34px rgba(0, 255, 65, 0.08),
+    0 0 34px color-mix(in srgb, var(--card-accent, #9ad933) 16%, transparent),
     inset 0 1px 0 rgba(150, 255, 170, 0.16);
   overflow: hidden;
   transition:
@@ -315,15 +315,15 @@
 }
 
 .corridor-travel-card--nearest {
-  border-color: rgba(126, 255, 150, 0.54);
+  border-color: color-mix(in srgb, var(--card-accent, #9ad933) 74%, white 8%);
   box-shadow:
     0 32px 90px rgba(0, 0, 0, 0.34),
-    0 0 50px rgba(0, 255, 65, 0.22),
+    0 0 50px color-mix(in srgb, var(--card-accent, #9ad933) 32%, transparent),
     inset 0 1px 0 rgba(190, 255, 200, 0.22);
 }
 
 .corridor-travel-card:hover {
-  border-color: rgba(126, 255, 150, 0.62);
+  border-color: color-mix(in srgb, var(--card-accent, #9ad933) 84%, white 10%);
   background:
     linear-gradient(180deg, rgba(0, 28, 9, 0.92), rgba(0, 8, 3, 0.82)),
     repeating-linear-gradient(0deg, rgba(95, 255, 128, 0.04) 0 1px, transparent 1px 18px);
@@ -334,6 +334,19 @@
   inset: 8px;
   border: 1px solid rgba(95, 255, 128, 0.08);
   border-radius: 10px;
+  pointer-events: none;
+}
+
+.corridor-travel-card__project-color {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--card-accent, #9ad933);
+  box-shadow:
+    0 0 18px var(--card-accent, #9ad933),
+    -10px 0 22px color-mix(in srgb, var(--card-accent, #9ad933) 22%, transparent);
   pointer-events: none;
 }
 
@@ -370,12 +383,16 @@
   flex: 0 0 auto;
   width: 22px;
   height: 22px;
-  border: 1px solid rgba(126, 255, 144, 0.36);
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 56%, white 8%);
   border-radius: 7px;
   background:
-    radial-gradient(circle at 50% 50%, rgba(0, 255, 65, 0.42), transparent 36%),
-    rgba(0, 255, 65, 0.08);
-  box-shadow: 0 0 18px rgba(0, 255, 65, 0.16);
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--card-accent, #9ad933) 70%, transparent),
+      transparent 36%
+    ),
+    color-mix(in srgb, var(--card-accent, #9ad933) 12%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--card-accent, #9ad933) 22%, transparent);
 }
 
 .corridor-travel-card__copy {
@@ -402,6 +419,117 @@
   color: rgba(218, 255, 224, 0.54);
   font-size: 11px;
   line-height: 1.42;
+}
+
+/* ===== Readable nearest-card inspector ===== */
+.corridor-readable-preview {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  width: min(520px, 42vw);
+  transform: translate(-50%, -50%);
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 46%, transparent);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(5, 18, 8, 0.76), rgba(0, 5, 2, 0.66)),
+    radial-gradient(
+      circle at 10% 0%,
+      color-mix(in srgb, var(--card-accent, #9ad933) 20%, transparent),
+      transparent 56%
+    );
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.44),
+    0 0 54px color-mix(in srgb, var(--card-accent, #9ad933) 18%, transparent),
+    inset 0 1px 0 rgba(200, 255, 210, 0.12);
+  backdrop-filter: blur(14px) saturate(1.18);
+  -webkit-backdrop-filter: blur(14px) saturate(1.18);
+  overflow: hidden;
+}
+
+.corridor-readable-preview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--card-accent, #9ad933);
+  box-shadow: 0 0 22px var(--card-accent, #9ad933);
+}
+
+.corridor-readable-preview--left::before {
+  left: 0;
+}
+
+.corridor-readable-preview--right::before {
+  right: 0;
+}
+
+.corridor-readable-preview__content,
+.corridor-readable-preview__open {
+  position: relative;
+  z-index: 1;
+  font: inherit;
+  cursor: pointer;
+}
+
+.corridor-readable-preview__content {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 18px 18px 18px 22px;
+  text-align: left;
+}
+
+.corridor-readable-preview__kicker {
+  color: color-mix(in srgb, var(--card-accent, #9ad933) 82%, white 12%);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.corridor-readable-preview strong {
+  overflow: hidden;
+  color: rgba(242, 255, 244, 0.96);
+  font-size: clamp(17px, 1.4vw, 22px);
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.corridor-readable-preview__content > span:not(.corridor-readable-preview__kicker) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: rgba(224, 255, 229, 0.72);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.corridor-readable-preview small {
+  color: color-mix(in srgb, var(--card-accent, #9ad933) 64%, white 8%);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+}
+
+.corridor-readable-preview__open {
+  align-self: center;
+  margin-right: 16px;
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 48%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-accent, #9ad933) 12%, transparent);
+  color: rgba(235, 255, 238, 0.92);
+  padding: 8px 12px;
+  white-space: nowrap;
 }
 
 /* ===== Center copy / far portal label ===== */
@@ -608,6 +736,18 @@
   .corridor-center-copy {
     top: 50%;
     width: min(140px, 38vw);
+  }
+
+  .corridor-readable-preview {
+    top: 56%;
+    width: min(88vw, 430px);
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .corridor-readable-preview__open {
+    justify-self: start;
+    margin: 0 0 14px 22px;
   }
 
   .corridor-focus {
