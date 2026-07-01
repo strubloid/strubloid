@@ -335,6 +335,110 @@
   line-height: 1;
 }
 
+.hackerSwitch {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  border: 1px solid rgba($color-accent, 0.24);
+  border-radius: 999px;
+  background: rgba($color-bg, 0.5);
+  color: rgba($color-text-dim, 0.9);
+  padding: 0 10px;
+  font-family: $font-mono;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color $transition-fast,
+    color $transition-fast,
+    box-shadow $transition-fast,
+    background $transition-fast;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 9px, rgba($color-accent, 0.1) 9px 10px),
+      linear-gradient(90deg, transparent, rgba($color-accent, 0.14), transparent);
+    opacity: 0;
+    transform: translateX(-60%);
+    transition: opacity $transition-fast;
+    animation: matrixSearchFlow 3.8s linear infinite;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba($color-accent, 0.52);
+    color: $color-text;
+    outline: none;
+  }
+}
+
+.hackerSwitchActive {
+  border-color: rgba($color-accent, 0.72);
+  background:
+    radial-gradient(circle at 12% 50%, rgba($color-accent, 0.22), transparent 68%),
+    rgba($color-bg, 0.66);
+  color: $color-accent;
+  box-shadow:
+    0 0 0 1px rgba($color-accent, 0.1),
+    0 0 24px rgba($color-accent, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  &::before {
+    opacity: 0.55;
+  }
+}
+
+.hackerSwitchLight {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.hackerSettingsButton {
+  width: auto;
+  min-width: 58px;
+  gap: 7px;
+  border: 1px solid rgba($color-accent, 0.58);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 14% 50%, rgba($color-accent, 0.28), transparent 55%),
+    linear-gradient(135deg, rgba($color-accent, 0.16), rgba(92, 242, 194, 0.08)),
+    rgba($color-bg, 0.74);
+  color: $color-accent;
+  padding: 0 10px;
+  box-shadow:
+    0 0 0 1px rgba($color-accent, 0.12),
+    0 0 28px rgba($color-accent, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    background:
+      radial-gradient(circle at 14% 50%, rgba($color-accent, 0.36), transparent 55%),
+      linear-gradient(135deg, rgba($color-accent, 0.22), rgba(92, 242, 194, 0.1)),
+      rgba($color-bg, 0.82);
+    color: #efffda;
+  }
+}
+
+.hackerSettingsText {
+  font-family: $font-mono;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
 // Desktop sidebar toggle
 .sidebar-toggle-desktop {
   display: flex;

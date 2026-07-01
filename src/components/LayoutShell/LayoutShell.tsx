@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, createContext, useContext, useEffect, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { HeaderBar } from '@/components/LayoutShell/HeaderBar';
 import { CommandDeck } from '@/components/CommandDeck';
+import { SettingsConsole } from '@/components/settings/SettingsConsole';
 import { usePortalStore } from '@/stores/portal.store';
 import styles from './LayoutShell.module.scss';
 
@@ -31,12 +32,15 @@ export function useSidebar() {
 }
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>('icons');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [commandDeckOpen, setCommandDeckOpen] = useState(false);
   const [commandDeckQuery, setCommandDeckQuery] = useState('');
+  const [hackerSettingsOpen, setHackerSettingsOpen] = useState(false);
   const pathname = usePathname();
   const portalPhase = usePortalStore((s) => s.phase);
+  const setPortalPhase = usePortalStore((s) => s.setPhase);
 
   // During portal entry phases on the root route, don't render layout chrome.
   // On direct app routes like /chat or /projects, a hard refresh resets the
@@ -44,6 +48,17 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   // the normal app shell/sidebar.
   const isPortalEntry = pathname === '/' && portalPhase !== 'interior';
   const isHackerMode = pathname === '/' && portalPhase === 'interior';
+
+  const toggleHackerMode = useCallback(() => {
+    if (isHackerMode) {
+      setHackerSettingsOpen(false);
+      router.push('/chat');
+      return;
+    }
+
+    setPortalPhase('interior');
+    router.push('/');
+  }, [isHackerMode, router, setPortalPhase]);
 
   useEffect(() => {
     const open = (event: Event) => {
@@ -105,6 +120,9 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       <div className={styles['layout-shell']} data-portal-interior>
         <HeaderBar
           hideSidebarToggle={isHackerMode}
+          isHackerMode={isHackerMode}
+          onToggleHackerMode={toggleHackerMode}
+          onOpenHackerSettings={() => setHackerSettingsOpen(true)}
           onOpenCommandDeck={(query) => {
             setCommandDeckQuery(query ?? '');
             setCommandDeckOpen(true);
@@ -128,6 +146,26 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
+        {isHackerMode && hackerSettingsOpen && (
+          <div className={styles['hacker-settings-screen']} role="dialog" aria-modal="true" aria-label="Hacker settings console">
+            <div className={styles['hacker-settings-panel']}>
+              <header className={styles['hacker-settings-header']}>
+                <div>
+                  <span className={styles['hacker-settings-kicker']}>system override</span>
+                  <h2>Hacker Settings Console</h2>
+                  <p>Configure the tunnel without leaving hacker mode.</p>
+                </div>
+                <button type="button" onClick={() => setHackerSettingsOpen(false)} aria-label="Close hacker settings console">
+                  ×
+                </button>
+              </header>
+
+              <div className={styles['hacker-settings-content']}>
+                <SettingsConsole embedded />
+              </div>
+            </div>
+          </div>
+        )}
         <CommandDeck
           open={commandDeckOpen}
           initialQuery={commandDeckQuery}

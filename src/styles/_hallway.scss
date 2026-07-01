@@ -324,6 +324,12 @@
 
 $rotateY: 60deg;
 $rotateZ: 0deg;
+$front-wall-offset-x: 10px;
+$front-wall-offset-y: 27px;
+$front-wall-offset-z: -10px;
+$front-wall-rotate-y: 42deg;
+$front-wall-rotate-z: 0deg;
+$front-wall-scale: 0.75;
 
 /* ---- left wall perspective ---- */
 $depth-spacing: 2.47;
@@ -373,7 +379,10 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
 
 /* First visible wall page: keep the tunnel stack, but let the front panel pop forward. */
 .wall-depth-page[data-side='left'][data-depth='0'] {
-  transform: translate3d(10px, 27px, -10px) rotateY(42deg) rotateZ(0) scale(0.75);
+  transform: translate3d($front-wall-offset-x, $front-wall-offset-y, $front-wall-offset-z)
+    rotateY($front-wall-rotate-y)
+    rotateZ($front-wall-rotate-z)
+    scale($front-wall-scale);
   opacity: 1;
   box-shadow:
     0 32px 100px rgba(0, 0, 0, 0.42),
@@ -382,7 +391,10 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
 }
 
 .wall-depth-page[data-side='right'][data-depth='0'] {
-  transform: translate3d(-10px, 27px, -10px) rotateY(-42deg) rotateZ(0) scale(0.75);
+  transform: translate3d(-$front-wall-offset-x, $front-wall-offset-y, $front-wall-offset-z)
+    rotateY(-$front-wall-rotate-y)
+    rotateZ($front-wall-rotate-z)
+    scale($front-wall-scale);
   opacity: 1;
   box-shadow:
     0 32px 100px rgba(0, 0, 0, 0.42),
