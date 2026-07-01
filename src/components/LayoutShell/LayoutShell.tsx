@@ -43,6 +43,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   // in-memory portal store back to "landing"; those routes must still render
   // the normal app shell/sidebar.
   const isPortalEntry = pathname === '/' && portalPhase !== 'interior';
+  const isHackerMode = pathname === '/' && portalPhase === 'interior';
 
   useEffect(() => {
     const open = (event: Event) => {
@@ -73,7 +74,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   // Close mobile sidebar on navigation
   useEffect(() => {
-    setMobileOpen(false);
+    void Promise.resolve().then(() => setMobileOpen(false));
   }, [pathname]);
 
   const toggle = useCallback(() => {
@@ -103,6 +104,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     >
       <div className={styles['layout-shell']} data-portal-interior>
         <HeaderBar
+          hideSidebarToggle={isHackerMode}
           onOpenCommandDeck={(query) => {
             setCommandDeckQuery(query ?? '');
             setCommandDeckOpen(true);
@@ -115,12 +117,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className={styles['layout-body']}>
-          <Sidebar mode={sidebarMode} mobileOpen={mobileOpen} onMobileToggle={setMobileOpen} />
-          {mobileOpen && <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />}
+          {!isHackerMode && <Sidebar mode={sidebarMode} mobileOpen={mobileOpen} onMobileToggle={setMobileOpen} />}
+          {!isHackerMode && mobileOpen && <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />}
           <main
             className={styles['main-area']}
             onClick={() => {
-              setSidebarMode((current) => (current === 'full' ? 'icons' : current));
+              if (!isHackerMode) setSidebarMode((current) => (current === 'full' ? 'icons' : current));
             }}
           >
             {children}

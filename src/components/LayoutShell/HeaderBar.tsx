@@ -20,6 +20,7 @@ interface HeaderBarProps {
   onToggleBrain?: () => void;
   onToggleRandomChats?: () => void;
   onOpenCommandDeck?: (query?: string) => void;
+  hideSidebarToggle?: boolean;
 }
 
 export function HeaderBar({
@@ -30,6 +31,7 @@ export function HeaderBar({
   onToggleBrain,
   onToggleRandomChats,
   onOpenCommandDeck,
+  hideSidebarToggle = false,
 }: HeaderBarProps) {
   const { toggle, setMobileOpen, mobileOpen } = useSidebar();
   const pathname = usePathname();
@@ -59,36 +61,40 @@ export function HeaderBar({
   return (
     <header className={styles.header}>
       {/* Mobile hamburger */}
-      <button
-        className={styles.hamburger}
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label="Toggle sidebar"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          {mobileOpen ? (
-            <path d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <>
-              <path d="M4 6h16" />
-              <path d="M4 12h16" />
-              <path d="M4 18h16" />
-            </>
-          )}
-        </svg>
-      </button>
+      {!hideSidebarToggle && (
+        <button
+          className={styles.hamburger}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle sidebar"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {mobileOpen ? (
+              <path d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <>
+                <path d="M4 6h16" />
+                <path d="M4 12h16" />
+                <path d="M4 18h16" />
+              </>
+            )}
+          </svg>
+        </button>
+      )}
 
       {/* Desktop sidebar toggle */}
-      <button
-        className={styles['sidebar-toggle-desktop']}
-        onClick={toggle}
-        title="Toggle sidebar mode"
-        aria-label="Toggle sidebar mode"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M9 3v18" />
-        </svg>
-      </button>
+      {!hideSidebarToggle && (
+        <button
+          className={styles['sidebar-toggle-desktop']}
+          onClick={toggle}
+          title="Toggle sidebar mode"
+          aria-label="Toggle sidebar mode"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M9 3v18" />
+          </svg>
+        </button>
+      )}
 
       {/* Logo */}
       <Link href="/chat" className={styles.logo}>

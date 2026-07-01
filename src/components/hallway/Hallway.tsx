@@ -25,6 +25,8 @@ type SelectedHallChat = {
   type: 'random' | 'project';
   projectId?: string;
   title: string;
+  accentColor: string;
+  projectName?: string;
 };
 
 interface ApiMessage {
@@ -545,7 +547,9 @@ export function Hallway() {
         id: chatId,
         type: item.type === 'random' ? 'random' : 'project',
         projectId: item.projectId ?? chat?.projectId ?? undefined,
-        title: chat?.title ?? item.title
+        title: chat?.title ?? item.title,
+        accentColor: item.accentColor,
+        projectName: item.projectName
       });
     } catch (error) {
       console.error('[Hallway] Failed to open inline chat', error);
@@ -605,6 +609,8 @@ export function Hallway() {
             key={selectedChat.id}
             chatId={selectedChat.id}
             title={selectedChat.title}
+            accentColor={selectedChat.accentColor}
+            projectName={selectedChat.projectName}
             onClose={() => setSelectedChat(null)}
             onChatTitleChange={(chatId, title) => {
               setSelectedChat((current) => (current?.id === chatId ? { ...current, title } : current));

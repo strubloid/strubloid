@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { CSSProperties, useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useHallChatSession } from '../../hooks/useHallChatSession';
 import { HackerChatInput } from './HackerChatInput';
@@ -15,11 +15,20 @@ type AiModel = {
 type HackerChatPanelProps = {
   chatId: string;
   title: string;
+  accentColor?: string;
+  projectName?: string;
   onClose: () => void;
   onChatTitleChange?: (chatId: string, title: string) => void;
 };
 
-export function HackerChatPanel({ chatId, title, onClose, onChatTitleChange }: HackerChatPanelProps) {
+export function HackerChatPanel({
+  chatId,
+  title,
+  accentColor = '#9ad933',
+  projectName,
+  onClose,
+  onChatTitleChange
+}: HackerChatPanelProps) {
   const {
     chat,
     devMode,
@@ -41,6 +50,7 @@ export function HackerChatPanel({ chatId, title, onClose, onChatTitleChange }: H
 
   const displayTitle = chat?.title || title || 'New Chat';
   const messages = chat?.messages ?? [];
+  const contextLabel = projectName ? `project link · ${projectName}` : 'random access memory';
 
   const [models, setModels] = useState<AiModel[]>([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
@@ -96,11 +106,13 @@ export function HackerChatPanel({ chatId, title, onClose, onChatTitleChange }: H
       exit={{ opacity: 0, y: 18, scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 150, damping: 22 }}
       aria-label={`${displayTitle} inline hacker chat`}
+      style={{ '--chat-accent': accentColor } as CSSProperties}
     >
       <header className="hacker-chat-header">
         <div className="hacker-chat-title-block">
           <span className="corridor-kicker">live tunnel chat</span>
           <h2>{displayTitle}</h2>
+          <span className="hacker-chat-context">{contextLabel}</span>
         </div>
         <button type="button" className="hacker-chat-close" onClick={onClose} aria-label="Close chat panel">
           ×
