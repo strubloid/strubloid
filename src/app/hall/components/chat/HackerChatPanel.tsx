@@ -18,6 +18,7 @@ type HackerChatPanelProps = {
   accentColor?: string;
   projectName?: string;
   onClose: () => void;
+  onDelete?: (chatId: string) => void;
   onChatTitleChange?: (chatId: string, title: string) => void;
 };
 
@@ -27,6 +28,7 @@ export function HackerChatPanel({
   accentColor = '#9ad933',
   projectName,
   onClose,
+  onDelete,
   onChatTitleChange
 }: HackerChatPanelProps) {
   const {
@@ -36,6 +38,7 @@ export function HackerChatPanel({
     isLoading,
     isSending,
     renameChat,
+    deleteChat,
     selectedModelId,
     sendMessage,
     setSelectedModelId,
@@ -57,6 +60,8 @@ export function HackerChatPanel({
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [draftTitle, setDraftTitle] = useState(displayTitle);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadModels = useCallback(async () => {
     if (modelsLoaded) return;
@@ -116,6 +121,29 @@ export function HackerChatPanel({
     setIsRenaming(false);
   }, [chatId, displayTitle, draftTitle, onChatTitleChange, renameChat]);
 
+  const handleDeleteClick = useCallback(() => {
+    setIsRenaming(false);
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const handleCancelDelete = useCallback(() => {
+    setShowDeleteConfirm(false);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    setIsDeleting(true);
+    void Promise.resolve()
+      .then(async () => {
+        await deleteChat();
+        onDelete?.(chatId);
+        onClose();
+      })
+      .catch(() => {
+        setIsDeleting(false);
+        setShowDeleteConfirm(false);
+      });
+  }, [chatId, deleteChat, onClose, onDelete]);
+
   const selectedModelLabel = models.find((model) => model.modelId === selectedModelId)?.name ?? 'model route';
 
   return (
@@ -154,9 +182,21 @@ export function HackerChatPanel({
           )}
           <span className="hacker-chat-context">{contextLabel}</span>
         </div>
-        <button type="button" className="hacker-chat-close" onClick={onClose} aria-label="Close chat panel">
-          ×
-        </button>
+        <div className="hacker-chat-header-actions">
+          <button
+            type="button"
+            className="hacker-chat-delete"
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+            title="Delete chat"
+            aria-label="Delete chat"
+          >
+            {isDeleting ? '…' : '🗑'}
+          </button>
+          <button type="button" className="hacker-chat-close" onClick={onClose} aria-label="Close chat panel">
+            ×
+          </button>
+        </div>
       </header>
 
       <div className="hacker-chat-toolbar" aria-label="Chat controls">
@@ -207,11 +247,48 @@ export function HackerChatPanel({
         <HackerChatMessages messages={messages} devMode={devMode} streamingMessageId={streamingMessageId} />
       )}
 
-      <HackerChatInput
-        disabled={isLoading || Boolean(error)}
-        isSending={isSending}
-        onSend={(message) => sendMessage(message, selectedModelId)}
-      />
+      <div className="hacker-chat-input-bar">
+        <HackerChatInput
+          disabled={isLoading || Boolean(error)}
+          isSending={isSending}
+          onSend={(message) => sendMessage(message, selectedModelId)}
+        />
+      </div>
+
+      {showDeleteConfirm && (
+        <motion.div
+          className="hacker-chat-confirm-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          <motion.div
+            className="hacker-chat-confirm-dialog"
+            style={{ '--chat-accent': accentColor } as CSSProperties}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p>Delete this chat? This cannot be undone.</p>
+            <div className="hacker-chat-confirm-dialog__actions">
+              <button type="button" onClick={handleCancelDelete} disabled={isDeleting}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="hacker-chat-confirm-dialog__delete"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.section>
   );
 }

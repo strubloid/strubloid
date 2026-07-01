@@ -29,6 +29,14 @@ type SelectedHallChat = {
   projectName?: string;
 };
 
+type SelectedHallProject = {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  chatCount: number;
+};
+
 interface ApiMessage {
   content: string;
   role: string;
@@ -73,6 +81,7 @@ interface WallPage {
   accentColor: string;
   projectId?: string;
   projectName?: string;
+  projectDescription?: string | null;
   items: FocusItem[];
 }
 
@@ -80,6 +89,24 @@ interface WallMotionState {
   target: number;
   current: number;
   max: number;
+}
+
+interface ProjectCreatorState {
+  open: boolean;
+  name: string;
+  color: string;
+  isSaving: boolean;
+  error?: string;
+}
+
+interface ProjectEditorState {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  chatCount: number;
+  isSaving: boolean;
+  error?: string;
 }
 
 const PAGE_WIDTH = 450;
@@ -197,6 +224,7 @@ function buildProjectPages(projects: ProjectLane[]): WallPage[] {
           accentColor,
           projectId: project.id,
           projectName: project.name,
+          projectDescription: project.description,
           items: [
             {
               type: 'projectEmpty' as const,
@@ -223,6 +251,7 @@ function buildProjectPages(projects: ProjectLane[]): WallPage[] {
       accentColor,
       projectId: project.id,
       projectName: project.name,
+      projectDescription: project.description,
       items: pageChats.map((chat) => chatItem(chat, accentColor, project))
     }));
   });
@@ -305,6 +334,7 @@ function HallWall({
   onCreateRandomChat,
   onCreateProject,
   onCreateProjectChat,
+  onEditProject,
   onInspect
 }: {
   side: WallSide;
@@ -316,6 +346,7 @@ function HallWall({
   onCreateRandomChat: () => void;
   onCreateProject: () => void;
   onCreateProjectChat: (projectId: string) => void;
+  onEditProject: (project: SelectedHallProject) => void;
   onInspect: (item: FocusItem) => void;
 }) {
   const isPassive = activeSide !== null && activeSide !== side;
@@ -357,13 +388,30 @@ function HallWall({
                       + project
                     </button>
                     {page.projectId && (
-                      <button
-                        type="button"
-                        onClick={() => onCreateProjectChat(page.projectId!)}
-                        title={`Create chat in ${page.projectName ?? page.title}`}
-                      >
-                        + chat
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onEditProject({
+                              id: page.projectId!,
+                              name: page.projectName ?? page.title,
+                              description: page.projectDescription ?? '',
+                              color: page.accentColor,
+                              chatCount: page.items.length
+                            })
+                          }
+                          title={`Edit ${page.projectName ?? page.title}`}
+                        >
+                          edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onCreateProjectChat(page.projectId!)}
+                          title={`Create chat in ${page.projectName ?? page.title}`}
+                        >
+                          + chat
+                        </button>
+                      </>
                     )}
                   </>
                 )}
@@ -410,6 +458,13 @@ export function Hallway() {
   const [data, setData] = useState<HallwayData>({ randomChats: [], projects: [] });
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<SelectedHallChat | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectEditorState | null>(null);
+  const [projectCreator, setProjectCreator] = useState<ProjectCreatorState>({
+    open: false,
+    name: '',
+    color: PROJECT_PALETTE[0],
+    isSaving: false
+  });
   const [isHackerMode] = useState(true);
 
   const loadHallway = useCallback(async (signal?: AbortSignal) => {
@@ -485,7 +540,7 @@ export function Hallway() {
     };
 
     const eventStartedInsideChat = (target: EventTarget | null) =>
-      target instanceof Element && Boolean(target.closest('.hacker-chat-panel'));
+      target instanceof Element && Boolean(target.closest('.hacker-chat-panel, .hacker-project-dialog'));
 
     const handleWheel = (event: WheelEvent) => {
       if (eventStartedInsideChat(event.target)) return;
@@ -603,25 +658,42 @@ export function Hallway() {
   }, [createChatFromHall]);
 
   const handleCreateProject = useCallback(() => {
-    const name = window.prompt('Project name');
-    const trimmed = name?.trim();
-    if (!trimmed) return;
+    setSelectedChat(null);
+    setSelectedProject(null);
+    setProjectCreator({
+      open: true,
+      name: '',
+      color: nextProjectColor(data.projects.length),
+      isSaving: false
+    });
+  }, [data.projects.length]);
 
+  const submitProjectCreator = useCallback(() => {
+    const trimmed = projectCreator.name.trim();
+    if (!trimmed) {
+      setProjectCreator((current) => ({ ...current, error: 'Name the project first.' }));
+      return;
+    }
+
+    setProjectCreator((current) => ({ ...current, isSaving: true, error: undefined }));
     void Promise.resolve()
       .then(async () => {
-        const color = nextProjectColor(data.projects.length);
         const projectRes = await fetch('/api/projects', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: trimmed, color })
+          body: JSON.stringify({ name: trimmed, color: projectCreator.color })
         });
 
         if (!projectRes.ok) throw new Error('Failed to create project');
         window.dispatchEvent(new CustomEvent('sidebar-refresh'));
         await loadHallway();
+        setProjectCreator({ open: false, name: '', color: nextProjectColor(data.projects.length + 1), isSaving: false });
       })
-      .catch((error) => console.error('[Hallway] Failed to create project', error));
-  }, [data.projects.length, loadHallway]);
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : 'Failed to create project';
+        setProjectCreator((current) => ({ ...current, isSaving: false, error: message }));
+      });
+  }, [data.projects.length, loadHallway, projectCreator.color, projectCreator.name]);
 
   const handleCreateProjectChat = useCallback(
     (projectId: string) => {
@@ -635,6 +707,44 @@ export function Hallway() {
     [createChatFromHall, data.projects]
   );
 
+  const handleEditProject = useCallback((project: SelectedHallProject) => {
+    setSelectedChat(null);
+    setProjectCreator((current) => ({ ...current, open: false, error: undefined }));
+    setSelectedProject({ ...project, isSaving: false });
+  }, []);
+
+  const submitProjectEditor = useCallback(() => {
+    if (!selectedProject) return;
+    const trimmed = selectedProject.name.trim();
+    if (!trimmed) {
+      setSelectedProject((current) => (current ? { ...current, error: 'Project name cannot be empty.' } : current));
+      return;
+    }
+
+    setSelectedProject((current) => (current ? { ...current, isSaving: true, error: undefined } : current));
+    void Promise.resolve()
+      .then(async () => {
+        const projectRes = await fetch(`/api/projects/${selectedProject.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: trimmed,
+            description: selectedProject.description,
+            color: selectedProject.color
+          })
+        });
+
+        if (!projectRes.ok) throw new Error('Failed to update project');
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+        await loadHallway();
+        setSelectedProject((current) => (current ? { ...current, name: trimmed, isSaving: false } : current));
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : 'Failed to update project';
+        setSelectedProject((current) => (current ? { ...current, isSaving: false, error: message } : current));
+      });
+  }, [loadHallway, selectedProject]);
+
   const handleItemSelect = async (item: FocusItem) => {
     if (!isHackerMode) {
       routeToNormalExperience(item);
@@ -647,6 +757,7 @@ export function Hallway() {
     }
 
     try {
+      setSelectedProject(null);
       const chat = item.id === 'new' || item.type === 'projectEmpty' ? await createInlineChat(item) : null;
       const chatId = chat?.id ?? item.id;
       setSelectedChat({
@@ -694,6 +805,7 @@ export function Hallway() {
           onCreateRandomChat={handleCreateRandomChat}
           onCreateProject={handleCreateProject}
           onCreateProjectChat={handleCreateProjectChat}
+          onEditProject={handleEditProject}
           onInspect={handleItemSelect}
         />
         <HallWall
@@ -706,14 +818,169 @@ export function Hallway() {
           onCreateRandomChat={handleCreateRandomChat}
           onCreateProject={handleCreateProject}
           onCreateProjectChat={handleCreateProjectChat}
+          onEditProject={handleEditProject}
           onInspect={handleItemSelect}
         />
       </div>
 
-      <motion.div className="corridor-center-copy" animate={{ opacity: selectedChat ? 0.12 : 1 }}>
+      <motion.div className="corridor-center-copy" animate={{ opacity: selectedChat || selectedProject ? 0.12 : 1 }}>
         <span className="corridor-kicker">hacker zone</span>
-        <h1>{loading ? 'Loading wall memory.' : selectedChat ? 'Chat stream open.' : 'You are inside.'}</h1>
+        <h1>{loading ? 'Loading wall memory.' : selectedChat ? 'Chat stream open.' : selectedProject ? 'Project wall selected.' : 'You are inside.'}</h1>
       </motion.div>
+
+      <AnimatePresence>
+        {projectCreator.open && (
+          <motion.form
+            className="hacker-project-dialog"
+            style={{ '--project-draft-accent': projectCreator.color } as CSSProperties}
+            initial={{ opacity: 0, y: 22, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 160, damping: 22 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              submitProjectCreator();
+            }}
+            aria-label="Create project"
+          >
+            <div className="hacker-project-dialog__header">
+              <span className="corridor-kicker">new project wall</span>
+              <button
+                type="button"
+                onClick={() => setProjectCreator((current) => ({ ...current, open: false, error: undefined }))}
+                aria-label="Close project creator"
+              >
+                ×
+              </button>
+            </div>
+
+            <label className="hacker-project-dialog__field">
+              <span>Project name</span>
+              <input
+                value={projectCreator.name}
+                onChange={(event) =>
+                  setProjectCreator((current) => ({ ...current, name: event.target.value, error: undefined }))
+                }
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    setProjectCreator((current) => ({ ...current, open: false, error: undefined }));
+                  }
+                }}
+                placeholder="Name the wall..."
+                autoFocus
+              />
+            </label>
+
+            <div className="hacker-project-dialog__palette" aria-label="Project color">
+              {PROJECT_PALETTE.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={projectCreator.color === color ? 'hacker-project-dialog__swatch--active' : ''}
+                  style={{ '--swatch-color': color } as CSSProperties}
+                  onClick={() => setProjectCreator((current) => ({ ...current, color }))}
+                  aria-label={`Use project color ${color}`}
+                />
+              ))}
+            </div>
+
+            {projectCreator.error && <p className="hacker-project-dialog__error">{projectCreator.error}</p>}
+
+            <div className="hacker-project-dialog__actions">
+              <button
+                type="button"
+                onClick={() => setProjectCreator((current) => ({ ...current, open: false, error: undefined }))}
+                disabled={projectCreator.isSaving}
+              >
+                Cancel
+              </button>
+              <button type="submit" disabled={projectCreator.isSaving}>
+                {projectCreator.isSaving ? 'Creating…' : 'Create wall'}
+              </button>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedProject && (
+          <motion.form
+            className="hacker-project-dialog hacker-project-dialog--editor"
+            style={{ '--project-draft-accent': selectedProject.color } as CSSProperties}
+            initial={{ opacity: 0, y: 22, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 160, damping: 22 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              submitProjectEditor();
+            }}
+            aria-label="Edit current project"
+          >
+            <div className="hacker-project-dialog__header">
+              <span className="corridor-kicker">edit project wall · {selectedProject.chatCount} chats</span>
+              <button type="button" onClick={() => setSelectedProject(null)} aria-label="Close project editor">
+                ×
+              </button>
+            </div>
+
+            <label className="hacker-project-dialog__field">
+              <span>Project name</span>
+              <input
+                value={selectedProject.name}
+                onChange={(event) =>
+                  setSelectedProject((current) =>
+                    current ? { ...current, name: event.target.value, error: undefined } : current
+                  )
+                }
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') setSelectedProject(null);
+                }}
+                placeholder="Project wall name..."
+                autoFocus
+              />
+            </label>
+
+            <label className="hacker-project-dialog__field">
+              <span>Description</span>
+              <textarea
+                value={selectedProject.description}
+                onChange={(event) =>
+                  setSelectedProject((current) =>
+                    current ? { ...current, description: event.target.value, error: undefined } : current
+                  )
+                }
+                placeholder="Optional project notes..."
+                rows={3}
+              />
+            </label>
+
+            <div className="hacker-project-dialog__palette" aria-label="Project color">
+              {PROJECT_PALETTE.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={selectedProject.color === color ? 'hacker-project-dialog__swatch--active' : ''}
+                  style={{ '--swatch-color': color } as CSSProperties}
+                  onClick={() => setSelectedProject((current) => (current ? { ...current, color } : current))}
+                  aria-label={`Use project color ${color}`}
+                />
+              ))}
+            </div>
+
+            {selectedProject.error && <p className="hacker-project-dialog__error">{selectedProject.error}</p>}
+
+            <div className="hacker-project-dialog__actions">
+              <button type="button" onClick={() => setSelectedProject(null)} disabled={selectedProject.isSaving}>
+                Cancel
+              </button>
+              <button type="submit" disabled={selectedProject.isSaving}>
+                {selectedProject.isSaving ? 'Saving…' : 'Save project'}
+              </button>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {selectedChat && (
@@ -724,6 +991,10 @@ export function Hallway() {
             accentColor={selectedChat.accentColor}
             projectName={selectedChat.projectName}
             onClose={() => setSelectedChat(null)}
+            onDelete={(chatId) => {
+              setSelectedChat((current) => (current?.id === chatId ? null : current));
+              void loadHallway();
+            }}
             onChatTitleChange={(chatId, title) => {
               setSelectedChat((current) => (current?.id === chatId ? { ...current, title } : current));
             }}

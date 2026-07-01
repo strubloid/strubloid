@@ -284,15 +284,19 @@
   transition: opacity 180ms ease;
 }
 
+$wall-offset: 0.4vw;
+$rotateY: 70deg;
+$skew: 1deg;
+
 .corridor-wall-zone--left {
-  left: 3.4vw;
-  transform: rotateY(51deg) skewY(-1deg);
+  left: $wall-offset;
+  transform: rotateY($rotateY) skewY($skew);
   transform-origin: left center;
 }
 
 .corridor-wall-zone--right {
-  right: 3.4vw;
-  transform: rotateY(-51deg) skewY(1deg);
+  right: $wall-offset;
+  transform: rotateY(-$rotateY) skewY(-$skew);
   transform-origin: right center;
 }
 
@@ -944,7 +948,11 @@
   border: 1px solid color-mix(in srgb, var(--chat-accent) 46%, transparent);
   border-radius: 20px;
   background:
-    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--chat-accent) 18%, transparent), transparent 42%),
+    radial-gradient(
+      circle at 16% 0%,
+      color-mix(in srgb, var(--chat-accent) 18%, transparent),
+      transparent 42%
+    ),
     linear-gradient(
       135deg,
       color-mix(in srgb, var(--chat-accent) 10%, rgba(3, 20, 12, 0.92)),
@@ -1050,7 +1058,11 @@
   gap: 9px;
   border-bottom: 1px solid color-mix(in srgb, var(--chat-accent) 20%, transparent);
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--chat-accent) 12%, rgba(12, 32, 14, 0.7)), rgba(1, 8, 6, 0.54)),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--chat-accent) 12%, rgba(12, 32, 14, 0.7)),
+      rgba(1, 8, 6, 0.54)
+    ),
     repeating-linear-gradient(
       90deg,
       transparent 0 42px,
@@ -1145,16 +1157,36 @@
 .hacker-chat-panel [class*='MessageList_empty'] {
   border-color: color-mix(in srgb, var(--chat-accent) 16%, transparent);
   background:
-    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--chat-accent) 10%, transparent), transparent 18rem),
-    radial-gradient(circle at 85% 76%, color-mix(in srgb, var(--chat-accent) 6%, transparent), transparent 22rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--chat-accent) 6%, rgba(16, 16, 26, 0.94)), rgba(3, 7, 5, 0.96));
+    radial-gradient(
+      circle at 18% 12%,
+      color-mix(in srgb, var(--chat-accent) 10%, transparent),
+      transparent 18rem
+    ),
+    radial-gradient(
+      circle at 85% 76%,
+      color-mix(in srgb, var(--chat-accent) 6%, transparent),
+      transparent 22rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--chat-accent) 6%, rgba(16, 16, 26, 0.94)),
+      rgba(3, 7, 5, 0.96)
+    );
 }
 
 .hacker-chat-panel [class*='MessageList_container']::before,
 .hacker-chat-panel [class*='MessageList_empty']::before {
   background:
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--chat-accent) 4%, transparent) 0 1px, transparent 1px 24px),
-    repeating-linear-gradient(180deg, color-mix(in srgb, var(--chat-accent) 3%, transparent) 0 1px, transparent 1px 18px);
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--chat-accent) 4%, transparent) 0 1px,
+      transparent 1px 24px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--chat-accent) 3%, transparent) 0 1px,
+      transparent 1px 18px
+    );
 }
 
 .hacker-chat-panel [class*='MessageList_bubble'][class*='MessageList_user'] {
@@ -1255,6 +1287,279 @@
 .hacker-chat-send-button:not(:disabled):focus-visible {
   background: color-mix(in srgb, var(--chat-accent) 24%, transparent);
   outline: none;
+}
+
+/* ===== Hacker chat header actions ===== */
+.hacker-chat-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.hacker-chat-delete {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--chat-accent) 22%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--chat-accent) 42%, white 18%);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+
+.hacker-chat-delete:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.hacker-chat-delete:not(:disabled):hover {
+  background: color-mix(in srgb, var(--chat-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--chat-accent) 38%, transparent);
+}
+
+/* ===== Hacker chat delete confirmation ===== */
+.hacker-chat-confirm-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 33;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: rgba(2, 6, 8, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.hacker-chat-confirm-dialog {
+  display: grid;
+  gap: 16px;
+  width: min(280px, 80vw);
+  padding: 24px 22px 18px;
+  border: 1px solid color-mix(in srgb, var(--chat-accent) 34%, transparent);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(6, 18, 12, 0.96), rgba(1, 8, 6, 0.94));
+  box-shadow:
+    0 26px 60px rgba(0, 0, 0, 0.5),
+    0 0 50px color-mix(in srgb, var(--chat-accent) 12%, transparent);
+}
+
+.hacker-chat-confirm-dialog p {
+  margin: 0;
+  color: rgba(232, 242, 214, 0.88);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.hacker-chat-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.hacker-chat-confirm-dialog__actions button {
+  border: 1px solid color-mix(in srgb, var(--chat-accent) 30%, transparent);
+  border-radius: 10px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(232, 255, 223, 0.82);
+  cursor: pointer;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hacker-chat-confirm-dialog__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.hacker-chat-confirm-dialog__delete {
+  border-color: rgba(220, 70, 70, 0.46) !important;
+  background: rgba(220, 70, 70, 0.14) !important;
+  color: rgba(255, 160, 160, 0.92) !important;
+}
+
+.hacker-chat-confirm-dialog__actions button:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ===== Hacker project creator ===== */
+.hacker-project-dialog {
+  --project-draft-accent: #9ad933;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 72;
+  display: grid;
+  width: min(420px, 90vw);
+  gap: 16px;
+  translate: -50% -50%;
+  border: 1px solid color-mix(in srgb, var(--project-draft-accent) 48%, transparent);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at 18% 0%,
+      color-mix(in srgb, var(--project-draft-accent) 18%, transparent),
+      transparent 46%
+    ),
+    linear-gradient(135deg, rgba(3, 20, 12, 0.92), rgba(1, 8, 6, 0.86)),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--project-draft-accent) 4%, transparent) 0 1px,
+      transparent 1px 7px
+    );
+  box-shadow:
+    0 0 72px color-mix(in srgb, var(--project-draft-accent) 18%, transparent),
+    0 34px 120px rgba(0, 0, 0, 0.54),
+    inset 0 0 34px color-mix(in srgb, var(--project-draft-accent) 8%, transparent);
+  padding: 18px;
+  backdrop-filter: blur(18px) saturate(1.16);
+  -webkit-backdrop-filter: blur(18px) saturate(1.16);
+  color: rgba(246, 250, 232, 0.96);
+}
+
+.hacker-project-dialog__header,
+.hacker-project-dialog__actions,
+.hacker-project-dialog__palette {
+  display: flex;
+  align-items: center;
+}
+
+.hacker-project-dialog__header {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hacker-project-dialog__header button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--project-draft-accent) 32%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--project-draft-accent) 10%, transparent);
+  color: color-mix(in srgb, var(--project-draft-accent) 56%, white 38%);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.hacker-project-dialog__field {
+  display: grid;
+  gap: 8px;
+}
+
+.hacker-project-dialog__field span {
+  color: color-mix(in srgb, var(--project-draft-accent) 70%, white 8%);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hacker-project-dialog__field input,
+.hacker-project-dialog__field textarea {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--project-draft-accent) 30%, transparent);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.32);
+  color: #e8ffdf;
+  padding: 13px 14px;
+  outline: none;
+  font: inherit;
+}
+
+.hacker-project-dialog__field textarea {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.hacker-project-dialog__field input:focus,
+.hacker-project-dialog__field textarea:focus {
+  border-color: color-mix(in srgb, var(--project-draft-accent) 62%, white 8%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--project-draft-accent) 12%, transparent);
+}
+
+.hacker-project-dialog--editor {
+  width: min(480px, 92vw);
+}
+
+.hacker-project-dialog__palette {
+  gap: 10px;
+}
+
+.hacker-project-dialog__palette button {
+  --swatch-color: #9ad933;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--swatch-color) 62%, white 12%);
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.35), transparent 34%),
+    var(--swatch-color);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--swatch-color) 20%, transparent);
+  cursor: pointer;
+}
+
+.hacker-project-dialog__swatch--active {
+  outline: 2px solid color-mix(in srgb, var(--swatch-color) 68%, white 12%);
+  outline-offset: 3px;
+}
+
+.hacker-project-dialog__error {
+  margin: -4px 0 0;
+  color: rgba(255, 150, 150, 0.92);
+  font-size: 12px;
+}
+
+.hacker-project-dialog__actions {
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.hacker-project-dialog__actions button {
+  border: 1px solid color-mix(in srgb, var(--project-draft-accent) 34%, transparent);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(232, 255, 223, 0.84);
+  cursor: pointer;
+  padding: 10px 14px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hacker-project-dialog__actions button[type='submit'] {
+  background: color-mix(in srgb, var(--project-draft-accent) 16%, transparent);
+  color: color-mix(in srgb, var(--project-draft-accent) 58%, white 36%);
+}
+
+.hacker-project-dialog__header button:hover,
+.hacker-project-dialog__header button:focus-visible,
+.hacker-project-dialog__actions button:hover:not(:disabled),
+.hacker-project-dialog__actions button:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--project-draft-accent) 58%, white 8%);
+  background: color-mix(in srgb, var(--project-draft-accent) 14%, transparent);
+  outline: none;
+}
+
+.hacker-project-dialog__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* ===== Travel status ===== */

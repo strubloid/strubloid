@@ -147,6 +147,18 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
     [patchChat]
   );
 
+  const deleteChat = useCallback(async () => {
+    if (!chat) return;
+
+    const res = await fetch(`/api/chats/${chat.id}`, {
+      method: 'DELETE'
+    });
+
+    if (!res.ok) throw new Error('Failed to delete chat');
+    window.dispatchEvent(new CustomEvent('hallway-refresh'));
+    window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+  }, [chat]);
+
   const sendMessage = useCallback(
     async (message: string, modelId?: string) => {
       if (!chat || isSending) return;
@@ -257,6 +269,7 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
     assignProject,
     reload: loadChat,
     renameChat,
+    deleteChat,
     sendMessage,
     setError,
     toggleBrain,
