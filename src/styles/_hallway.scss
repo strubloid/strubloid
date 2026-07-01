@@ -324,7 +324,7 @@ $rotateY: 70deg;
 $rotateZ: 0deg;
 
 /* ---- left wall perspective ---- */
-$depth-spacing: 1.2;
+$depth-spacing: 1.24;
 $depth-scales: 0.82, 0.6, 0.52, 0.4;
 $depth-offset-x:
   0,
@@ -341,7 +341,7 @@ $depth-offset-z:
   -270px * $depth-spacing,
   -410px * $depth-spacing,
   -530px * $depth-spacing;
-$depth-opacity: 1, 0.65, 0.4, 0.22;
+$depth-opacity: 1, 0.8, 0.6, 0.4;
 
 @for $i from 0 to 4 {
   .wall-depth-page[data-side='left'][data-depth='#{$i}'] {
