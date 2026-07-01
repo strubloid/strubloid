@@ -272,76 +272,31 @@
   transform: rotateY(-70deg) translateZ(10px);
 }
 
-/* ===== Z-positioned wall cards ===== */
-.corridor-wall-zone {
+/* ===== Wall Depth Stack — side-aligned perspective ===== */
+.wall-depth-stack {
   position: absolute;
-  top: 16%;
-  z-index: 7;
-  width: min(34vw, 500px);
-  height: min(62vh, 590px);
-  overflow: hidden;
+  top: 80px;
+  bottom: 100px;
+  width: min(34vw, 560px);
+  perspective: 1400px;
   transform-style: preserve-3d;
-  transition: opacity 180ms ease;
-}
-
-$wall-offset: 0.4vw;
-$rotateY: 70deg;
-$skew: 1deg;
-
-.corridor-wall-zone--left {
-  left: $wall-offset;
-  transform: rotateY($rotateY) skewY($skew);
-  transform-origin: left center;
-}
-
-.corridor-wall-zone--right {
-  right: $wall-offset;
-  transform: rotateY(-$rotateY) skewY(-$skew);
-  transform-origin: right center;
-}
-
-.corridor-wall-zone--passive {
-  opacity: 0.58;
-}
-
-.corridor-wall-surface {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border: 1px solid rgba(154, 217, 51, 0.15);
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(12, 28, 13, 0.28), rgba(7, 12, 8, 0.2)),
-    repeating-linear-gradient(90deg, transparent 0 54px, rgba(154, 217, 51, 0.05) 55px 56px),
-    repeating-linear-gradient(0deg, transparent 0 44px, rgba(154, 217, 51, 0.045) 45px 46px);
-  box-shadow:
-    0 0 54px rgba(154, 217, 51, 0.08),
-    inset 0 0 70px rgba(154, 217, 51, 0.045);
-  clip-path: polygon(0 4%, 100% 0, 100% 96%, 0 100%);
+  z-index: 32;
   pointer-events: none;
 }
 
-.corridor-wall-zone--right .corridor-wall-surface {
-  clip-path: polygon(0 0, 100% 4%, 100% 100%, 0 96%);
+.wall-depth-stack--left {
+  left: 36px;
 }
 
-.corridor-wall-mover {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 54px;
-  height: 100%;
-  padding: 18px;
-  transform: translate3d(var(--wall-offset), 0, 0);
-  will-change: transform;
+.wall-depth-stack--right {
+  right: 36px;
 }
 
-.corridor-wall-page {
-  flex: 0 0 min(30vw, 450px);
+.wall-depth-page {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  height: 100%;
   border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 72%, transparent);
   border-radius: 20px;
   background:
@@ -358,17 +313,63 @@ $skew: 1deg;
     0 0 40px color-mix(in srgb, var(--card-accent, #9ad933) 22%, transparent),
     inset 0 1px 0 rgba(236, 244, 222, 0.12);
   overflow: hidden;
+  pointer-events: auto;
+  transform-style: preserve-3d;
+  transition:
+    transform 400ms ease,
+    opacity 400ms ease;
 }
 
-.corridor-wall-page__header,
-.corridor-wall-page__title-row {
+$rotateY: 70deg;
+$rotateZ: 0.1deg;
+
+/* ---- left wall perspective ---- */
+$depth-scales: 0.82, 0.6, 0.52, 0.4;
+$depth-offset-x: 0, 240px, 390px, 510px;
+$depth-offset-y: 0, 14px, 24px, 32px;
+$depth-offset-z:
+  0,
+  -130px,
+  -210px,
+  -270px;
+$depth-opacity: 1, 0.65, 0.4, 0.22;
+
+@for $i from 0 to 4 {
+  .wall-depth-page[data-side='left'][data-depth='#{$i}'] {
+    transform: translate3d(
+        nth($depth-offset-x, $i + 1),
+        nth($depth-offset-y, $i + 1),
+        nth($depth-offset-z, $i + 1)
+      )
+      rotateY($rotateY)
+      rotateZ(-$rotateZ)
+      scale(nth($depth-scales, $i + 1));
+    opacity: nth($depth-opacity, $i + 1);
+  }
+
+  .wall-depth-page[data-side='right'][data-depth='#{$i}'] {
+    transform: translate3d(
+        -#{nth($depth-offset-x, $i + 1)},
+        nth($depth-offset-y, $i + 1),
+        nth($depth-offset-z, $i + 1)
+      )
+      rotateY(-$rotateY)
+      rotateZ($rotateZ)
+      scale(nth($depth-scales, $i + 1));
+    opacity: nth($depth-opacity, $i + 1);
+  }
+}
+
+/* ---- page internals (mirrors old .corridor-wall-page) ---- */
+.wall-depth-page__header,
+.wall-depth-page__title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
 }
 
-.corridor-wall-page__header {
+.wall-depth-page__header {
   border-bottom: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 22%, transparent);
   color: color-mix(in srgb, var(--card-accent, #9ad933) 82%, white 10%);
   padding: 13px 16px 10px;
@@ -379,18 +380,18 @@ $skew: 1deg;
   text-transform: uppercase;
 }
 
-.corridor-wall-page__header span:last-child,
-.corridor-wall-page__page {
+.wall-depth-page__header span:last-child,
+.wall-depth-page__page-label {
   color: rgba(236, 244, 222, 0.72);
   white-space: nowrap;
 }
 
-.corridor-wall-page__title-row {
+.wall-depth-page__title-row {
   flex-wrap: wrap;
   padding: 14px 16px 4px;
 }
 
-.corridor-wall-page h2 {
+.wall-depth-page h2 {
   overflow: hidden;
   margin: 0;
   color: rgba(246, 250, 232, 0.96);
@@ -400,14 +401,14 @@ $skew: 1deg;
   white-space: nowrap;
 }
 
-.corridor-wall-page__page {
+.wall-depth-page__page-label {
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.corridor-wall-page__actions {
+.wall-depth-page__actions {
   display: flex;
   flex: 1 1 auto;
   justify-content: flex-end;
@@ -415,7 +416,7 @@ $skew: 1deg;
   min-width: 128px;
 }
 
-.corridor-wall-page__actions button {
+.wall-depth-page__actions button {
   border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 32%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--card-accent, #9ad933) 9%, rgba(4, 12, 7, 0.78));
@@ -433,21 +434,22 @@ $skew: 1deg;
     box-shadow 140ms ease;
 }
 
-.corridor-wall-page__actions button:hover,
-.corridor-wall-page__actions button:focus-visible {
+.wall-depth-page__actions button:hover,
+.wall-depth-page__actions button:focus-visible {
   border-color: color-mix(in srgb, var(--card-accent, #9ad933) 68%, white 8%);
   background: color-mix(in srgb, var(--card-accent, #9ad933) 16%, rgba(4, 12, 7, 0.88));
   box-shadow: 0 0 18px color-mix(in srgb, var(--card-accent, #9ad933) 18%, transparent);
   outline: none;
 }
 
-.corridor-wall-page__items {
+.wall-depth-page__items {
   display: grid;
   align-content: start;
   gap: 11px;
   padding: 12px 16px 18px;
 }
 
+/* ===== Card panel (shared by old and new wall) ===== */
 .corridor-wall-panel {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -535,27 +537,7 @@ $skew: 1deg;
   text-transform: uppercase;
 }
 
-.corridor-wall-progress {
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  bottom: 10px;
-  z-index: 2;
-  height: 2px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(154, 217, 51, 0.1);
-  pointer-events: none;
-}
-
-.corridor-wall-progress span {
-  display: block;
-  width: var(--wall-progress);
-  height: 100%;
-  background: linear-gradient(90deg, rgba(154, 217, 51, 0.35), rgba(246, 250, 232, 0.8));
-  box-shadow: 0 0 16px rgba(154, 217, 51, 0.28);
-}
-
+/* ===== Default state (no selected chat) ===== */
 .corridor-travel-card {
   position: absolute;
   top: 22%;

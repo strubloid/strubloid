@@ -3,7 +3,6 @@
 import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { HackerChatPanel } from '@/app/hall/components/chat/HackerChatPanel';
 
 type WallSide = 'left' | 'right';
@@ -85,12 +84,6 @@ interface WallPage {
   items: FocusItem[];
 }
 
-interface WallMotionState {
-  target: number;
-  current: number;
-  max: number;
-}
-
 interface ProjectCreatorState {
   open: boolean;
   name: string;
@@ -109,15 +102,24 @@ interface ProjectEditorState {
   error?: string;
 }
 
-const PAGE_WIDTH = 450;
-const PAGE_GAP = 54;
-const PAGE_STRIDE = PAGE_WIDTH + PAGE_GAP;
 const RIB_GAP = 420;
 const SECTION_COUNT = 11;
 const PROJECT_PALETTE = ['#d8f45d', '#55d8ff', '#ff67c4', '#ffb24d', '#a78bfa', '#5eead4'];
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+/** How many wall pages to show at once, based on total pages.
+ *  - 1 page  → show 1 (nothing to scroll)
+ *  - 2 pages → show 1 (scroll to reveal second)
+ *  - 3 pages → show 2 (scroll to reveal third)
+ *  - 4+      → show 3 (minimum per standard view)
+ */
+function visibleWallCount(totalPages: number): number {
+  if (totalPages <= 2) return Math.max(1, totalPages - 1);
+  if (totalPages === 3) return 2;
+  return 3;
 }
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -324,12 +326,10 @@ function WallPanelCard({
   );
 }
 
-function HallWall({
+function WallDepthStack({
   side,
   pages,
-  offset,
-  progress,
-  activeSide,
+  activeIndex,
   selectedChatId,
   onCreateRandomChat,
   onCreateProject,
@@ -339,9 +339,7 @@ function HallWall({
 }: {
   side: WallSide;
   pages: WallPage[];
-  offset: number;
-  progress: number;
-  activeSide: WallSide | null;
+  activeIndex: number;
   selectedChatId?: string | null;
   onCreateRandomChat: () => void;
   onCreateProject: () => void;
@@ -349,111 +347,97 @@ function HallWall({
   onEditProject: (project: SelectedHallProject) => void;
   onInspect: (item: FocusItem) => void;
 }) {
-  const isPassive = activeSide !== null && activeSide !== side;
+  const visibleCount = visibleWallCount(pages.length);
+  const visiblePages = pages.slice(activeIndex, activeIndex + visibleCount);
+
+  if (!visiblePages.length) return null;
 
   return (
-    <div className={`corridor-wall-zone corridor-wall-zone--${side} ${isPassive ? 'corridor-wall-zone--passive' : ''}`}>
-      <div className="corridor-wall-surface" aria-hidden="true" />
-      <div
-        className="corridor-wall-mover"
-        data-side={side}
-        style={
-          {
-            '--wall-offset': `${-offset}px`,
-            '--wall-progress': `${progress}%`
-          } as CSSProperties
-        }
-      >
-        {pages.map((page, index) => (
-          <section
-            key={page.key}
-            className="corridor-wall-page"
-            style={{ '--card-accent': page.accentColor } as CSSProperties}
-            aria-label={`${side} wall page ${index + 1}: ${page.title}`}
-          >
-            <header className="corridor-wall-page__header">
-              <span>{page.eyebrow}</span>
-              <span>{page.countLabel}</span>
-            </header>
-            <div className="corridor-wall-page__title-row">
-              <h2>{page.title}</h2>
-              <div className="corridor-wall-page__actions">
-                {side === 'left' ? (
-                  <button type="button" onClick={onCreateRandomChat} title="Create random chat">
-                    + random
+    <div className={`wall-depth-stack wall-depth-stack--${side}`}>
+      {visiblePages.map((page, depthIndex) => (
+        <section
+          key={page.key}
+          className="wall-depth-page"
+          data-side={side}
+          data-depth={depthIndex}
+          style={
+            {
+              '--card-accent': page.accentColor,
+              zIndex: 10 - depthIndex
+            } as CSSProperties
+          }
+          aria-label={`${side} wall page ${activeIndex + depthIndex + 1}: ${page.title}`}
+        >
+          <header className="wall-depth-page__header">
+            <span>{page.eyebrow}</span>
+            <span>{page.countLabel}</span>
+          </header>
+          <div className="wall-depth-page__title-row">
+            <h2>{page.title}</h2>
+            <div className="wall-depth-page__actions">
+              {side === 'left' ? (
+                <button type="button" onClick={onCreateRandomChat} title="Create random chat">
+                  + random
+                </button>
+              ) : (
+                <>
+                  <button type="button" onClick={onCreateProject} title="Create project">
+                    + project
                   </button>
-                ) : (
-                  <>
-                    <button type="button" onClick={onCreateProject} title="Create project">
-                      + project
-                    </button>
-                    {page.projectId && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onEditProject({
-                              id: page.projectId!,
-                              name: page.projectName ?? page.title,
-                              description: page.projectDescription ?? '',
-                              color: page.accentColor,
-                              chatCount: page.items.length
-                            })
-                          }
-                          title={`Edit ${page.projectName ?? page.title}`}
-                        >
-                          edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onCreateProjectChat(page.projectId!)}
-                          title={`Create chat in ${page.projectName ?? page.title}`}
-                        >
-                          + chat
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-              <span className="corridor-wall-page__page">wall {index + 1}</span>
+                  {page.projectId && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onEditProject({
+                            id: page.projectId!,
+                            name: page.projectName ?? page.title,
+                            description: page.projectDescription ?? '',
+                            color: page.accentColor,
+                            chatCount: page.items.length
+                          })
+                        }
+                        title={`Edit ${page.projectName ?? page.title}`}
+                      >
+                        edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onCreateProjectChat(page.projectId!)}
+                        title={`Create chat in ${page.projectName ?? page.title}`}
+                      >
+                        + chat
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
             </div>
-            <div className="corridor-wall-page__items">
-              {page.items.map((item) => (
-                <WallPanelCard
-                  key={`${page.key}-${item.id}`}
-                  item={item}
-                  selected={selectedChatId === item.id}
-                  onInspect={onInspect}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-      <div className="corridor-wall-progress" aria-hidden="true">
-        <span />
-      </div>
+            <span className="wall-depth-page__page-label">
+              wall {activeIndex + depthIndex + 1}/{pages.length}
+            </span>
+          </div>
+          <div className="wall-depth-page__items">
+            {page.items.map((item) => (
+              <WallPanelCard
+                key={`${page.key}-${item.id}`}
+                item={item}
+                selected={selectedChatId === item.id}
+                onInspect={onInspect}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
 
-function progressFor(offset: number, max: number): number {
-  if (max <= 0) return 0;
-  return Math.round((offset / max) * 100);
-}
-
 export function Hallway() {
   const router = useRouter();
-  const reducedMotion = useReducedMotion();
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const leftRef = useRef<WallMotionState>({ target: 0, current: 0, max: 0 });
-  const rightRef = useRef<WallMotionState>({ target: 0, current: 0, max: 0 });
-  const [leftOffset, setLeftOffset] = useState(0);
-  const [rightOffset, setRightOffset] = useState(0);
-  const [leftMax, setLeftMax] = useState(0);
-  const [rightMax, setRightMax] = useState(0);
+  const [leftActiveIndex, setLeftActiveIndex] = useState(0);
+  const [rightActiveIndex, setRightActiveIndex] = useState(0);
   const [activeSide, setActiveSide] = useState<WallSide | null>(null);
   const [data, setData] = useState<HallwayData>({ randomChats: [], projects: [] });
   const [loading, setLoading] = useState(true);
@@ -513,15 +497,16 @@ export function Hallway() {
   const leftPages = useMemo(() => buildRandomPages(data.randomChats), [data.randomChats]);
   const rightPages = useMemo(() => buildProjectPages(data.projects), [data.projects]);
   const sections = useMemo(() => Array.from({ length: SECTION_COUNT }, (_, index) => 360 - index * RIB_GAP), []);
+  const leftMaxIndex = Math.max(0, leftPages.length - visibleWallCount(leftPages.length));
+  const rightMaxIndex = Math.max(0, rightPages.length - visibleWallCount(rightPages.length));
 
+  // Reset indexes when page count shrinks
   useEffect(() => {
-    leftRef.current.max = Math.max(0, (leftPages.length - 1) * PAGE_STRIDE);
-    rightRef.current.max = Math.max(0, (rightPages.length - 1) * PAGE_STRIDE);
-    leftRef.current.target = clamp(leftRef.current.target, 0, leftRef.current.max);
-    rightRef.current.target = clamp(rightRef.current.target, 0, rightRef.current.max);
-    setLeftMax(leftRef.current.max);
-    setRightMax(rightRef.current.max);
-  }, [leftPages.length, rightPages.length]);
+    setLeftActiveIndex((prev) => clamp(prev, 0, leftMaxIndex));
+  }, [leftMaxIndex]);
+  useEffect(() => {
+    setRightActiveIndex((prev) => clamp(prev, 0, rightMaxIndex));
+  }, [rightMaxIndex]);
 
   useEffect(() => {
     const element = wrapperRef.current;
@@ -532,32 +517,42 @@ export function Hallway() {
       return clientX - rect.left < rect.width / 2 ? 'left' : 'right';
     };
 
-    const moveSide = (side: WallSide, delta: number) => {
+    const moveSide = (side: WallSide, direction: 1 | -1) => {
       if (loading) return;
-      const state = side === 'left' ? leftRef.current : rightRef.current;
-      state.target = clamp(state.target + delta, 0, state.max);
       setActiveSide(side);
+      if (side === 'left') {
+        setLeftActiveIndex((prev) => clamp(prev + direction, 0, leftMaxIndex));
+      } else {
+        setRightActiveIndex((prev) => clamp(prev + direction, 0, rightMaxIndex));
+      }
     };
 
     const eventStartedInsideChat = (target: EventTarget | null) =>
       target instanceof Element && Boolean(target.closest('.hacker-chat-panel, .hacker-project-dialog'));
 
+    // Wheel handler — one scroll tick = one page step (low threshold for trackpads)
+    const wheelAccum: Record<WallSide, number> = { left: 0, right: 0 };
+
     const handleWheel = (event: WheelEvent) => {
       if (eventStartedInsideChat(event.target)) return;
       event.preventDefault();
-      moveSide(sideFromClientX(event.clientX), event.deltaY * 0.55);
+      const side = sideFromClientX(event.clientX);
+      wheelAccum[side] += event.deltaY;
+      if (Math.abs(wheelAccum[side]) >= 24) {
+        moveSide(side, wheelAccum[side] > 0 ? 1 : -1);
+        wheelAccum[side] = 0;
+      }
     };
 
-    let touchStartY = 0;
+    let lastTouchY = 0;
     let touchSide: WallSide = 'left';
 
     const handleTouchStart = (event: TouchEvent) => {
       if (eventStartedInsideChat(event.target)) return;
       const touch = event.touches[0];
       if (!touch) return;
-      touchStartY = touch.clientY;
+      lastTouchY = touch.clientY;
       touchSide = sideFromClientX(touch.clientX);
-      setActiveSide(touchSide);
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -565,9 +560,11 @@ export function Hallway() {
       const touch = event.touches[0];
       if (!touch) return;
       event.preventDefault();
-      const deltaY = touchStartY - touch.clientY;
-      touchStartY = touch.clientY;
-      moveSide(touchSide, deltaY * 1.8);
+      const deltaY = lastTouchY - touch.clientY;
+      lastTouchY = touch.clientY;
+      if (Math.abs(deltaY) >= 20) {
+        moveSide(touchSide, deltaY > 0 ? 1 : -1);
+      }
     };
 
     element.addEventListener('wheel', handleWheel, { passive: false });
@@ -578,25 +575,7 @@ export function Hallway() {
       element.removeEventListener('touchstart', handleTouchStart);
       element.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [loading]);
-
-  useEffect(() => {
-    const animate = () => {
-      const ease = reducedMotion === 'reduce' ? 1 : 0.08;
-      const left = leftRef.current;
-      const right = rightRef.current;
-      left.current = Math.abs(left.current - left.target) < 0.1 ? left.target : left.current + (left.target - left.current) * ease;
-      right.current = Math.abs(right.current - right.target) < 0.1 ? right.target : right.current + (right.target - right.current) * ease;
-      setLeftOffset(left.current);
-      setRightOffset(right.current);
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [reducedMotion]);
+  }, [loading, leftMaxIndex, rightMaxIndex]);
 
   const routeToNormalExperience = (item: FocusItem) => {
     if (item.id === 'new') router.push('/chat');
@@ -774,8 +753,10 @@ export function Hallway() {
     }
   };
 
-  const leftProgress = progressFor(leftOffset, leftMax);
-  const rightProgress = progressFor(rightOffset, rightMax);
+  const leftCurrentPage = leftActiveIndex + 1;
+  const rightCurrentPage = rightActiveIndex + 1;
+  const leftTotalPages = leftPages.length;
+  const rightTotalPages = rightPages.length;
 
   return (
     <div ref={wrapperRef} className="hallway-wrapper corridor-wrapper">
@@ -786,7 +767,7 @@ export function Hallway() {
       <div className="corridor-particles corridor-particles--near" />
       <div className="corridor-particles corridor-particles--far" />
 
-      <div className="corridor-scene" style={{ '--left-travel': `${leftOffset}px`, '--right-travel': `${rightOffset}px` } as CSSProperties}>
+      <div className="corridor-scene">
         <div className="corridor-world">
           <div className="corridor-floor-grid" aria-hidden="true" />
           <div className="corridor-ceiling-grid" aria-hidden="true" />
@@ -795,12 +776,10 @@ export function Hallway() {
           ))}
         </div>
 
-        <HallWall
+        <WallDepthStack
           side="left"
           pages={leftPages}
-          offset={leftOffset}
-          progress={leftProgress}
-          activeSide={activeSide}
+          activeIndex={leftActiveIndex}
           selectedChatId={selectedChat?.id}
           onCreateRandomChat={handleCreateRandomChat}
           onCreateProject={handleCreateProject}
@@ -808,12 +787,10 @@ export function Hallway() {
           onEditProject={handleEditProject}
           onInspect={handleItemSelect}
         />
-        <HallWall
+        <WallDepthStack
           side="right"
           pages={rightPages}
-          offset={rightOffset}
-          progress={rightProgress}
-          activeSide={activeSide}
+          activeIndex={rightActiveIndex}
           selectedChatId={selectedChat?.id}
           onCreateRandomChat={handleCreateRandomChat}
           onCreateProject={handleCreateProject}
@@ -1004,7 +981,7 @@ export function Hallway() {
 
       <div className="corridor-travel-status">
         <span>{loading ? 'loading wall memory' : `active side: ${activeSide ?? 'none'}`}</span>
-        <span>LEFT {leftProgress}% · RIGHT {rightProgress}%</span>
+        <span>LEFT wall {leftCurrentPage}/{leftTotalPages} · RIGHT wall {rightCurrentPage}/{rightTotalPages}</span>
       </div>
     </div>
   );
