@@ -144,7 +144,8 @@ export function HackerChatPanel({
       });
   }, [chatId, deleteChat, onClose, onDelete]);
 
-  const selectedModelLabel = models.find((model) => model.modelId === selectedModelId)?.name ?? 'model route';
+  const selectedModelLabel =
+    models.find((model) => model.modelId === selectedModelId)?.name ?? 'model route';
 
   return (
     <motion.section
@@ -193,7 +194,12 @@ export function HackerChatPanel({
           >
             {isDeleting ? '…' : '🗑'}
           </button>
-          <button type="button" className="hacker-chat-close" onClick={onClose} aria-label="Close chat panel">
+          <button
+            type="button"
+            className="hacker-chat-close"
+            onClick={onClose}
+            aria-label="Close chat panel"
+          >
             ×
           </button>
         </div>
@@ -215,6 +221,7 @@ export function HackerChatPanel({
             </option>
           ))}
         </select>
+        <span className="hacker-chat-toolbar-status">{selectedModelLabel}</span>
 
         <button
           type="button"
@@ -235,8 +242,6 @@ export function HackerChatPanel({
         >
           📋 {useRandomChats ? 'Randoms ON' : 'Randoms'}
         </button>
-
-        <span className="hacker-chat-toolbar-status">{selectedModelLabel}</span>
       </div>
 
       {isLoading ? (
@@ -244,16 +249,18 @@ export function HackerChatPanel({
       ) : error ? (
         <div className="hacker-chat-state hacker-chat-state--error">{error}</div>
       ) : (
-        <HackerChatMessages messages={messages} devMode={devMode} streamingMessageId={streamingMessageId} />
+        <HackerChatMessages
+          messages={messages}
+          devMode={devMode}
+          streamingMessageId={streamingMessageId}
+        />
       )}
 
-      <div className="hacker-chat-input-bar">
-        <HackerChatInput
-          disabled={isLoading || Boolean(error)}
-          isSending={isSending}
-          onSend={(message) => sendMessage(message, selectedModelId)}
-        />
-      </div>
+      <HackerChatInput
+        disabled={isLoading || Boolean(error)}
+        isSending={isSending}
+        onSend={(message) => sendMessage(message, selectedModelId)}
+      />
 
       {showDeleteConfirm && (
         <motion.div

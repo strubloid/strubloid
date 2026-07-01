@@ -380,9 +380,7 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
 /* First visible wall page: keep the tunnel stack, but let the front panel pop forward. */
 .wall-depth-page[data-side='left'][data-depth='0'] {
   transform: translate3d($front-wall-offset-x, $front-wall-offset-y, $front-wall-offset-z)
-    rotateY($front-wall-rotate-y)
-    rotateZ($front-wall-rotate-z)
-    scale($front-wall-scale);
+    rotateY($front-wall-rotate-y) rotateZ($front-wall-rotate-z) scale($front-wall-scale);
   opacity: 1;
   box-shadow:
     0 32px 100px rgba(0, 0, 0, 0.42),
@@ -392,9 +390,7 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
 
 .wall-depth-page[data-side='right'][data-depth='0'] {
   transform: translate3d(-$front-wall-offset-x, $front-wall-offset-y, $front-wall-offset-z)
-    rotateY(-$front-wall-rotate-y)
-    rotateZ($front-wall-rotate-z)
-    scale($front-wall-scale);
+    rotateY(-$front-wall-rotate-y) rotateZ($front-wall-rotate-z) scale($front-wall-scale);
   opacity: 1;
   box-shadow:
     0 32px 100px rgba(0, 0, 0, 0.42),
@@ -959,18 +955,20 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
 /* ===== Inline hacker chat panel ===== */
 .hacker-chat-panel {
   --chat-accent: #9ad933;
+  --chat-edge-gap: clamp(14px, 4vw, 64px);
+  --chat-vertical-gap: clamp(76px, 12vh, 120px);
   position: absolute;
   left: 50%;
   top: 52%;
   z-index: 60;
   display: flex;
   flex-direction: column;
-  width: min(720px, 44vw);
-  height: min(620px, 68vh);
-  min-width: 430px;
-  min-height: 420px;
+  width: min(1600px, calc(100vw - var(--chat-edge-gap)));
+  height: min(920px, calc(100vh - var(--chat-vertical-gap)));
+  min-width: min(430px, calc(100vw - 20px));
+  min-height: min(420px, calc(100vh - 104px));
   border: 1px solid color-mix(in srgb, var(--chat-accent) 46%, transparent);
-  border-radius: 20px;
+  border-radius: clamp(14px, 2.2vw, 20px);
   background:
     radial-gradient(
       circle at 16% 0%,
@@ -1170,7 +1168,33 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 18px;
+  scrollbar-color: color-mix(in srgb, var(--chat-accent) 58%, transparent)
+    color-mix(in srgb, var(--chat-accent) 8%, transparent);
+  scrollbar-width: thin;
   touch-action: pan-y;
+}
+
+.hacker-chat-messages::-webkit-scrollbar,
+.hacker-chat-input::-webkit-scrollbar,
+.hacker-chat-panel [class*='MessageList_container']::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.hacker-chat-messages::-webkit-scrollbar-track,
+.hacker-chat-input::-webkit-scrollbar-track,
+.hacker-chat-panel [class*='MessageList_container']::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chat-accent) 8%, rgba(0, 0, 0, 0.28));
+}
+
+.hacker-chat-messages::-webkit-scrollbar-thumb,
+.hacker-chat-input::-webkit-scrollbar-thumb,
+.hacker-chat-panel [class*='MessageList_container']::-webkit-scrollbar-thumb {
+  border: 2px solid color-mix(in srgb, var(--chat-accent) 7%, rgba(0, 0, 0, 0.42));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chat-accent) 62%, #1d3a10);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--chat-accent) 18%, transparent);
 }
 
 .hacker-chat-messages > div {
@@ -1180,6 +1204,10 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
 .hacker-chat-panel [class*='MessageList_container'],
 .hacker-chat-panel [class*='MessageList_empty'] {
   border-color: color-mix(in srgb, var(--chat-accent) 16%, transparent);
+  margin-left: 0;
+  scrollbar-color: color-mix(in srgb, var(--chat-accent) 58%, transparent)
+    color-mix(in srgb, var(--chat-accent) 8%, transparent);
+  scrollbar-width: thin;
   background:
     radial-gradient(
       circle at 18% 12%,
@@ -1257,22 +1285,27 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
 
 .hacker-chat-input-bar {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   border-top: 1px solid color-mix(in srgb, var(--chat-accent) 24%, transparent);
   background: color-mix(in srgb, var(--chat-accent) 7%, rgba(1, 8, 6, 0.74));
-  padding: 14px;
+  padding: 16px 18px;
+  width: 100%;
 }
 
 .hacker-chat-input {
   flex: 1;
   min-width: 0;
-  max-height: 140px;
+  min-height: 58px;
+  max-height: 180px;
   resize: none;
   border: 1px solid color-mix(in srgb, var(--chat-accent) 30%, transparent);
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.28);
   color: #e8ffdf;
   padding: 12px 14px;
+  scrollbar-color: color-mix(in srgb, var(--chat-accent) 62%, transparent)
+    color-mix(in srgb, var(--chat-accent) 8%, transparent);
+  scrollbar-width: thin;
   outline: none;
   font: inherit;
   line-height: 1.45;
