@@ -35,6 +35,7 @@ export function HackerChatPanel({
     error,
     isLoading,
     isSending,
+    renameChat,
     selectedModelId,
     sendMessage,
     setSelectedModelId,
@@ -54,6 +55,8 @@ export function HackerChatPanel({
 
   const [models, setModels] = useState<AiModel[]>([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(displayTitle);
 
   const loadModels = useCallback(async () => {
     if (modelsLoaded) return;
@@ -96,6 +99,23 @@ export function HackerChatPanel({
     }
   }, [models, selectedModelId, setSelectedModelId]);
 
+  useEffect(() => {
+    if (!isRenaming) void Promise.resolve().then(() => setDraftTitle(displayTitle));
+  }, [displayTitle, isRenaming]);
+
+  const submitRename = useCallback(async () => {
+    const trimmed = draftTitle.trim();
+    if (!trimmed || trimmed === displayTitle) {
+      setDraftTitle(displayTitle);
+      setIsRenaming(false);
+      return;
+    }
+
+    await renameChat(trimmed);
+    onChatTitleChange?.(chatId, trimmed);
+    setIsRenaming(false);
+  }, [chatId, displayTitle, draftTitle, onChatTitleChange, renameChat]);
+
   const selectedModelLabel = models.find((model) => model.modelId === selectedModelId)?.name ?? 'model route';
 
   return (
@@ -111,7 +131,27 @@ export function HackerChatPanel({
       <header className="hacker-chat-header">
         <div className="hacker-chat-title-block">
           <span className="corridor-kicker">live tunnel chat</span>
-          <h2>{displayTitle}</h2>
+          {isRenaming ? (
+            <input
+              className="hacker-chat-title-input"
+              value={draftTitle}
+              onChange={(event) => setDraftTitle(event.target.value)}
+              onBlur={() => void submitRename()}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') void submitRename();
+                if (event.key === 'Escape') {
+                  setDraftTitle(displayTitle);
+                  setIsRenaming(false);
+                }
+              }}
+              autoFocus
+              aria-label="Rename chat"
+            />
+          ) : (
+            <h2 onDoubleClick={() => setIsRenaming(true)} title="Double-click to rename chat">
+              {displayTitle}
+            </h2>
+          )}
           <span className="hacker-chat-context">{contextLabel}</span>
         </div>
         <button type="button" className="hacker-chat-close" onClick={onClose} aria-label="Close chat panel">

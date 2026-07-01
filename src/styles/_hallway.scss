@@ -382,6 +382,7 @@
 }
 
 .corridor-wall-page__title-row {
+  flex-wrap: wrap;
   padding: 14px 16px 4px;
 }
 
@@ -400,6 +401,40 @@
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.corridor-wall-page__actions {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 128px;
+}
+
+.corridor-wall-page__actions button {
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 32%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-accent, #9ad933) 9%, rgba(4, 12, 7, 0.78));
+  color: color-mix(in srgb, var(--card-accent, #9ad933) 72%, white 12%);
+  cursor: pointer;
+  padding: 6px 9px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.corridor-wall-page__actions button:hover,
+.corridor-wall-page__actions button:focus-visible {
+  border-color: color-mix(in srgb, var(--card-accent, #9ad933) 68%, white 8%);
+  background: color-mix(in srgb, var(--card-accent, #9ad933) 16%, rgba(4, 12, 7, 0.88));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--card-accent, #9ad933) 18%, transparent);
+  outline: none;
 }
 
 .corridor-wall-page__items {
@@ -951,10 +986,26 @@
   overflow: hidden;
   margin: 4px 0 0;
   color: rgba(246, 250, 232, 0.96);
+  cursor: text;
   font-size: clamp(18px, 1.8vw, 26px);
   line-height: 1.05;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.hacker-chat-title-input {
+  width: min(100%, 420px);
+  margin: 4px 0 0;
+  border: 1px solid color-mix(in srgb, var(--chat-accent) 48%, transparent);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.34);
+  color: rgba(246, 250, 232, 0.98);
+  padding: 6px 9px;
+  outline: none;
+  font: inherit;
+  font-size: clamp(18px, 1.8vw, 26px);
+  line-height: 1.05;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--chat-accent) 10%, transparent);
 }
 
 .hacker-chat-context {

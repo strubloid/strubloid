@@ -71,6 +71,8 @@ interface WallPage {
   eyebrow: string;
   countLabel: string;
   accentColor: string;
+  projectId?: string;
+  projectName?: string;
   items: FocusItem[];
 }
 
@@ -120,6 +122,10 @@ function timeAgo(dateStr: string): string {
 
 function projectColor(project: ApiProject, index: number): string {
   return project.color || PROJECT_PALETTE[index % PROJECT_PALETTE.length];
+}
+
+function nextProjectColor(seed: number): string {
+  return PROJECT_PALETTE[Math.abs(seed) % PROJECT_PALETTE.length];
 }
 
 function chatItem(chat: ApiChat, accentColor: string, project?: ProjectLane): FocusItem {
@@ -189,6 +195,8 @@ function buildProjectPages(projects: ProjectLane[]): WallPage[] {
           eyebrow: 'Project Wall',
           countLabel: '0 chats',
           accentColor,
+          projectId: project.id,
+          projectName: project.name,
           items: [
             {
               type: 'projectEmpty' as const,
@@ -213,6 +221,8 @@ function buildProjectPages(projects: ProjectLane[]): WallPage[] {
       eyebrow: pageIndex === 0 ? 'Project Wall' : `Project Wall ${pageIndex + 1}`,
       countLabel: `${pageChats.length} chats`,
       accentColor,
+      projectId: project.id,
+      projectName: project.name,
       items: pageChats.map((chat) => chatItem(chat, accentColor, project))
     }));
   });
@@ -292,6 +302,9 @@ function HallWall({
   progress,
   activeSide,
   selectedChatId,
+  onCreateRandomChat,
+  onCreateProject,
+  onCreateProjectChat,
   onInspect
 }: {
   side: WallSide;
@@ -300,6 +313,9 @@ function HallWall({
   progress: number;
   activeSide: WallSide | null;
   selectedChatId?: string | null;
+  onCreateRandomChat: () => void;
+  onCreateProject: () => void;
+  onCreateProjectChat: (projectId: string) => void;
   onInspect: (item: FocusItem) => void;
 }) {
   const isPassive = activeSide !== null && activeSide !== side;
@@ -330,6 +346,28 @@ function HallWall({
             </header>
             <div className="corridor-wall-page__title-row">
               <h2>{page.title}</h2>
+              <div className="corridor-wall-page__actions">
+                {side === 'left' ? (
+                  <button type="button" onClick={onCreateRandomChat} title="Create random chat">
+                    + random
+                  </button>
+                ) : (
+                  <>
+                    <button type="button" onClick={onCreateProject} title="Create project">
+                      + project
+                    </button>
+                    {page.projectId && (
+                      <button
+                        type="button"
+                        onClick={() => onCreateProjectChat(page.projectId!)}
+                        title={`Create chat in ${page.projectName ?? page.title}`}
+                      >
+                        + chat
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
               <span className="corridor-wall-page__page">wall {index + 1}</span>
             </div>
             <div className="corridor-wall-page__items">
@@ -529,6 +567,74 @@ export function Hallway() {
     return chat;
   };
 
+  const openCreatedChat = useCallback((chat: ApiChat, accentColor: string, projectName?: string) => {
+    setSelectedChat({
+      id: chat.id,
+      type: chat.projectId ? 'project' : 'random',
+      projectId: chat.projectId ?? undefined,
+      title: chat.title || (chat.projectId ? 'New Project Chat' : 'New Chat'),
+      accentColor,
+      projectName
+    });
+  }, []);
+
+  const createChatFromHall = useCallback(
+    async (projectId?: string, accentColor = '#9ad933', projectName?: string) => {
+      const createRes = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: projectId ? 'New Project Chat' : 'New Chat',
+          ...(projectId ? { projectId } : {})
+        })
+      });
+
+      if (!createRes.ok) throw new Error('Failed to create chat');
+      const chat: ApiChat = await createRes.json();
+      window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+      await loadHallway();
+      openCreatedChat(chat, accentColor, projectName);
+    },
+    [loadHallway, openCreatedChat]
+  );
+
+  const handleCreateRandomChat = useCallback(() => {
+    void createChatFromHall().catch((error) => console.error('[Hallway] Failed to create random chat', error));
+  }, [createChatFromHall]);
+
+  const handleCreateProject = useCallback(() => {
+    const name = window.prompt('Project name');
+    const trimmed = name?.trim();
+    if (!trimmed) return;
+
+    void Promise.resolve()
+      .then(async () => {
+        const color = nextProjectColor(data.projects.length);
+        const projectRes = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: trimmed, color })
+        });
+
+        if (!projectRes.ok) throw new Error('Failed to create project');
+        window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+        await loadHallway();
+      })
+      .catch((error) => console.error('[Hallway] Failed to create project', error));
+  }, [data.projects.length, loadHallway]);
+
+  const handleCreateProjectChat = useCallback(
+    (projectId: string) => {
+      const projectIndex = data.projects.findIndex((project) => project.id === projectId);
+      const project = data.projects[projectIndex];
+      const accentColor = project ? projectColor(project, projectIndex) : '#d8f45d';
+      void createChatFromHall(projectId, accentColor, project?.name).catch((error) =>
+        console.error('[Hallway] Failed to create project chat', error)
+      );
+    },
+    [createChatFromHall, data.projects]
+  );
+
   const handleItemSelect = async (item: FocusItem) => {
     if (!isHackerMode) {
       routeToNormalExperience(item);
@@ -585,6 +691,9 @@ export function Hallway() {
           progress={leftProgress}
           activeSide={activeSide}
           selectedChatId={selectedChat?.id}
+          onCreateRandomChat={handleCreateRandomChat}
+          onCreateProject={handleCreateProject}
+          onCreateProjectChat={handleCreateProjectChat}
           onInspect={handleItemSelect}
         />
         <HallWall
@@ -594,6 +703,9 @@ export function Hallway() {
           progress={rightProgress}
           activeSide={activeSide}
           selectedChatId={selectedChat?.id}
+          onCreateRandomChat={handleCreateRandomChat}
+          onCreateProject={handleCreateProject}
+          onCreateProjectChat={handleCreateProjectChat}
           onInspect={handleItemSelect}
         />
       </div>

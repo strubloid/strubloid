@@ -138,6 +138,15 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
     [patchChat]
   );
 
+  const renameChat = useCallback(
+    async (title: string) => {
+      const trimmed = title.trim();
+      if (!trimmed) return;
+      await patchChat({ title: trimmed });
+    },
+    [patchChat]
+  );
+
   const sendMessage = useCallback(
     async (message: string, modelId?: string) => {
       if (!chat || isSending) return;
@@ -247,6 +256,7 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
     userMessages,
     assignProject,
     reload: loadChat,
+    renameChat,
     sendMessage,
     setError,
     toggleBrain,
