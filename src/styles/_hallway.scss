@@ -371,6 +371,25 @@ $depth-opacity: 1, 0.8, 0.6, 0.4;
   }
 }
 
+/* First visible wall page: keep the tunnel stack, but let the front panel pop forward. */
+.wall-depth-page[data-side='left'][data-depth='0'] {
+  transform: translate3d(10px, 27px, -10px) rotateY(42deg) rotateZ(0) scale(0.75);
+  opacity: 1;
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.42),
+    0 0 62px color-mix(in srgb, var(--card-accent, #9ad933) 32%, transparent),
+    inset 0 1px 0 rgba(236, 244, 222, 0.18);
+}
+
+.wall-depth-page[data-side='right'][data-depth='0'] {
+  transform: translate3d(-10px, 27px, -10px) rotateY(-42deg) rotateZ(0) scale(0.75);
+  opacity: 1;
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.42),
+    0 0 62px color-mix(in srgb, var(--card-accent, #9ad933) 32%, transparent),
+    inset 0 1px 0 rgba(236, 244, 222, 0.18);
+}
+
 /* ---- page internals (mirrors old .corridor-wall-page) ---- */
 .wall-depth-page__header,
 .wall-depth-page__title-row {
