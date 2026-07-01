@@ -154,7 +154,7 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: translateZ(var(--travel));
+  transform: translateZ(var(--travel, 0px));
   will-change: transform;
 }
 
@@ -273,6 +273,234 @@
 }
 
 /* ===== Z-positioned wall cards ===== */
+.corridor-wall-zone {
+  position: absolute;
+  top: 16%;
+  z-index: 7;
+  width: min(34vw, 500px);
+  height: min(62vh, 590px);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: opacity 180ms ease;
+}
+
+.corridor-wall-zone--left {
+  left: 3.4vw;
+  transform: rotateY(51deg) skewY(-1deg);
+  transform-origin: left center;
+}
+
+.corridor-wall-zone--right {
+  right: 3.4vw;
+  transform: rotateY(-51deg) skewY(1deg);
+  transform-origin: right center;
+}
+
+.corridor-wall-zone--passive {
+  opacity: 0.58;
+}
+
+.corridor-wall-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: 1px solid rgba(154, 217, 51, 0.15);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(12, 28, 13, 0.28), rgba(7, 12, 8, 0.2)),
+    repeating-linear-gradient(90deg, transparent 0 54px, rgba(154, 217, 51, 0.05) 55px 56px),
+    repeating-linear-gradient(0deg, transparent 0 44px, rgba(154, 217, 51, 0.045) 45px 46px);
+  box-shadow:
+    0 0 54px rgba(154, 217, 51, 0.08),
+    inset 0 0 70px rgba(154, 217, 51, 0.045);
+  clip-path: polygon(0 4%, 100% 0, 100% 96%, 0 100%);
+  pointer-events: none;
+}
+
+.corridor-wall-zone--right .corridor-wall-surface {
+  clip-path: polygon(0 0, 100% 4%, 100% 100%, 0 96%);
+}
+
+.corridor-wall-mover {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 54px;
+  height: 100%;
+  padding: 18px;
+  transform: translate3d(var(--wall-offset), 0, 0);
+  will-change: transform;
+}
+
+.corridor-wall-page {
+  flex: 0 0 min(30vw, 450px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 72%, transparent);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(8, 22, 12, 0.78), rgba(5, 10, 7, 0.72)),
+    radial-gradient(circle at 4% 0%, color-mix(in srgb, var(--card-accent, #9ad933) 18%, transparent), transparent 48%),
+    repeating-linear-gradient(90deg, transparent 0 56px, rgba(154, 217, 51, 0.04) 57px 58px),
+    repeating-linear-gradient(0deg, transparent 0 42px, rgba(154, 217, 51, 0.035) 43px 44px);
+  box-shadow:
+    0 22px 80px rgba(0, 0, 0, 0.3),
+    0 0 40px color-mix(in srgb, var(--card-accent, #9ad933) 22%, transparent),
+    inset 0 1px 0 rgba(236, 244, 222, 0.12);
+  overflow: hidden;
+}
+
+.corridor-wall-page__header,
+.corridor-wall-page__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.corridor-wall-page__header {
+  border-bottom: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 22%, transparent);
+  color: color-mix(in srgb, var(--card-accent, #9ad933) 82%, white 10%);
+  padding: 13px 16px 10px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.corridor-wall-page__header span:last-child,
+.corridor-wall-page__page {
+  color: rgba(236, 244, 222, 0.72);
+  white-space: nowrap;
+}
+
+.corridor-wall-page__title-row {
+  padding: 14px 16px 4px;
+}
+
+.corridor-wall-page h2 {
+  overflow: hidden;
+  margin: 0;
+  color: rgba(246, 250, 232, 0.96);
+  font-size: clamp(16px, 1.5vw, 24px);
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.corridor-wall-page__page {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.corridor-wall-page__items {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  padding: 12px 16px 18px;
+}
+
+.corridor-wall-panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 12px;
+  align-items: start;
+  width: 100%;
+  min-height: 62px;
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 34%, transparent);
+  border-radius: 12px;
+  background: rgba(4, 12, 7, 0.54);
+  color: inherit;
+  cursor: pointer;
+  padding: 10px 12px;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.corridor-wall-panel:hover,
+.corridor-wall-panel:focus-visible {
+  border-color: color-mix(in srgb, var(--card-accent, #9ad933) 76%, white 8%);
+  background: color-mix(in srgb, var(--card-accent, #9ad933) 11%, rgba(4, 12, 7, 0.66));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--card-accent, #9ad933) 14%, transparent);
+  outline: none;
+}
+
+.corridor-wall-panel__icon {
+  grid-row: span 2;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 72%, white 8%);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--card-accent, #9ad933) 70%, transparent), transparent 42%),
+    color-mix(in srgb, var(--card-accent, #9ad933) 10%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--card-accent, #9ad933) 28%, transparent);
+}
+
+.corridor-wall-panel__copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.corridor-wall-panel__copy strong {
+  overflow: hidden;
+  color: rgba(246, 250, 232, 0.96);
+  font-size: 13px;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.corridor-wall-panel__copy span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: rgba(224, 232, 206, 0.66);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.corridor-wall-panel small {
+  grid-column: 2;
+  color: color-mix(in srgb, var(--card-accent, #9ad933) 64%, white 8%);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.corridor-wall-progress {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 10px;
+  z-index: 2;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(154, 217, 51, 0.1);
+  pointer-events: none;
+}
+
+.corridor-wall-progress span {
+  display: block;
+  width: var(--wall-progress);
+  height: 100%;
+  background: linear-gradient(90deg, rgba(154, 217, 51, 0.35), rgba(246, 250, 232, 0.8));
+  box-shadow: 0 0 16px rgba(154, 217, 51, 0.28);
+}
+
 .corridor-travel-card {
   position: absolute;
   top: 22%;

@@ -5,38 +5,19 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-type FocusItem =
-  | {
-      type: 'random';
-      id: string;
-      title: string;
-      subtitle: string;
-      detail: string;
-      meta: string;
-      accentColor?: string;
-    }
-  | {
-      type: 'project';
-      id: string;
-      title: string;
-      subtitle: string;
-      detail: string;
-      meta: string;
-      accentColor?: string;
-    }
-  | {
-      type: 'projectChat';
-      id: string;
-      projectId: string;
-      title: string;
-      subtitle: string;
-      detail: string;
-      meta: string;
-      accentColor?: string;
-      projectName?: string;
-    };
-
 type WallSide = 'left' | 'right';
+
+type FocusItem = {
+  type: 'random' | 'projectChat' | 'projectEmpty';
+  id: string;
+  title: string;
+  subtitle: string;
+  detail: string;
+  meta: string;
+  accentColor: string;
+  projectId?: string;
+  projectName?: string;
+};
 
 interface ApiMessage {
   content: string;
@@ -58,7 +39,7 @@ interface ApiProject {
   id: string;
   name: string;
   description?: string | null;
-  color?: string;
+  color?: string | null;
   chatCount?: number;
   memoryCount?: number;
   lastChat?: ApiChat | null;
@@ -73,31 +54,39 @@ interface HallwayData {
   projects: ProjectLane[];
 }
 
-interface CorridorCard {
+interface WallPage {
   key: string;
   side: WallSide;
-  z: number;
-  item: FocusItem;
+  title: string;
+  eyebrow: string;
+  countLabel: string;
+  accentColor: string;
+  items: FocusItem[];
 }
 
-const CARD_GAP = 600;
+interface WallMotionState {
+  target: number;
+  current: number;
+  max: number;
+}
+
+const PAGE_WIDTH = 450;
+const PAGE_GAP = 54;
+const PAGE_STRIDE = PAGE_WIDTH + PAGE_GAP;
 const RIB_GAP = 420;
-const FAR_LIMIT = 2700;
-const BEHIND_CAMERA_Z = 320;
+const SECTION_COUNT = 11;
+const PROJECT_PALETTE = ['#d8f45d', '#55d8ff', '#ff67c4', '#ffb24d', '#a78bfa', '#5eead4'];
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-function mapRange(
-  value: number,
-  inMin: number,
-  inMax: number,
-  outMin: number,
-  outMax: number
-): number {
-  const progress = clamp((value - inMin) / (inMax - inMin), 0, 1);
-  return outMin + (outMax - outMin) * progress;
+function chunk<T>(items: T[], size: number): T[][] {
+  const pages: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    pages.push(items.slice(index, index + size));
+  }
+  return pages;
 }
 
 function getPreview(chat: ApiChat): string {
@@ -119,134 +108,128 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-function cardDepthStyle(
-  z: number,
-  travel: number
-): {
-  localZ: number;
-  opacity: number;
-  blur: number;
-  scale: number;
-  interactive: boolean;
-} {
-  const localZ = z + travel;
-
-  if (localZ > BEHIND_CAMERA_Z) {
-    return { localZ, opacity: 0, blur: 8, scale: 1.08, interactive: false };
-  }
-
-  const distance = Math.abs(localZ);
-  const farFade = clamp(1 - distance / FAR_LIMIT, 0, 1);
-  const nearWindow = localZ > -520 && localZ < 180 ? 1 : 0;
-  const opacity = clamp(0.14 + farFade * 0.72 + nearWindow * 0.14, 0, 1);
-  const blur = mapRange(distance, 180, FAR_LIMIT, 0, 4.5);
-  const scale = mapRange(distance, 0, FAR_LIMIT, 1, 0.74);
-
-  return { localZ, opacity, blur, scale, interactive: opacity > 0.12 && localZ < BEHIND_CAMERA_Z };
+function projectColor(project: ApiProject, index: number): string {
+  return project.color || PROJECT_PALETTE[index % PROJECT_PALETTE.length];
 }
 
-function cardVars(card: CorridorCard, travel: number, isNearest: boolean): CSSProperties {
-  const depth = cardDepthStyle(card.z, travel);
+function chatItem(chat: ApiChat, accentColor: string, project?: ProjectLane): FocusItem {
   return {
-    '--z': `${card.z}px`,
-    '--depth-opacity': `${depth.opacity}`,
-    '--depth-blur': `${depth.blur}px`,
-    '--depth-scale': `${depth.scale}`,
-    '--card-accent': card.item.accentColor || '#9ad933',
-    pointerEvents: depth.interactive ? 'auto' : 'none'
-  } as CSSProperties;
+    type: project ? 'projectChat' : 'random',
+    id: chat.id,
+    projectId: project?.id,
+    projectName: project?.name,
+    title: chat.title || (project ? 'Untitled project chat' : 'Untitled random'),
+    subtitle: getPreview(chat),
+    detail: getPreview(chat),
+    meta: project
+      ? `${project.name} · ${timeAgo(chat.updatedAt)} · ${chat.messages?.length ?? 0} msgs`
+      : `${timeAgo(chat.updatedAt)} · ${chat.messages?.length ?? 0} msgs`,
+    accentColor
+  };
 }
 
-function WallTravelCard({
-  card,
-  travel,
-  isNearest,
-  onFocus,
-  onPreview,
-  onPreviewEnd
-}: {
-  card: CorridorCard;
-  travel: number;
-  isNearest: boolean;
-  onFocus: (item: FocusItem) => void;
-  onPreview: (key: string) => void;
-  onPreviewEnd: (key: string) => void;
-}) {
-  const style = cardVars(card, travel, isNearest);
+function buildRandomPages(chats: ApiChat[]): WallPage[] {
+  const source = chats.length ? chats : [];
+  const pages = chunk(source, 6).map((pageChats, index) => ({
+    key: `random-wall-${index}`,
+    side: 'left' as const,
+    title: `Random Chats Wall ${index + 1}`,
+    eyebrow: 'Random Access Memory',
+    countLabel: `${pageChats.length} chats`,
+    accentColor: '#9ad933',
+    items: pageChats.map((chat) => chatItem(chat, '#9ad933'))
+  }));
 
-  return (
-    <button
-      className={`corridor-travel-card corridor-travel-card--${card.side} ${isNearest ? 'corridor-travel-card--nearest' : ''}`}
-      style={style}
-      onPointerDown={() => onFocus(card.item)}
-      onClick={() => onFocus(card.item)}
-      onMouseEnter={() => onPreview(card.key)}
-      onMouseLeave={() => onPreviewEnd(card.key)}
-      onFocus={() => onPreview(card.key)}
-      onBlur={() => onPreviewEnd(card.key)}
-      aria-label={`Open ${card.item.title}`}
-    >
-      <span className="corridor-travel-card__bezel" aria-hidden="true" />
-      {card.side === 'right' && (
-        <span className="corridor-travel-card__project-color" aria-hidden="true" />
-      )}
-      <span className="corridor-travel-card__header">
-        <span>
-          {card.side === 'left'
-            ? 'Random Access Memory'
-            : card.item.type === 'project'
-              ? 'Project Folder'
-              : 'Project Chat'}
-        </span>
-        <span>{card.item.meta}</span>
-      </span>
-      <span className="corridor-travel-card__body">
-        <span className="corridor-travel-card__icon" aria-hidden="true" />
-        <span className="corridor-travel-card__copy">
-          <strong>{card.item.title}</strong>
-          <span>{card.item.subtitle}</span>
-        </span>
-      </span>
-    </button>
-  );
-}
+  if (pages.length) return pages;
 
-function ReadableNearestPreview({
-  card,
-  onInspect,
-  onOpen
-}: {
-  card: CorridorCard | undefined;
-  onInspect: (item: FocusItem) => void;
-  onOpen: (item: FocusItem) => void;
-}) {
-  if (!card) return null;
-
-  const wallLabel = (() => {
-    if (card.side === 'left') return 'nearest random memory';
-    if (card.item.type === 'project') return 'nearest project folder';
-    if (card.item.type === 'projectChat' && 'projectName' in card.item) {
-      return `${card.item.projectName || 'project'} chat signal`;
+  return [
+    {
+      key: 'random-wall-empty',
+      side: 'left',
+      title: 'Random Chats Wall',
+      eyebrow: 'Random Access Memory',
+      countLabel: '0 chats',
+      accentColor: '#9ad933',
+      items: [
+        {
+          type: 'random',
+          id: 'new',
+          title: 'No random chats yet',
+          subtitle: 'Create a random chat and it will become part of this left wall group.',
+          detail: 'The left side of the hall is reserved for Random Chats grouped into wall pages.',
+          meta: 'empty wall',
+          accentColor: '#9ad933'
+        }
+      ]
     }
-    return 'nearest wall signal';
-  })();
+  ];
+}
 
-  return (
-    <div
-      className={`corridor-readable-preview corridor-readable-preview--${card.side}`}
-      style={{ '--card-accent': card.item.accentColor || '#9ad933' } as CSSProperties}
-    >
-      <button className="corridor-readable-preview__content" onClick={() => onInspect(card.item)}>
-        <span className="corridor-readable-preview__kicker">{wallLabel}</span>
-        <strong>{card.item.title}</strong>
-        <span>{card.item.detail}</span>
-        <small>{card.item.meta}</small>
-      </button>
-      <button className="corridor-readable-preview__open" onClick={() => onOpen(card.item)}>
-        Open →
-      </button>
-    </div>
-  );
+function buildProjectPages(projects: ProjectLane[]): WallPage[] {
+  const pages = projects.flatMap((project, projectIndex) => {
+    const accentColor = projectColor(project, projectIndex);
+    const chatPages = chunk(project.chats, 6);
+
+    if (!chatPages.length) {
+      return [
+        {
+          key: `project-wall-${project.id}-empty`,
+          side: 'right' as const,
+          title: project.name,
+          eyebrow: 'Project Wall',
+          countLabel: '0 chats',
+          accentColor,
+          items: [
+            {
+              type: 'projectEmpty' as const,
+              id: project.id,
+              projectId: project.id,
+              projectName: project.name,
+              title: project.name,
+              subtitle: project.description || 'Project wall waiting for its first chat.',
+              detail: project.description || 'This right-side wall belongs only to this project.',
+              meta: 'project wall · 0 chats',
+              accentColor
+            }
+          ]
+        }
+      ];
+    }
+
+    return chatPages.map((pageChats, pageIndex) => ({
+      key: `project-wall-${project.id}-${pageIndex}`,
+      side: 'right' as const,
+      title: project.name,
+      eyebrow: pageIndex === 0 ? 'Project Wall' : `Project Wall ${pageIndex + 1}`,
+      countLabel: `${pageChats.length} chats`,
+      accentColor,
+      items: pageChats.map((chat) => chatItem(chat, accentColor, project))
+    }));
+  });
+
+  if (pages.length) return pages;
+
+  return [
+    {
+      key: 'project-wall-empty',
+      side: 'right',
+      title: 'Project Walls',
+      eyebrow: 'Project Index',
+      countLabel: '0 chats',
+      accentColor: '#d8f45d',
+      items: [
+        {
+          type: 'projectEmpty',
+          id: 'projects',
+          title: 'No projects yet',
+          subtitle: 'Create a project and its chats will live on their own color-coded wall.',
+          detail: 'The right side of the hall is reserved for project-scoped chat walls.',
+          meta: 'empty index',
+          accentColor: '#d8f45d'
+        }
+      ]
+    }
+  ];
 }
 
 function CorridorSection({ z }: { z: number }) {
@@ -266,104 +249,135 @@ function CorridorSection({ z }: { z: number }) {
   );
 }
 
-function buildCards(data: HallwayData): CorridorCard[] {
-  const randomCards: CorridorCard[] = data.randomChats.slice(0, 18).map((chat, index) => ({
-    key: `random-${chat.id}`,
-    side: 'left',
-    z: -index * CARD_GAP,
-    item: {
-      type: 'random',
-      id: chat.id,
-      title: chat.title || 'Untitled random',
-      subtitle: getPreview(chat),
-      detail: getPreview(chat),
-      meta: `${timeAgo(chat.updatedAt)} · ${chat.messages?.length ?? 0} msgs`,
-      accentColor: '#9ad933'
-    }
-  }));
+function WallPanelCard({ item, onInspect }: { item: FocusItem; onInspect: (item: FocusItem) => void }) {
+  return (
+    <button className="corridor-wall-panel" onClick={() => onInspect(item)} type="button">
+      <span className="corridor-wall-panel__icon" aria-hidden="true" />
+      <span className="corridor-wall-panel__copy">
+        <strong>{item.title}</strong>
+        <span>{item.subtitle}</span>
+      </span>
+      <small>{item.meta}</small>
+    </button>
+  );
+}
 
-  const rightItems: FocusItem[] = data.projects.flatMap((project) => {
-    const projectColor = project.color || '#9ad933';
-    const projectItem: FocusItem = {
-      type: 'project',
-      id: project.id,
-      title: project.name,
-      subtitle: project.description || project.lastChat?.title || 'Project space',
-      detail: project.description || 'Open this project wall to inspect its chats.',
-      meta: `${project.chatCount ?? project.chats.length} chats`,
-      accentColor: projectColor
-    };
+function HallWall({
+  side,
+  pages,
+  offset,
+  progress,
+  activeSide,
+  onInspect
+}: {
+  side: WallSide;
+  pages: WallPage[];
+  offset: number;
+  progress: number;
+  activeSide: WallSide | null;
+  onInspect: (item: FocusItem) => void;
+}) {
+  const isPassive = activeSide !== null && activeSide !== side;
 
-    const chatItems: FocusItem[] = project.chats.slice(0, 5).map((chat) => ({
-      type: 'projectChat',
-      id: chat.id,
-      projectId: project.id,
-      title: chat.title || 'Untitled project chat',
-      subtitle: getPreview(chat),
-      detail: getPreview(chat),
-      meta: `${project.name} · ${timeAgo(chat.updatedAt)}`,
-      accentColor: projectColor,
-      projectName: project.name
-    }));
+  return (
+    <div className={`corridor-wall-zone corridor-wall-zone--${side} ${isPassive ? 'corridor-wall-zone--passive' : ''}`}>
+      <div className="corridor-wall-surface" aria-hidden="true" />
+      <div
+        className="corridor-wall-mover"
+        data-side={side}
+        style={
+          {
+            '--wall-offset': `${-offset}px`,
+            '--wall-progress': `${progress}%`
+          } as CSSProperties
+        }
+      >
+        {pages.map((page, index) => (
+          <section
+            key={page.key}
+            className="corridor-wall-page"
+            style={{ '--card-accent': page.accentColor } as CSSProperties}
+            aria-label={`${side} wall page ${index + 1}: ${page.title}`}
+          >
+            <header className="corridor-wall-page__header">
+              <span>{page.eyebrow}</span>
+              <span>{page.countLabel}</span>
+            </header>
+            <div className="corridor-wall-page__title-row">
+              <h2>{page.title}</h2>
+              <span className="corridor-wall-page__page">wall {index + 1}</span>
+            </div>
+            <div className="corridor-wall-page__items">
+              {page.items.map((item) => (
+                <WallPanelCard key={`${page.key}-${item.id}`} item={item} onInspect={onInspect} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+      <div className="corridor-wall-progress" aria-hidden="true">
+        <span />
+      </div>
+    </div>
+  );
+}
 
-    return [projectItem, ...chatItems];
-  });
+function FocusPanel({
+  item,
+  onClose,
+  onOpen
+}: {
+  item: FocusItem;
+  onClose: () => void;
+  onOpen: (item: FocusItem) => void;
+}) {
+  return (
+    <motion.div
+      className={`corridor-focus corridor-focus--${item.type === 'random' ? 'left' : 'right'}`}
+      style={{ '--card-accent': item.accentColor } as CSSProperties}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.94 }}
+      transition={{ type: 'spring', stiffness: 130, damping: 20 }}
+    >
+      <button className="corridor-focus__close" onClick={onClose} aria-label="Close preview">
+        ×
+      </button>
+      <span className="corridor-kicker">
+        {item.type === 'random'
+          ? 'random chat from left wall'
+          : `${item.projectName || 'project'} wall signal`}
+      </span>
+      <h2>{item.title}</h2>
+      <p>{item.detail}</p>
+      <div className="corridor-focus__meta">{item.meta}</div>
+      <button className="corridor-focus__open" onClick={() => onOpen(item)}>
+        Open {item.type === 'projectEmpty' ? 'project' : 'chat'} →
+      </button>
+    </motion.div>
+  );
+}
 
-  const projectCards: CorridorCard[] = rightItems.slice(0, 18).map((item, index) => ({
-    key: `${item.type}-${item.id}-${index}`,
-    side: 'right',
-    z: -index * CARD_GAP - CARD_GAP * 0.5,
-    item
-  }));
-
-  const fallbackCards: CorridorCard[] = [
-    {
-      key: 'empty-random',
-      side: 'left',
-      z: 0,
-      item: {
-        type: 'random',
-        id: 'new',
-        title: 'No random chats yet',
-        subtitle: 'Create a random chat and it will become a wall-mounted memory display.',
-        detail: 'This side of the corridor is reserved for Random Access Memory.',
-        meta: 'empty wall',
-        accentColor: '#9ad933'
-      }
-    },
-    {
-      key: 'empty-project',
-      side: 'right',
-      z: -CARD_GAP * 0.5,
-      item: {
-        type: 'project',
-        id: 'projects',
-        title: 'No projects yet',
-        subtitle: 'Create a project and the right wall becomes your project index.',
-        detail: 'This side of the corridor is reserved for project navigation.',
-        meta: 'empty index',
-        accentColor: '#9ad933'
-      }
-    }
-  ];
-
-  const cards = [...randomCards, ...projectCards];
-  return cards.length ? cards : fallbackCards;
+function progressFor(offset: number, max: number): number {
+  if (max <= 0) return 0;
+  return Math.round((offset / max) * 100);
 }
 
 export function Hallway() {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const targetTravelRef = useRef(0);
-  const currentTravelRef = useRef(0);
   const rafRef = useRef<number | null>(null);
-  const [travel, setTravel] = useState(0);
+  const leftRef = useRef<WallMotionState>({ target: 0, current: 0, max: 0 });
+  const rightRef = useRef<WallMotionState>({ target: 0, current: 0, max: 0 });
+  const [leftOffset, setLeftOffset] = useState(0);
+  const [rightOffset, setRightOffset] = useState(0);
+  const [leftMax, setLeftMax] = useState(0);
+  const [rightMax, setRightMax] = useState(0);
+  const [activeSide, setActiveSide] = useState<WallSide | null>(null);
   const [data, setData] = useState<HallwayData>({ randomChats: [], projects: [] });
   const [loading, setLoading] = useState(true);
   const [focusItem, setFocusItem] = useState<FocusItem | null>(null);
-  const [hoverCardKey, setHoverCardKey] = useState<string | null>(null);
-  const [cameraTilt, setCameraTilt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -381,7 +395,7 @@ export function Hallway() {
 
         const projectsWithChats = await Promise.all(
           projects.map(async (project) => {
-            const chatRes = await fetch(`/api/chats?projectId=${project.id}&limit=12`);
+            const chatRes = await fetch(`/api/chats?projectId=${project.id}&limit=80`);
             const chatJson = chatRes.ok ? await chatRes.json() : { chats: [] };
             return { ...project, chats: chatJson.chats || [] };
           })
@@ -401,68 +415,79 @@ export function Hallway() {
     };
   }, []);
 
-  const cards = useMemo(() => buildCards(data), [data]);
-  const maxTravel = useMemo(() => {
-    const farthest = Math.max(...cards.map((card) => Math.abs(card.z)), CARD_GAP * 4);
-    return farthest + CARD_GAP;
-  }, [cards]);
-
-  const nearestCard = useMemo(() => {
-    return cards.reduce<{ card: CorridorCard; distance: number } | null>((nearest, card) => {
-      const localZ = card.z + travel;
-      if (localZ > BEHIND_CAMERA_Z || localZ < -FAR_LIMIT) return nearest;
-      const distance = Math.abs(localZ);
-      if (!nearest || distance < nearest.distance) return { card, distance };
-      return nearest;
-    }, null)?.card;
-  }, [cards, travel]);
-
-  const nearestCardKey = nearestCard?.key;
-
-  const previewCard = useMemo(() => {
-    if (hoverCardKey) return cards.find((card) => card.key === hoverCardKey) || nearestCard;
-    return nearestCard;
-  }, [cards, hoverCardKey, nearestCard]);
-
-  const sectionCount = Math.ceil((maxTravel + FAR_LIMIT) / RIB_GAP);
-  const sections = useMemo(
-    () => Array.from({ length: sectionCount }, (_, index) => 360 - index * RIB_GAP),
-    [sectionCount]
-  );
+  const leftPages = useMemo(() => buildRandomPages(data.randomChats), [data.randomChats]);
+  const rightPages = useMemo(() => buildProjectPages(data.projects), [data.projects]);
+  const sections = useMemo(() => Array.from({ length: SECTION_COUNT }, (_, index) => 360 - index * RIB_GAP), []);
 
   useEffect(() => {
-    targetTravelRef.current = clamp(targetTravelRef.current, 0, maxTravel);
-  }, [maxTravel]);
-
-  useEffect(() => {
-    if (focusItem) {
-      setCameraTilt(focusItem.type === 'random' ? -8 : 8);
-    } else {
-      setCameraTilt(0);
-    }
-  }, [focusItem]);
+    leftRef.current.max = Math.max(0, (leftPages.length - 1) * PAGE_STRIDE);
+    rightRef.current.max = Math.max(0, (rightPages.length - 1) * PAGE_STRIDE);
+    leftRef.current.target = clamp(leftRef.current.target, 0, leftRef.current.max);
+    rightRef.current.target = clamp(rightRef.current.target, 0, rightRef.current.max);
+    setLeftMax(leftRef.current.max);
+    setRightMax(rightRef.current.max);
+  }, [leftPages.length, rightPages.length]);
 
   useEffect(() => {
     const element = wrapperRef.current;
     if (!element) return;
 
+    const sideFromClientX = (clientX: number): WallSide => {
+      const rect = element.getBoundingClientRect();
+      return clientX - rect.left < rect.width / 2 ? 'left' : 'right';
+    };
+
+    const moveSide = (side: WallSide, delta: number) => {
+      if (loading) return;
+      const state = side === 'left' ? leftRef.current : rightRef.current;
+      state.target = clamp(state.target + delta, 0, state.max);
+      setActiveSide(side);
+    };
+
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
-      if (loading) return;
-      targetTravelRef.current = clamp(targetTravelRef.current + event.deltaY * 0.45, 0, maxTravel);
+      moveSide(sideFromClientX(event.clientX), event.deltaY * 0.55);
+    };
+
+    let touchStartY = 0;
+    let touchSide: WallSide = 'left';
+
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      touchStartY = touch.clientY;
+      touchSide = sideFromClientX(touch.clientX);
+      setActiveSide(touchSide);
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      event.preventDefault();
+      const deltaY = touchStartY - touch.clientY;
+      touchStartY = touch.clientY;
+      moveSide(touchSide, deltaY * 1.8);
     };
 
     element.addEventListener('wheel', handleWheel, { passive: false });
-    return () => element.removeEventListener('wheel', handleWheel);
-  }, [loading, maxTravel]);
+    element.addEventListener('touchstart', handleTouchStart, { passive: true });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      element.removeEventListener('wheel', handleWheel);
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [loading]);
 
   useEffect(() => {
     const animate = () => {
-      const target = reducedMotion === 'reduce' ? targetTravelRef.current : targetTravelRef.current;
-      const current = currentTravelRef.current;
-      const next = reducedMotion === 'reduce' ? target : current + (target - current) * 0.055;
-      currentTravelRef.current = Math.abs(next - target) < 0.1 ? target : next;
-      setTravel(currentTravelRef.current);
+      const ease = reducedMotion === 'reduce' ? 1 : 0.08;
+      const left = leftRef.current;
+      const right = rightRef.current;
+      left.current = Math.abs(left.current - left.target) < 0.1 ? left.target : left.current + (left.target - left.current) * ease;
+      right.current = Math.abs(right.current - right.target) < 0.1 ? right.target : right.current + (right.target - right.current) * ease;
+      setLeftOffset(left.current);
+      setRightOffset(right.current);
       rafRef.current = requestAnimationFrame(animate);
     };
 
@@ -473,18 +498,14 @@ export function Hallway() {
   }, [reducedMotion]);
 
   const openItem = (item: FocusItem) => {
-    if (item.type === 'project') router.push(`/projects/${item.id}`);
-    else if (item.id === 'new') router.push('/chat');
+    if (item.id === 'new') router.push('/chat');
     else if (item.id === 'projects') router.push('/projects');
+    else if (item.type === 'projectEmpty') router.push(`/projects/${item.id}`);
     else router.push(`/chat/${item.id}`);
   };
 
-  const openFocusedItem = () => {
-    if (!focusItem) return;
-    openItem(focusItem);
-  };
-
-  const travelProgress = maxTravel > 0 ? Math.round((travel / maxTravel) * 100) : 0;
+  const leftProgress = progressFor(leftOffset, leftMax);
+  const rightProgress = progressFor(rightOffset, rightMax);
 
   return (
     <div ref={wrapperRef} className="hallway-wrapper corridor-wrapper">
@@ -495,81 +516,47 @@ export function Hallway() {
       <div className="corridor-particles corridor-particles--near" />
       <div className="corridor-particles corridor-particles--far" />
 
-      <motion.div
-        className="corridor-scene"
-        style={{ '--travel': `${travel}px` } as CSSProperties}
-        animate={{ rotateY: cameraTilt }}
-        transition={{ type: 'spring', stiffness: 100, damping: 22 }}
-      >
+      <div className="corridor-scene" style={{ '--left-travel': `${leftOffset}px`, '--right-travel': `${rightOffset}px` } as CSSProperties}>
         <div className="corridor-world">
           <div className="corridor-floor-grid" aria-hidden="true" />
           <div className="corridor-ceiling-grid" aria-hidden="true" />
           {sections.map((z) => (
             <CorridorSection key={z} z={z} />
           ))}
-          {cards.map((card) => (
-            <WallTravelCard
-              key={card.key}
-              card={card}
-              travel={travel}
-              isNearest={nearestCardKey === card.key}
-              onFocus={setFocusItem}
-              onPreview={setHoverCardKey}
-              onPreviewEnd={(key) =>
-                setHoverCardKey((current) => (current === key ? null : current))
-              }
-            />
-          ))}
         </div>
-      </motion.div>
 
-      {previewCard && !focusItem ? (
-        <ReadableNearestPreview card={previewCard} onInspect={setFocusItem} onOpen={openItem} />
-      ) : (
-        <motion.div className="corridor-center-copy" animate={{ opacity: focusItem ? 0.18 : 1 }}>
-          <span className="corridor-kicker">hacker zone</span>
-          <h1>You are inside.</h1>
-        </motion.div>
-      )}
+        <HallWall
+          side="left"
+          pages={leftPages}
+          offset={leftOffset}
+          progress={leftProgress}
+          activeSide={activeSide}
+          onInspect={setFocusItem}
+        />
+        <HallWall
+          side="right"
+          pages={rightPages}
+          offset={rightOffset}
+          progress={rightProgress}
+          activeSide={activeSide}
+          onInspect={setFocusItem}
+        />
+      </div>
+
+      <motion.div className="corridor-center-copy" animate={{ opacity: focusItem ? 0.16 : 1 }}>
+        <span className="corridor-kicker">hacker zone</span>
+        <h1>{loading ? 'Loading wall memory.' : 'You are inside.'}</h1>
+      </motion.div>
 
       <AnimatePresence>
         {focusItem && (
-          <motion.div
-            className={`corridor-focus corridor-focus--${focusItem.type === 'random' ? 'left' : 'right'}`}
-            initial={{
-              opacity: 0,
-              scale: 0.86,
-              rotateY: focusItem.type === 'random' ? 10 : -10
-            }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-          >
-            <button
-              className="corridor-focus__close"
-              onClick={() => setFocusItem(null)}
-              aria-label="Close preview"
-            >
-              ×
-            </button>
-            <span className="corridor-kicker">
-              {focusItem.type === 'random'
-                ? 'random memory pulled from left wall'
-                : 'project signal pulled from right wall'}
-            </span>
-            <h2>{focusItem.title}</h2>
-            <p>{focusItem.detail}</p>
-            <div className="corridor-focus__meta">{focusItem.meta}</div>
-            <button className="corridor-focus__open" onClick={openFocusedItem}>
-              Open {focusItem.type === 'project' ? 'project' : 'chat'} →
-            </button>
-          </motion.div>
+          <FocusPanel item={focusItem} onClose={() => setFocusItem(null)} onOpen={openItem} />
         )}
       </AnimatePresence>
 
       <div className="corridor-travel-status">
-        <span>{loading ? 'loading wall memory' : 'wheel to walk forward through the hall'}</span>
-        <span>{travelProgress}% corridor travel</span>
+        <span>{loading ? 'loading wall memory' : `active side: ${activeSide ?? 'none'}`}</span>
+        <span>LEFT {leftProgress}% · RIGHT {rightProgress}%</span>
       </div>
     </div>
   );
