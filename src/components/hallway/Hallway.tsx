@@ -4,6 +4,7 @@ import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HackerChatPanel } from '@/app/hall/components/chat/HackerChatPanel';
+import { circularWallWindow, wrapWallIndex } from '@/lib/hallway/wallTravel';
 
 type WallSide = 'left' | 'right';
 
@@ -105,22 +106,6 @@ interface ProjectEditorState {
 const RIB_GAP = 420;
 const SECTION_COUNT = 11;
 const PROJECT_PALETTE = ['#d8f45d', '#55d8ff', '#ff67c4', '#ffb24d', '#a78bfa', '#5eead4'];
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
-
-/** How many wall pages to show at once, based on total pages.
- *  - 1 page  → show 1 (nothing to scroll)
- *  - 2 pages → show 1 (scroll to reveal second)
- *  - 3 pages → show 2 (scroll to reveal third)
- *  - 4+      → show 3 (minimum per standard view)
- */
-function visibleWallCount(totalPages: number): number {
-  if (totalPages <= 2) return Math.max(1, totalPages - 1);
-  if (totalPages === 3) return 2;
-  return 3;
-}
 
 function chunk<T>(items: T[], size: number): T[][] {
   const pages: T[][] = [];
@@ -347,26 +332,26 @@ function WallDepthStack({
   onEditProject: (project: SelectedHallProject) => void;
   onInspect: (item: FocusItem) => void;
 }) {
-  const visibleCount = visibleWallCount(pages.length);
-  const visiblePages = pages.slice(activeIndex, activeIndex + visibleCount);
+  const visiblePages = circularWallWindow(pages, activeIndex);
 
   if (!visiblePages.length) return null;
 
   return (
     <div className={`wall-depth-stack wall-depth-stack--${side}`}>
-      {visiblePages.map((page, depthIndex) => (
+      {visiblePages.map(({ item: page, index, depthIndex }) => (
         <section
-          key={page.key}
+          key={`${page.key}-${index}`}
           className="wall-depth-page"
           data-side={side}
           data-depth={depthIndex}
+          data-page-index={index}
           style={
             {
               '--card-accent': page.accentColor,
               zIndex: 10 - depthIndex
             } as CSSProperties
           }
-          aria-label={`${side} wall page ${activeIndex + depthIndex + 1}: ${page.title}`}
+          aria-label={`${side} wall page ${index + 1}: ${page.title}`}
         >
           <header className="wall-depth-page__header">
             <span>{page.eyebrow}</span>
@@ -414,7 +399,7 @@ function WallDepthStack({
               )}
             </div>
             <span className="wall-depth-page__page-label">
-              wall {activeIndex + depthIndex + 1}/{pages.length}
+              wall {index + 1}/{pages.length}
             </span>
           </div>
           <div className="wall-depth-page__items">
@@ -497,16 +482,14 @@ export function Hallway() {
   const leftPages = useMemo(() => buildRandomPages(data.randomChats), [data.randomChats]);
   const rightPages = useMemo(() => buildProjectPages(data.projects), [data.projects]);
   const sections = useMemo(() => Array.from({ length: SECTION_COUNT }, (_, index) => 360 - index * RIB_GAP), []);
-  const leftMaxIndex = Math.max(0, leftPages.length - visibleWallCount(leftPages.length));
-  const rightMaxIndex = Math.max(0, rightPages.length - visibleWallCount(rightPages.length));
 
   // Reset indexes when page count shrinks
   useEffect(() => {
-    setLeftActiveIndex((prev) => clamp(prev, 0, leftMaxIndex));
-  }, [leftMaxIndex]);
+    setLeftActiveIndex((prev) => wrapWallIndex(prev, leftPages.length));
+  }, [leftPages.length]);
   useEffect(() => {
-    setRightActiveIndex((prev) => clamp(prev, 0, rightMaxIndex));
-  }, [rightMaxIndex]);
+    setRightActiveIndex((prev) => wrapWallIndex(prev, rightPages.length));
+  }, [rightPages.length]);
 
   useEffect(() => {
     const element = wrapperRef.current;
@@ -521,9 +504,9 @@ export function Hallway() {
       if (loading) return;
       setActiveSide(side);
       if (side === 'left') {
-        setLeftActiveIndex((prev) => clamp(prev + direction, 0, leftMaxIndex));
+        setLeftActiveIndex((prev) => wrapWallIndex(prev + direction, leftPages.length));
       } else {
-        setRightActiveIndex((prev) => clamp(prev + direction, 0, rightMaxIndex));
+        setRightActiveIndex((prev) => wrapWallIndex(prev + direction, rightPages.length));
       }
     };
 
@@ -575,7 +558,7 @@ export function Hallway() {
       element.removeEventListener('touchstart', handleTouchStart);
       element.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [loading, leftMaxIndex, rightMaxIndex]);
+  }, [loading, leftPages.length, rightPages.length]);
 
   const routeToNormalExperience = (item: FocusItem) => {
     if (item.id === 'new') router.push('/chat');

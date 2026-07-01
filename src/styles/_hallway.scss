@@ -1,3 +1,5 @@
+@use 'sass:list';
+
 /* ===== Hallway — continuous 3D travel corridor ===== */
 /* The walls ARE the navigation. The UI is mounted into moving architecture. */
 
@@ -277,7 +279,7 @@
   position: absolute;
   top: 80px;
   bottom: 100px;
-  width: min(34vw, 560px);
+  width: min(36vw, 590px);
   perspective: 1400px;
   transform-style: preserve-3d;
   z-index: 32;
@@ -285,11 +287,11 @@
 }
 
 .wall-depth-stack--left {
-  left: 36px;
+  left: 40px;
 }
 
 .wall-depth-stack--right {
-  right: 36px;
+  right: 40px;
 }
 
 .wall-depth-page {
@@ -320,52 +322,52 @@
     opacity 400ms ease;
 }
 
-$rotateY: 70deg;
+$rotateY: 60deg;
 $rotateZ: 0deg;
 
 /* ---- left wall perspective ---- */
-$depth-spacing: 1.24;
-$depth-scales: 0.82, 0.6, 0.52, 0.4;
+$depth-spacing: 2.47;
+$depth-scales: 0.7, 0.6, 0.5, 0.4;
 $depth-offset-x:
   0,
-  160px * $depth-spacing,
-  270px * $depth-spacing,
-  370px * $depth-spacing;
+  100px * $depth-spacing,
+  180px * $depth-spacing,
+  300px * $depth-spacing;
 $depth-offset-y:
   0,
-  14px * $depth-spacing,
-  24px * $depth-spacing,
-  32px * $depth-spacing;
+  5px * $depth-spacing,
+  7px * $depth-spacing,
+  8px * $depth-spacing;
 $depth-offset-z:
   0,
+  -170px * $depth-spacing,
   -270px * $depth-spacing,
-  -410px * $depth-spacing,
-  -530px * $depth-spacing;
+  -300px * $depth-spacing;
 $depth-opacity: 1, 0.8, 0.6, 0.4;
 
 @for $i from 0 to 4 {
   .wall-depth-page[data-side='left'][data-depth='#{$i}'] {
     transform: translate3d(
-        nth($depth-offset-x, $i + 1),
-        nth($depth-offset-y, $i + 1),
-        nth($depth-offset-z, $i + 1)
+        list.nth($depth-offset-x, $i + 1),
+        list.nth($depth-offset-y, $i + 1),
+        list.nth($depth-offset-z, $i + 1)
       )
       rotateY($rotateY)
       rotateZ(-$rotateZ)
-      scale(nth($depth-scales, $i + 1));
-    opacity: nth($depth-opacity, $i + 1);
+      scale(list.nth($depth-scales, $i + 1));
+    opacity: list.nth($depth-opacity, $i + 1);
   }
 
   .wall-depth-page[data-side='right'][data-depth='#{$i}'] {
     transform: translate3d(
-        -#{nth($depth-offset-x, $i + 1)},
-        nth($depth-offset-y, $i + 1),
-        nth($depth-offset-z, $i + 1)
+        -#{list.nth($depth-offset-x, $i + 1)},
+        list.nth($depth-offset-y, $i + 1),
+        list.nth($depth-offset-z, $i + 1)
       )
       rotateY(-$rotateY)
       rotateZ($rotateZ)
-      scale(nth($depth-scales, $i + 1));
-    opacity: nth($depth-opacity, $i + 1);
+      scale(list.nth($depth-scales, $i + 1));
+    opacity: list.nth($depth-opacity, $i + 1);
   }
 }
 
