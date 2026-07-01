@@ -1,9 +1,10 @@
 'use client';
 
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { HackerChatPanel } from '@/app/hall/components/chat/HackerChatPanel';
 
 type WallSide = 'left' | 'right';
 
@@ -17,6 +18,13 @@ type FocusItem = {
   accentColor: string;
   projectId?: string;
   projectName?: string;
+};
+
+type SelectedHallChat = {
+  id: string;
+  type: 'random' | 'project';
+  projectId?: string;
+  title: string;
 };
 
 interface ApiMessage {
@@ -249,9 +257,22 @@ function CorridorSection({ z }: { z: number }) {
   );
 }
 
-function WallPanelCard({ item, onInspect }: { item: FocusItem; onInspect: (item: FocusItem) => void }) {
+function WallPanelCard({
+  item,
+  selected,
+  onInspect
+}: {
+  item: FocusItem;
+  selected: boolean;
+  onInspect: (item: FocusItem) => void;
+}) {
   return (
-    <button className="corridor-wall-panel" onClick={() => onInspect(item)} type="button">
+    <button
+      className={`corridor-wall-panel ${selected ? 'corridor-wall-panel--selected' : ''}`}
+      onClick={() => onInspect(item)}
+      type="button"
+      aria-pressed={selected}
+    >
       <span className="corridor-wall-panel__icon" aria-hidden="true" />
       <span className="corridor-wall-panel__copy">
         <strong>{item.title}</strong>
@@ -268,6 +289,7 @@ function HallWall({
   offset,
   progress,
   activeSide,
+  selectedChatId,
   onInspect
 }: {
   side: WallSide;
@@ -275,6 +297,7 @@ function HallWall({
   offset: number;
   progress: number;
   activeSide: WallSide | null;
+  selectedChatId?: string | null;
   onInspect: (item: FocusItem) => void;
 }) {
   const isPassive = activeSide !== null && activeSide !== side;
@@ -309,7 +332,12 @@ function HallWall({
             </div>
             <div className="corridor-wall-page__items">
               {page.items.map((item) => (
-                <WallPanelCard key={`${page.key}-${item.id}`} item={item} onInspect={onInspect} />
+                <WallPanelCard
+                  key={`${page.key}-${item.id}`}
+                  item={item}
+                  selected={selectedChatId === item.id}
+                  onInspect={onInspect}
+                />
               ))}
             </div>
           </section>
@@ -319,42 +347,6 @@ function HallWall({
         <span />
       </div>
     </div>
-  );
-}
-
-function FocusPanel({
-  item,
-  onClose,
-  onOpen
-}: {
-  item: FocusItem;
-  onClose: () => void;
-  onOpen: (item: FocusItem) => void;
-}) {
-  return (
-    <motion.div
-      className={`corridor-focus corridor-focus--${item.type === 'random' ? 'left' : 'right'}`}
-      style={{ '--card-accent': item.accentColor } as CSSProperties}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.94 }}
-      transition={{ type: 'spring', stiffness: 130, damping: 20 }}
-    >
-      <button className="corridor-focus__close" onClick={onClose} aria-label="Close preview">
-        ×
-      </button>
-      <span className="corridor-kicker">
-        {item.type === 'random'
-          ? 'random chat from left wall'
-          : `${item.projectName || 'project'} wall signal`}
-      </span>
-      <h2>{item.title}</h2>
-      <p>{item.detail}</p>
-      <div className="corridor-focus__meta">{item.meta}</div>
-      <button className="corridor-focus__open" onClick={() => onOpen(item)}>
-        Open {item.type === 'projectEmpty' ? 'project' : 'chat'} →
-      </button>
-    </motion.div>
   );
 }
 
@@ -377,43 +369,51 @@ export function Hallway() {
   const [activeSide, setActiveSide] = useState<WallSide | null>(null);
   const [data, setData] = useState<HallwayData>({ randomChats: [], projects: [] });
   const [loading, setLoading] = useState(true);
-  const [focusItem, setFocusItem] = useState<FocusItem | null>(null);
+  const [selectedChat, setSelectedChat] = useState<SelectedHallChat | null>(null);
+  const [isHackerMode] = useState(true);
+
+  const loadHallway = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    try {
+      const [randomRes, projectsRes] = await Promise.all([
+        fetch('/api/chats?isRandom=true&limit=80', { signal }),
+        fetch('/api/projects?limit=30', { signal })
+      ]);
+
+      const randomJson = randomRes.ok ? await randomRes.json() : { chats: [] };
+      const projectsJson = projectsRes.ok ? await projectsRes.json() : { projects: [] };
+      const projects: ApiProject[] = projectsJson.projects || [];
+
+      const projectsWithChats = await Promise.all(
+        projects.map(async (project) => {
+          const chatRes = await fetch(`/api/chats?projectId=${project.id}&limit=80`, { signal });
+          const chatJson = chatRes.ok ? await chatRes.json() : { chats: [] };
+          return { ...project, chats: chatJson.chats || [] };
+        })
+      );
+
+      setData({ randomChats: randomJson.chats || [], projects: projectsWithChats });
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        console.error('[Hallway] Failed to load hallway data', error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
+    void Promise.resolve().then(() => loadHallway(controller.signal));
 
-    async function loadHallway() {
-      try {
-        const [randomRes, projectsRes] = await Promise.all([
-          fetch('/api/chats?isRandom=true&limit=80'),
-          fetch('/api/projects?limit=30')
-        ]);
+    const refresh = () => loadHallway();
+    window.addEventListener('hallway-refresh', refresh);
 
-        const randomJson = randomRes.ok ? await randomRes.json() : { chats: [] };
-        const projectsJson = projectsRes.ok ? await projectsRes.json() : { projects: [] };
-        const projects: ApiProject[] = projectsJson.projects || [];
-
-        const projectsWithChats = await Promise.all(
-          projects.map(async (project) => {
-            const chatRes = await fetch(`/api/chats?projectId=${project.id}&limit=80`);
-            const chatJson = chatRes.ok ? await chatRes.json() : { chats: [] };
-            return { ...project, chats: chatJson.chats || [] };
-          })
-        );
-
-        if (!cancelled) {
-          setData({ randomChats: randomJson.chats || [], projects: projectsWithChats });
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    loadHallway();
     return () => {
-      cancelled = true;
+      controller.abort();
+      window.removeEventListener('hallway-refresh', refresh);
     };
-  }, []);
+  }, [loadHallway]);
 
   const leftPages = useMemo(() => buildRandomPages(data.randomChats), [data.randomChats]);
   const rightPages = useMemo(() => buildProjectPages(data.projects), [data.projects]);
@@ -444,7 +444,11 @@ export function Hallway() {
       setActiveSide(side);
     };
 
+    const eventStartedInsideChat = (target: EventTarget | null) =>
+      target instanceof Element && Boolean(target.closest('.hacker-chat-panel'));
+
     const handleWheel = (event: WheelEvent) => {
+      if (eventStartedInsideChat(event.target)) return;
       event.preventDefault();
       moveSide(sideFromClientX(event.clientX), event.deltaY * 0.55);
     };
@@ -453,6 +457,7 @@ export function Hallway() {
     let touchSide: WallSide = 'left';
 
     const handleTouchStart = (event: TouchEvent) => {
+      if (eventStartedInsideChat(event.target)) return;
       const touch = event.touches[0];
       if (!touch) return;
       touchStartY = touch.clientY;
@@ -461,6 +466,7 @@ export function Hallway() {
     };
 
     const handleTouchMove = (event: TouchEvent) => {
+      if (eventStartedInsideChat(event.target)) return;
       const touch = event.touches[0];
       if (!touch) return;
       event.preventDefault();
@@ -497,11 +503,54 @@ export function Hallway() {
     };
   }, [reducedMotion]);
 
-  const openItem = (item: FocusItem) => {
+  const routeToNormalExperience = (item: FocusItem) => {
     if (item.id === 'new') router.push('/chat');
     else if (item.id === 'projects') router.push('/projects');
     else if (item.type === 'projectEmpty') router.push(`/projects/${item.id}`);
     else router.push(`/chat/${item.id}`);
+  };
+
+  const createInlineChat = async (item: FocusItem) => {
+    const createRes = await fetch('/api/chats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: item.type === 'projectEmpty' ? 'New Project Chat' : 'New Chat',
+        ...(item.projectId ? { projectId: item.projectId } : {})
+      })
+    });
+
+    if (!createRes.ok) throw new Error('Failed to create chat');
+    const chat: ApiChat = await createRes.json();
+    window.dispatchEvent(new CustomEvent('sidebar-refresh'));
+    await loadHallway();
+    return chat;
+  };
+
+  const handleItemSelect = async (item: FocusItem) => {
+    if (!isHackerMode) {
+      routeToNormalExperience(item);
+      return;
+    }
+
+    if (item.id === 'projects') {
+      routeToNormalExperience(item);
+      return;
+    }
+
+    try {
+      const chat = item.id === 'new' || item.type === 'projectEmpty' ? await createInlineChat(item) : null;
+      const chatId = chat?.id ?? item.id;
+      setSelectedChat({
+        id: chatId,
+        type: item.type === 'random' ? 'random' : 'project',
+        projectId: item.projectId ?? chat?.projectId ?? undefined,
+        title: chat?.title ?? item.title
+      });
+    } catch (error) {
+      console.error('[Hallway] Failed to open inline chat', error);
+      routeToNormalExperience(item);
+    }
   };
 
   const leftProgress = progressFor(leftOffset, leftMax);
@@ -531,7 +580,8 @@ export function Hallway() {
           offset={leftOffset}
           progress={leftProgress}
           activeSide={activeSide}
-          onInspect={setFocusItem}
+          selectedChatId={selectedChat?.id}
+          onInspect={handleItemSelect}
         />
         <HallWall
           side="right"
@@ -539,18 +589,27 @@ export function Hallway() {
           offset={rightOffset}
           progress={rightProgress}
           activeSide={activeSide}
-          onInspect={setFocusItem}
+          selectedChatId={selectedChat?.id}
+          onInspect={handleItemSelect}
         />
       </div>
 
-      <motion.div className="corridor-center-copy" animate={{ opacity: focusItem ? 0.16 : 1 }}>
+      <motion.div className="corridor-center-copy" animate={{ opacity: selectedChat ? 0.12 : 1 }}>
         <span className="corridor-kicker">hacker zone</span>
-        <h1>{loading ? 'Loading wall memory.' : 'You are inside.'}</h1>
+        <h1>{loading ? 'Loading wall memory.' : selectedChat ? 'Chat stream open.' : 'You are inside.'}</h1>
       </motion.div>
 
       <AnimatePresence>
-        {focusItem && (
-          <FocusPanel item={focusItem} onClose={() => setFocusItem(null)} onOpen={openItem} />
+        {selectedChat && (
+          <HackerChatPanel
+            key={selectedChat.id}
+            chatId={selectedChat.id}
+            title={selectedChat.title}
+            onClose={() => setSelectedChat(null)}
+            onChatTitleChange={(chatId, title) => {
+              setSelectedChat((current) => (current?.id === chatId ? { ...current, title } : current));
+            }}
+          />
         )}
       </AnimatePresence>
 
