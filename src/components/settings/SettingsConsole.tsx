@@ -8,7 +8,7 @@ type SettingsTab = 'zen' | 'nvidia' | 'chat';
 const TABS: { key: SettingsTab; label: string }[] = [
   { key: 'chat', label: 'Chat' },
   { key: 'zen', label: 'Zen (OpenCode)' },
-  { key: 'nvidia', label: 'NVIDIA NIM' },
+  { key: 'nvidia', label: 'NVIDIA NIM' }
 ];
 
 interface AiModel {
@@ -25,18 +25,21 @@ interface AiModel {
   outputPrice: number | null;
 }
 
-const PROVIDER_INFO: Record<string, {
-  label: string;
-  configKey: string;
-  configBaseUrlKey: string;
-  configDefaultModelKey: string;
-  apiKeyLabel: string;
-  apiKeyPlaceholder: string;
-  apiKeyHelpUrl: string;
-  apiKeyHelpText: string;
-  defaultApiUrl: string;
-  defaultModel: string;
-}> = {
+const PROVIDER_INFO: Record<
+  string,
+  {
+    label: string;
+    configKey: string;
+    configBaseUrlKey: string;
+    configDefaultModelKey: string;
+    apiKeyLabel: string;
+    apiKeyPlaceholder: string;
+    apiKeyHelpUrl: string;
+    apiKeyHelpText: string;
+    defaultApiUrl: string;
+    defaultModel: string;
+  }
+> = {
   zen: {
     label: 'Zen (OpenCode)',
     configKey: 'zen_api_key',
@@ -47,7 +50,7 @@ const PROVIDER_INFO: Record<string, {
     apiKeyHelpUrl: 'https://opencode.ai/workspace',
     apiKeyHelpText: 'Get yours from opencode.ai/workspace',
     defaultApiUrl: 'https://opencode.ai/zen',
-    defaultModel: 'big-pickle',
+    defaultModel: 'big-pickle'
   },
   nvidia: {
     label: 'NVIDIA NIM',
@@ -59,8 +62,8 @@ const PROVIDER_INFO: Record<string, {
     apiKeyHelpUrl: 'https://build.nvidia.com',
     apiKeyHelpText: 'Get yours from build.nvidia.com',
     defaultApiUrl: 'https://integrate.api.nvidia.com/v1',
-    defaultModel: 'meta/llama-3.3-70b-instruct',
-  },
+    defaultModel: 'meta/llama-3.3-70b-instruct'
+  }
 };
 
 export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
@@ -118,7 +121,8 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
     if (a.isEnabled !== b.isEnabled) return a.isEnabled ? -1 : 1;
     return a.name.localeCompare(b.name);
   };
-  const providerModels = activeTab !== 'chat' ? allModels.filter((m) => m.modelSource === activeTab) : [];
+  const providerModels =
+    activeTab !== 'chat' ? allModels.filter((m) => m.modelSource === activeTab) : [];
   const freeModels = providerModels.filter((m) => m.isFree).sort(byEnabledThenName);
   const paidModels = providerModels.filter((m) => !m.isFree).sort(byEnabledThenName);
 
@@ -129,7 +133,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
     try {
       const [modelsRes, configRes] = await Promise.all([
         fetch('/api/ai/models?all=true'),
-        fetch('/api/ai/config'),
+        fetch('/api/ai/config')
       ]);
 
       if (modelsRes.ok) {
@@ -142,8 +146,8 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
         setApiKey(data.configs[PROVIDER_INFO.zen.configKey] || '');
         setDefaultModel(
           data.configs[PROVIDER_INFO.zen.configDefaultModelKey] ||
-          data.configs[PROVIDER_INFO.nvidia.configDefaultModelKey] ||
-          PROVIDER_INFO.zen.defaultModel
+            data.configs[PROVIDER_INFO.nvidia.configDefaultModelKey] ||
+            PROVIDER_INFO.zen.defaultModel
         );
         setCleanAutoEnabled(data.configs['random_chat_auto_clean_enabled'] === 'true');
         setCleanPeriodDays(data.configs['random_chat_clean_period_days'] || '30');
@@ -179,10 +183,10 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
     if (!info) return;
     setApiKey(configs[info.configKey] || '');
     setSaveMsg(null);
-    const pf = allModels.filter(m => m.modelSource === activeTab && m.isFree);
-    const pp = allModels.filter(m => m.modelSource === activeTab && !m.isFree);
-    setCollapsedFree(pf.filter(m => m.isEnabled).length === 0);
-    setCollapsedPaid(pp.filter(m => m.isEnabled).length === 0);
+    const pf = allModels.filter((m) => m.modelSource === activeTab && m.isFree);
+    const pp = allModels.filter((m) => m.modelSource === activeTab && !m.isFree);
+    setCollapsedFree(pf.filter((m) => m.isEnabled).length === 0);
+    setCollapsedPaid(pp.filter((m) => m.isEnabled).length === 0);
   }, [activeTab, configs, info, allModels]);
 
   async function saveConfig(key: string, value: string) {
@@ -192,7 +196,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
       const res = await fetch('/api/ai/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ configs: [{ key, value }] }),
+        body: JSON.stringify({ configs: [{ key, value }] })
       });
       if (!res.ok) throw new Error('Failed to save');
       setConfigs((prev) => ({ ...prev, [key]: value }));
@@ -238,7 +242,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
     setRefreshResult(null);
     try {
       const res = await fetch(`/api/ai/models/refresh?provider=${activeTab}`, {
-        method: 'POST',
+        method: 'POST'
       });
       const data = await res.json();
       if (data.models) setAllModels(data.models);
@@ -274,7 +278,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
       const res = await fetch('/api/ai/models', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updates: [{ id: model.id, isEnabled: enabled }] }),
+        body: JSON.stringify({ updates: [{ id: model.id, isEnabled: enabled }] })
       });
       if (res.ok) {
         const data = await res.json();
@@ -296,7 +300,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
       const res = await fetch('/api/ai/models', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updates }),
+        body: JSON.stringify({ updates })
       });
       if (res.ok) {
         const data = await res.json();
@@ -326,12 +330,13 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
     setCleanError(null);
     try {
       const res = await fetch('/api/chats/clean-random', {
-        method: 'POST',
+        method: 'POST'
       });
       const data = await res.json();
       if (res.ok) {
         const parts: string[] = [];
-        if (data.compactedCount > 0) parts.push(`${data.compactedCount} compressed → ${data.entry?.title || 'memory'}`);
+        if (data.compactedCount > 0)
+          parts.push(`${data.compactedCount} compressed → ${data.entry?.title || 'memory'}`);
         if (data.emptyChatsCount > 0) parts.push(`${data.emptyChatsCount} empty skipped`);
         if (data.deletedCount > 0) parts.push(`${data.deletedCount} deleted`);
         setCleanResult(`✓ ${parts.join(', ')}`);
@@ -350,7 +355,13 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
     }
   }
 
-  function renderModelSection(title: string, models: AiModel[], collapsed: boolean, onToggleCollapse: () => void, emoji: string) {
+  function renderModelSection(
+    title: string,
+    models: AiModel[],
+    collapsed: boolean,
+    onToggleCollapse: () => void,
+    emoji: string
+  ) {
     const allEnabled = models.length > 0 && models.every((m) => m.isEnabled);
     const noneEnabled = models.every((m) => !m.isEnabled);
 
@@ -373,7 +384,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
         {!collapsed && (
           <div className="border-t border-[var(--color-border)] px-4 py-2">
             {/* Select All / None */}
-            <label className="flex items-center gap-2 py-1 text-xs text-[var(--color-text-dim)] hover:text-white cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-2 py-1 text-xs text-[var(--color-text-dim)] hover:text-white">
               <input
                 type="checkbox"
                 checked={allEnabled}
@@ -399,7 +410,9 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                     className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg)]"
                   />
                   <span className="font-medium">{model.name}</span>
-                  <span className="font-mono text-xs text-[var(--color-text-dim)]">{model.modelId}</span>
+                  <span className="font-mono text-xs text-[var(--color-text-dim)]">
+                    {model.modelId}
+                  </span>
                   {model.description && (
                     <span className="hidden truncate text-xs text-[var(--color-text-dim)] sm:inline">
                       — {model.description}
@@ -425,7 +438,9 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
   }
 
   return (
-    <main className={`cw-page settings-console flex-1 overflow-y-auto ${embedded ? 'settings-console--embedded' : ''}`}>
+    <main
+      className={`cw-page settings-console flex-1 overflow-y-auto ${embedded ? 'settings-console--embedded' : ''}`}
+    >
       <div className="cw-container">
         <div className="cw-shell cw-section mb-6">
           <div className="cw-eyebrow">systems console / model routing</div>
@@ -461,7 +476,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
         </div>
 
         {isLoading ? (
-          <div className="py-12 flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 py-12">
             <PageSkeleton />
           </div>
         ) : (
@@ -478,17 +493,17 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[var(--color-text-dim)]">Status</span>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        !apiKey
-                          ? 'bg-red-900/40 text-red-300'
-                          : 'bg-green-900/40 text-green-300'
-                      }`}>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          !apiKey ? 'bg-red-900/40 text-red-300' : 'bg-green-900/40 text-green-300'
+                        }`}
+                      >
                         {apiKey ? 'KEY STORED' : 'NO KEY'}
                       </span>
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-[var(--color-text-dim)]">API URL</span>
-                      <span className="break-all text-right font-mono text-xs">
+                      <span className="text-right font-mono text-xs break-all">
                         {activeApiUrl}
                         <button
                           onClick={saveBaseUrl}
@@ -502,7 +517,9 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                   </div>
 
                   {saveMsg && (
-                    <div className={`mt-4 text-sm ${saveMsg === 'Saved successfully' ? 'text-green-400' : 'text-red-400'}`}>
+                    <div
+                      className={`mt-4 text-sm ${saveMsg === 'Saved successfully' ? 'text-green-400' : 'text-red-400'}`}
+                    >
                       {saveMsg}
                     </div>
                   )}
@@ -534,20 +551,40 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                       <button
                         type="button"
                         onClick={() => setShowApiKey((v) => !v)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-dim)] hover:text-white"
+                        className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-[var(--color-text-dim)] hover:text-white"
                         title={showApiKey ? 'Hide API key' : 'Show API key'}
                       >
                         {showApiKey ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                            <line x1="1" y1="1" x2="23" y2="23"/>
-                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
                           </svg>
                         ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
                           </svg>
                         )}
                       </button>
@@ -568,7 +605,8 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                     <div>
                       <h2 className="text-lg font-semibold">Available Models</h2>
                       <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-                        Check which models appear in the chat model selector. Unchecked models are hidden.
+                        Check which models appear in the chat model selector. Unchecked models are
+                        hidden.
                       </p>
                     </div>
                     <button
@@ -599,13 +637,15 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                   </div>
 
                   {refreshResult && (
-                    <div className={`mb-3 rounded px-3 py-2 text-sm ${
-                      refreshResult.startsWith('✓')
-                        ? 'bg-green-900/30 text-green-300'
-                        : refreshResult.startsWith('⚠')
-                          ? 'bg-yellow-900/30 text-yellow-300'
-                          : 'bg-red-900/30 text-red-300'
-                    }`}>
+                    <div
+                      className={`mb-3 rounded px-3 py-2 text-sm ${
+                        refreshResult.startsWith('✓')
+                          ? 'bg-green-900/30 text-green-300'
+                          : refreshResult.startsWith('⚠')
+                            ? 'bg-yellow-900/30 text-yellow-300'
+                            : 'bg-red-900/30 text-red-300'
+                      }`}
+                    >
                       {refreshResult}
                     </div>
                   )}
@@ -635,7 +675,8 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                 <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <h2 className="mb-4 text-lg font-semibold">Default AI Model</h2>
                   <p className="mb-4 text-sm text-[var(--color-text-dim)]">
-                    Default AI model used for new chats. Choose from all available models across providers.
+                    Default AI model used for new chats. Choose from all available models across
+                    providers.
                   </p>
                   <div className="flex gap-3">
                     <select
@@ -643,12 +684,11 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                       onChange={(e) => setDefaultModel(e.target.value)}
                       className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm outline-none focus:border-blue-500"
                     >
-                      {chatModels.length === 0 && (
-                        <option value="">No models available</option>
-                      )}
+                      {chatModels.length === 0 && <option value="">No models available</option>}
                       {chatModels.map((m) => (
                         <option key={m.modelId} value={m.modelId}>
-                          {m.name} ({m.modelSource === 'zen' ? 'Zen' : 'NVIDIA'}) {m.isFree ? '(Free)' : ''}
+                          {m.name} ({m.modelSource === 'zen' ? 'Zen' : 'NVIDIA'}){' '}
+                          {m.isFree ? '(Free)' : ''}
                         </option>
                       ))}
                     </select>
@@ -664,21 +704,17 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
 
                 {/* Clean Random Chats */}
                 <section className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
-                  <h2 className="mb-4 text-lg font-semibold">
-                    🧹 Clean Random Chats
-                  </h2>
+                  <h2 className="mb-4 text-lg font-semibold">🧹 Clean Random Chats</h2>
                   <p className="mb-4 text-sm text-[var(--color-text-dim)]">
-                    Compact all random chats into memory entries and remove them.
-                    The knowledge from random chats is preserved as compressed
-                    memories so the AI Brain can still reference it.
+                    Compact all random chats into memory entries and remove them. The knowledge from
+                    random chats is preserved as compressed memories so the AI Brain can still
+                    reference it.
                   </p>
 
                   <div className="space-y-4">
                     {/* Auto-clean toggle + periodicity */}
                     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-                      <h3 className="mb-3 text-sm font-medium">
-                        Automatic Cleaning
-                      </h3>
+                      <h3 className="mb-3 text-sm font-medium">Automatic Cleaning</h3>
                       <div className="space-y-3">
                         <label className="flex cursor-pointer items-center gap-3">
                           <input
@@ -687,15 +723,11 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                             onChange={handleToggleAutoClean}
                             className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg)]"
                           />
-                          <span className="text-sm">
-                            Auto-clean random chats periodically
-                          </span>
+                          <span className="text-sm">Auto-clean random chats periodically</span>
                         </label>
 
                         <div className="flex items-center gap-3">
-                          <label className="text-sm text-[var(--color-text-dim)]">
-                            Every
-                          </label>
+                          <label className="text-sm text-[var(--color-text-dim)]">Every</label>
                           <input
                             type="number"
                             min="1"
@@ -705,9 +737,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                             className="w-20 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-center text-sm outline-none focus:border-blue-500"
                             disabled={!cleanAutoEnabled}
                           />
-                          <label className="text-sm text-[var(--color-text-dim)]">
-                            days
-                          </label>
+                          <label className="text-sm text-[var(--color-text-dim)]">days</label>
                           <button
                             onClick={handleSaveCleanConfig}
                             disabled={saving}
@@ -721,12 +751,10 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
 
                     {/* Manual clean button */}
                     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-                      <h3 className="mb-3 text-sm font-medium">
-                        Manual Clean
-                      </h3>
+                      <h3 className="mb-3 text-sm font-medium">Manual Clean</h3>
                       <p className="mb-3 text-xs text-[var(--color-text-dim)]">
-                        Compact all current random chats into memory entries and
-                        delete them immediately.
+                        Compact all current random chats into memory entries and delete them
+                        immediately.
                       </p>
                       <button
                         onClick={handleCleanNow}
@@ -770,7 +798,7 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                 </section>
 
                 {/* Token Usage */}
-                <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
+                <section className="mt-8 mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <h2 className="text-lg font-semibold">Token Usage</h2>
@@ -785,9 +813,14 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" strokeWidth="2"
-                        strokeLinecap="round" strokeLinejoin="round"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                         className={usageLoading ? 'animate-spin' : ''}
                       >
                         <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -807,7 +840,9 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                           <div className="font-mono text-lg font-bold text-[var(--color-accent)]">
                             {usageData.totals.totalTokens.toLocaleString()}
                           </div>
-                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">Total Tokens</div>
+                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">
+                            Total Tokens
+                          </div>
                         </div>
                         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-center">
                           <div className="font-mono text-lg font-bold text-[var(--color-accent)]">
@@ -819,13 +854,17 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                           <div className="font-mono text-lg font-bold text-blue-300">
                             {usageData.totals.promptTokens.toLocaleString()}
                           </div>
-                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">Prompt Tokens</div>
+                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">
+                            Prompt Tokens
+                          </div>
                         </div>
                         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-center">
                           <div className="font-mono text-lg font-bold text-purple-300">
                             {usageData.totals.completionTokens.toLocaleString()}
                           </div>
-                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">Completion Tokens</div>
+                          <div className="mt-1 text-xs text-[var(--color-text-dim)]">
+                            Completion Tokens
+                          </div>
                         </div>
                       </div>
 
@@ -841,28 +880,37 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-text-dim)]">
-                            <th className="pb-2 pr-3 font-medium">Model</th>
-                            <th className="pb-2 pr-3 font-medium">Messages</th>
-                            <th className="pb-2 pr-3 font-medium">Tokens</th>
-                            <th className="pb-2 pr-3 font-medium">% Used</th>
-                            <th className="pb-2 pr-3 font-medium">Cost</th>
+                            <th className="pr-3 pb-2 font-medium">Model</th>
+                            <th className="pr-3 pb-2 font-medium">Messages</th>
+                            <th className="pr-3 pb-2 font-medium">Tokens</th>
+                            <th className="pr-3 pb-2 font-medium">% Used</th>
+                            <th className="pr-3 pb-2 font-medium">Cost</th>
                             <th className="pb-2 font-medium">Price / 1M tok</th>
                           </tr>
                         </thead>
                         <tbody>
                           {usageData.perModel.map((m) => (
-                            <tr key={m.modelId} className="border-b border-[var(--color-border)]/40">
+                            <tr
+                              key={m.modelId}
+                              className="border-b border-[var(--color-border)]/40"
+                            >
                               <td className="py-3 pr-3">
                                 <div className="font-medium text-white">{m.name}</div>
-                                <div className="font-mono text-xs text-[var(--color-text-dim)]">{m.modelId}</div>
+                                <div className="font-mono text-xs text-[var(--color-text-dim)]">
+                                  {m.modelId}
+                                </div>
                               </td>
                               <td className="py-3 pr-3 font-mono text-xs text-[var(--color-text-dim)]">
                                 {m.messageCount}
                               </td>
                               <td className="py-3 pr-3 font-mono text-xs">
-                                <span className="text-blue-300">{m.promptTokens.toLocaleString()}p</span>
+                                <span className="text-blue-300">
+                                  {m.promptTokens.toLocaleString()}p
+                                </span>
                                 {' / '}
-                                <span className="text-purple-300">{m.completionTokens.toLocaleString()}c</span>
+                                <span className="text-purple-300">
+                                  {m.completionTokens.toLocaleString()}c
+                                </span>
                                 {' = '}
                                 <span className="text-white">{m.totalTokens.toLocaleString()}</span>
                               </td>
@@ -883,7 +931,9 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                                 ${m.cost.toFixed(6)}
                               </td>
                               <td className="py-3 font-mono text-xs text-[var(--color-text-dim)]">
-                                {m.inputPrice != null ? `$${m.inputPrice} / $${m.outputPrice}` : '—'}
+                                {m.inputPrice != null
+                                  ? `$${m.inputPrice} / $${m.outputPrice}`
+                                  : '—'}
                               </td>
                             </tr>
                           ))}
