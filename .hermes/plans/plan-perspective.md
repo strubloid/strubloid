@@ -4,6 +4,9 @@
 > **Date:** 2026-06-26
 > **Goal:** Replace the 2D website with an immersive portal experience. The user doesn't "open pages" — they enter a digital space. Starting from a glowing circle on an empty canvas, scrolling through the portal into a spatial hallway where conversations live on physical walls.
 
+
+> **2026-07-01 accepted layout update:** The current successful direction is the dark Matrix tunnel from the rollback/current corridor, with fixed portal/header/sidebar/footer and two independent moving wall containers. This supersedes older notes in this plan that describe a white/glass hallway, paired wall movement, or one moving object per chat card. The reproducible target is: left wall = Random Chats wall pages, right wall = Project Chat wall pages grouped by project, max 6 chats per wall page, project color-coded, side-based movement only.
+
 ---
 
 ## Table of Contents
@@ -53,7 +56,7 @@ The user should feel **wonder, curiosity, flow, exploration, focus, calmness, im
 | **Physical navigation** | Walls, depth, distance, perspective. The interface is architecture |
 | **Progressive discovery** | Start minimal (just a portal). Everything else is found by moving deeper |
 | **Emotional contrast** | Random Chats feel quick/casual/ephemeral. Projects feel professional/persistent/powerful |
-| **Glass + Light** | Clean white/glass environment with neon green accents. Not dark. Not Matrix. Apple Store meets Cyberpunk |
+| **Dark Matrix tunnel** | Current accepted hall is dark sci-fi / Matrix green, not a flat dashboard and not the old white/glass concept |
 | **Zero instant appearance** | Every element fades, slides, scales, rotates. Nothing pops into existence |
 | **Scroll = movement** | Scrolling moves the camera through space. It never feels like scrolling a webpage |
 
@@ -119,8 +122,8 @@ This transition must be **memorable and cinematic**. The user should feel they p
 Once through the portal, the user stands in a **spatial hallway**:
 
 - A long corridor viewed in perspective
-- **Left wall**: Random Chats — floating panels, conversation previews, recent activity, memory cards
-- **Right wall**: Projects — project cards, pinned items, health, progress, tasks
+- **Left wall**: Random Chats — one moving wall container made of wall pages, max 6 random chats per page
+- **Right wall**: Project / Project Chat wall pages — project chats grouped by project, max 6 chats per wall page, color-coded per project
 - **Center**: The destination — current chat, project workspace, or selected item
 - **Floor**: Subtle reflection/grid providing spatial reference
 
@@ -140,11 +143,11 @@ The latest target reference is a **five-beat spatial website**, not a static das
 
 After the initial interior screen, scrolling should continue moving the camera forward through repeated wall segments:
 
-- The **left side** is a sequence of random-chat slabs. Because random chats can grow indefinitely, split them into screen-sized wall groups (for example 6–10 cards per wall). Scrolling forward moves the current slab past the viewer and reveals the next slab deeper in the corridor. Scrolling backward returns to previous random-chat slabs.
-- The **right side** starts with an **all-projects index wall**. After the first wall, each subsequent depth segment is dedicated to a single project, showing that project's chats mounted on the right wall.
-- The two walls move together at the same camera speed, but their contents differ: left keeps paginating random chats; right progresses from projects overview into per-project chat walls.
+- The **left side** is one wall mover containing Random Chat wall pages. Random chats are chunked into pages of **max 6 chats**. Wheel/touch on the left half changes only left wall offset/progress.
+- The **right side** is one wall mover containing project-specific wall pages. Project chats are grouped by project and never mixed. Each page contains **max 6 chats** and carries that project's color.
+- The two walls **do not move together**. Left-half wheel/touch moves only the left wall mover. Right-half wheel/touch moves only the right wall mover. The passive wall may dim but must stay spatially fixed.
 - The depth model should support beginning → end and end → beginning navigation. A user can scroll forward through the archive, then reverse back to the initial projects/randoms screen.
-- Motion should imply speed and depth: vanishing line, background glint, wall opacity falloff, `translateZ`, and spring easing between depth stages.
+- Motion should preserve the existing tunnel depth: vanishing line, corridor background, portal glint, wall surfaces, progress footer, and eased wall-container offset. Do not animate one card per wheel step.
 
 ### 2.4.3 Interaction Rule
 
@@ -980,7 +983,7 @@ With a "+ New Random Chat" button, styled as a glass card with dashed border.
 ### 11.4 Interaction
 
 - Click card: hallway rotates slightly left, camera approaches, card expands → chat opens
-- Hover: card lifts (translateZ + shadow increase)
+- Hover: glow/contrast only. No card lift, no wall angle change, no transform changes.
 - Long-press / right-click: context menu (pin, delete, rename)
 
 ---
@@ -1044,7 +1047,7 @@ With a "+ New Project" button.
 
 ### 12.4 Interaction
 
-- Click: hallway rotates toward right wall, camera approaches, project expands
+- Click: opens/locks the selected project chat/project preview from the right wall; project wall color remains visible.
 - Projects "feel" bigger when opening — the camera gets closer, the card takes more of the field of view
 
 ---
@@ -1375,4 +1378,286 @@ Key takeaways for implementation:
 
 ---
 
-*End of plan-portal.md — This document describes the complete redesign of strubloid as an immersive portal experience. The direction has shifted from a dark Matrix room to a clean, white/glass spatial hallway entered through a glowing portal. CSS 3D transforms + Framer Motion are the primary techniques; Three.js is reserved only for effects that genuinely require it.*
+## 19. 2026-07-01 Accepted Hall Layout — Wall-Page Container Refactor
+
+This section records the layout the user explicitly loved after implementation. Use this as the reproducible recipe when rebuilding or repairing the hall. It supersedes older card-level corridor notes in this file where they conflict.
+
+### 19.1 Required source reading
+
+Before touching the hall again, read the local visual instruction package in this order:
+
+1. `strubloid-hall-suggestion/instructions.md`
+2. `strubloid-hall-suggestion/images/00_current_rollback_reference.png`
+3. `strubloid-hall-suggestion/images/01_idle_tunnel_layout.jpg`
+4. `strubloid-hall-suggestion/images/02_wall_group_model.jpg`
+5. `strubloid-hall-suggestion/images/03_left_half_moves_left_wall_only.jpg`
+6. `strubloid-hall-suggestion/images/04_right_half_moves_right_wall_only.jpg`
+7. `strubloid-hall-suggestion/images/05_project_color_coded_walls.jpg`
+8. `strubloid-hall-suggestion/images/06_keep_tunnel_replace_single_message_movement.jpg`
+
+Treat the images as acceptance criteria, not inspiration. Keep the tunnel/corridor from `00_current_rollback_reference.png`; replace the movement model only.
+
+### 19.2 What worked visually
+
+The successful layout keeps the existing corridor background and portal identity:
+
+- dark sci-fi tunnel background: `url('/images/portal/corridor-hall.png')`;
+- green Matrix lighting, fog, particles, floor/ceiling grid, corridor ribs;
+- small central portal/glint near the vanishing point;
+- fixed app header, sidebar, footer/progress pill;
+- left and right trapezoid wall surfaces behind the moving pages;
+- compact wall-page panels mounted on the side planes;
+- center copy (`hacker zone`, `You are inside.`) stays fixed and does not become a dashboard card.
+
+Do not rebuild this as bento cards, a project dashboard, a list, or standalone plaques floating over a green background. The user liked the current result because the wall groups finally read as physical corridor walls.
+
+### 19.3 Core movement rule
+
+The wall is the moving object. Cards are normal children.
+
+Current accepted DOM/CSS pattern:
+
+```tsx
+<div className="corridor-wall-zone corridor-wall-zone--left">
+  <div className="corridor-wall-surface" />
+  <div
+    className="corridor-wall-mover"
+    data-side="left"
+    style={{ '--wall-offset': `${-leftOffset}px`, '--wall-progress': `${leftProgress}%` }}
+  >
+    <section className="corridor-wall-page">
+      <header className="corridor-wall-page__header">...</header>
+      <div className="corridor-wall-page__items">
+        <button className="corridor-wall-panel">...</button>
+      </div>
+    </section>
+  </div>
+</div>
+```
+
+`transform` belongs on `.corridor-wall-mover`:
+
+```scss
+.corridor-wall-mover {
+  display: flex;
+  gap: 54px;
+  height: 100%;
+  padding: 18px;
+  transform: translate3d(var(--wall-offset), 0, 0);
+  will-change: transform;
+}
+```
+
+Do not put travel transforms, progress math, `rotateY`, or per-depth movement on each `.corridor-wall-panel`. Child chat panels may glow on hover but must not move independently.
+
+### 19.4 Current accepted constants
+
+These produced the accepted layout at desktop width:
+
+```ts
+const PAGE_WIDTH = 450;
+const PAGE_GAP = 54;
+const PAGE_STRIDE = PAGE_WIDTH + PAGE_GAP;
+const RIB_GAP = 420;
+const SECTION_COUNT = 11;
+const PROJECT_PALETTE = ['#d8f45d', '#55d8ff', '#ff67c4', '#ffb24d', '#a78bfa', '#5eead4'];
+```
+
+Accepted wall geometry:
+
+```scss
+.corridor-wall-zone {
+  position: absolute;
+  top: 16%;
+  z-index: 7;
+  width: min(34vw, 500px);
+  height: min(62vh, 590px);
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+.corridor-wall-zone--left {
+  left: 3.4vw;
+  transform: rotateY(51deg) skewY(-1deg);
+  transform-origin: left center;
+}
+
+.corridor-wall-zone--right {
+  right: 3.4vw;
+  transform: rotateY(-51deg) skewY(1deg);
+  transform-origin: right center;
+}
+```
+
+The exact angle is important: the previous extreme `68deg` single-card model read as separate plaques; the accepted `51deg` wall-zone angle makes the grouped pages readable while still feeling mounted to the corridor.
+
+### 19.5 Data grouping rules
+
+Left wall:
+
+```ts
+function buildRandomPages(chats: ApiChat[]): WallPage[] {
+  return chunk(chats, 6).map((pageChats, index) => ({
+    key: `random-wall-${index}`,
+    side: 'left',
+    title: `Random Chats Wall ${index + 1}`,
+    eyebrow: 'Random Access Memory',
+    countLabel: `${pageChats.length} chats`,
+    accentColor: '#9ad933',
+    items: pageChats.map((chat) => chatItem(chat, '#9ad933'))
+  }));
+}
+```
+
+Right wall:
+
+```ts
+function buildProjectPages(projects: ProjectLane[]): WallPage[] {
+  return projects.flatMap((project, projectIndex) => {
+    const accentColor = project.color || PROJECT_PALETTE[projectIndex % PROJECT_PALETTE.length];
+    return chunk(project.chats, 6).map((pageChats, pageIndex) => ({
+      key: `project-wall-${project.id}-${pageIndex}`,
+      side: 'right',
+      title: project.name,
+      eyebrow: pageIndex === 0 ? 'Project Wall' : `Project Wall ${pageIndex + 1}`,
+      countLabel: `${pageChats.length} chats`,
+      accentColor,
+      items: pageChats.map((chat) => chatItem(chat, accentColor, project))
+    }));
+  });
+}
+```
+
+Non-negotiables:
+
+- random chats: max 6 per page;
+- project chats: max 6 per page;
+- never mix chats from different projects inside one right wall page;
+- each project page carries its own accent color into border, glow, icon, metadata, and panel hover;
+- render an empty-state wall page when either side has no data.
+
+### 19.6 Independent left/right travel
+
+Use two refs/state pairs, not one global `travel`:
+
+```ts
+const leftRef = useRef<WallMotionState>({ target: 0, current: 0, max: 0 });
+const rightRef = useRef<WallMotionState>({ target: 0, current: 0, max: 0 });
+const [leftOffset, setLeftOffset] = useState(0);
+const [rightOffset, setRightOffset] = useState(0);
+const [leftMax, setLeftMax] = useState(0);
+const [rightMax, setRightMax] = useState(0);
+const [activeSide, setActiveSide] = useState<WallSide | null>(null);
+```
+
+Side detection:
+
+```ts
+const sideFromClientX = (clientX: number): WallSide => {
+  const rect = element.getBoundingClientRect();
+  return clientX - rect.left < rect.width / 2 ? 'left' : 'right';
+};
+```
+
+Wheel rule:
+
+```ts
+const handleWheel = (event: WheelEvent) => {
+  event.preventDefault();
+  moveSide(sideFromClientX(event.clientX), event.deltaY * 0.55);
+};
+```
+
+Touch rule:
+
+```ts
+// touchstart records side from initial X
+// touchmove changes only that stored side by vertical drag delta
+moveSide(touchSide, deltaY * 1.8);
+```
+
+RAF lerp:
+
+```ts
+const ease = reducedMotion === 'reduce' ? 1 : 0.08;
+left.current = Math.abs(left.current - left.target) < 0.1
+  ? left.target
+  : left.current + (left.target - left.current) * ease;
+right.current = Math.abs(right.current - right.target) < 0.1
+  ? right.target
+  : right.current + (right.target - right.current) * ease;
+```
+
+React lint pitfall: do not read `leftRef.current.max` / `rightRef.current.max` during render. Mirror max values into state (`leftMax`, `rightMax`) inside the effect that recomputes page counts, then derive progress from state.
+
+### 19.7 Hover and active-side behavior
+
+Allowed:
+
+- passive wall opacity reduction (`opacity: 0.58`);
+- panel border/glow/background color changes;
+- progress footer update;
+- selected/focus overlay.
+
+Forbidden:
+
+- no whole-scene `rotateY`;
+- no wall-zone angle change on hover;
+- no `.corridor-wall-panel:hover { transform: ... }`;
+- no Framer `whileHover={{ scale, z }}` on cards;
+- no moving both walls from one input event.
+
+The accepted implementation removed the previous `cameraTilt`/`motion.div animate={{ rotateY: cameraTilt }}` behavior. Keep the portal and tunnel fixed.
+
+### 19.8 Verification recipe
+
+Required commands:
+
+```bash
+npm run typecheck
+npx eslint src/components/hallway/Hallway.tsx
+git diff --check -- src/components/hallway/Hallway.tsx src/styles/_hallway.scss
+```
+
+Current repo note: `npm run lint` is broken under Next 16 because the script still runs `next lint`, which exits with `Invalid project directory provided ... /lint`. Use `npx eslint ...` until the script is repaired. Repo-wide `npx eslint .` currently reports unrelated pre-existing lint errors; the hall file itself must stay clean.
+
+Browser smoke checks that proved the accepted layout:
+
+```js
+// initial
+left transform  === matrix(1, 0, 0, 1, 0, 0)
+right transform === matrix(1, 0, 0, 1, 0, 0)
+status          === ACTIVE SIDE: NONE · LEFT 0% · RIGHT 0%
+
+// dispatch wheel on left half
+left transform  !== initial
+right transform === initial
+status includes ACTIVE SIDE: LEFT
+
+// dispatch wheel on right half
+right transform !== initial
+left transform remains at its previous value, not changed by right event
+status includes ACTIVE SIDE: RIGHT
+```
+
+Manual visual acceptance:
+
+- tunnel feeling remains from rollback/current corridor;
+- wall groups replace floating single cards;
+- left movement affects only left wall;
+- right movement affects only right wall;
+- random walls show max 6 chats;
+- project walls show only one project at a time and are color-coded;
+- no hover angle changes;
+- portal/header/sidebar/footer stay fixed.
+
+### 19.9 Files touched in accepted pass
+
+- `src/components/hallway/Hallway.tsx` — replaced `CorridorCard` single-card travel with `WallPage`, `FocusItem`, `buildRandomPages`, `buildProjectPages`, `HallWall`, `WallPanelCard`, separate left/right movement refs and touch/wheel side detection.
+- `src/styles/_hallway.scss` — preserved tunnel/corridor layers and added `.corridor-wall-zone`, `.corridor-wall-surface`, `.corridor-wall-mover`, `.corridor-wall-page`, `.corridor-wall-panel`, and `.corridor-wall-progress`.
+
+Keep `WallLeft.tsx`, `WallRight.tsx`, `RandomChatCard.tsx`, and `ProjectCard.tsx` as legacy unless they are re-integrated intentionally. The current accepted hall path is composition inside `Hallway.tsx` plus `_hallway.scss`.
+
+---
+
+*End of plan-portal.md — This document describes the complete redesign of strubloid as an immersive portal experience. The direction has shifted from the initial portal concept to the accepted dark Matrix wall-page corridor entered through a glowing portal. CSS 3D transforms + Framer Motion are the primary techniques; Three.js is reserved only for effects that genuinely require it.*

@@ -91,7 +91,7 @@
 
 .hallway-portal-glint {
   position: absolute;
-  top: 46.5%;
+  top: 51.4%;
   left: 50%;
   z-index: 3;
   width: min(11vw, 124px);
@@ -342,7 +342,11 @@
   border-radius: 20px;
   background:
     linear-gradient(180deg, rgba(8, 22, 12, 0.78), rgba(5, 10, 7, 0.72)),
-    radial-gradient(circle at 4% 0%, color-mix(in srgb, var(--card-accent, #9ad933) 18%, transparent), transparent 48%),
+    radial-gradient(
+      circle at 4% 0%,
+      color-mix(in srgb, var(--card-accent, #9ad933) 18%, transparent),
+      transparent 48%
+    ),
     repeating-linear-gradient(90deg, transparent 0 56px, rgba(154, 217, 51, 0.04) 57px 58px),
     repeating-linear-gradient(0deg, transparent 0 42px, rgba(154, 217, 51, 0.035) 43px 44px);
   box-shadow:
@@ -441,7 +445,11 @@
   border: 1px solid color-mix(in srgb, var(--card-accent, #9ad933) 72%, white 8%);
   border-radius: 6px;
   background:
-    radial-gradient(circle, color-mix(in srgb, var(--card-accent, #9ad933) 70%, transparent), transparent 42%),
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--card-accent, #9ad933) 70%, transparent),
+      transparent 42%
+    ),
     color-mix(in srgb, var(--card-accent, #9ad933) 10%, transparent);
   box-shadow: 0 0 16px color-mix(in srgb, var(--card-accent, #9ad933) 28%, transparent);
 }
