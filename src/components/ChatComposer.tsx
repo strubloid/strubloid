@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styles from './ChatComposer.module.scss';
+import { ModelDropdown } from '@/components/ModelDropdown';
 
 interface AiModel {
   modelId: string;
@@ -275,20 +276,13 @@ export function ChatComposer({
         {/* Toolbar row */}
         <div className={styles.toolbar}>
           {/* Model selector */}
-          <select
+          <ModelDropdown
+            models={models}
             value={selectedModelId || ''}
-            onChange={(e) => onModelChange?.(e.target.value)}
-            onFocus={loadModels}
-            className={styles.modelSelect}
-            title="Select AI model"
-          >
-            {models.length === 0 && <option value="">Loading models...</option>}
-            {models.map((model) => (
-              <option key={model.modelId} value={model.modelId}>
-                {model.name} {model.isFree ? '(Free)' : ''}
-              </option>
-            ))}
-          </select>
+            onChange={onModelChange ?? (() => {})}
+            disabled={false}
+            triggerClassName={styles.modelSelect}
+          />
 
           {/* Brain toggle */}
           <button

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useHallChatSession } from '../../hooks/useHallChatSession';
 import { HackerChatInput } from './HackerChatInput';
 import { HackerChatMessages } from './HackerChatMessages';
+import { ModelDropdown } from '@/components/ModelDropdown';
 
 type AiModel = {
   modelId: string;
@@ -44,6 +45,7 @@ export function HackerChatPanel({
     setSelectedModelId,
     streamingMessageId,
     toggleBrain,
+    userMessages,
     toggleRandomChats,
     useAiBrain,
     useRandomChats
@@ -219,21 +221,14 @@ export function HackerChatPanel({
       </header>
 
       <div className="hacker-chat-toolbar" aria-label="Chat controls">
-        <select
+        <ModelDropdown
+          models={models}
           value={selectedModelId || ''}
-          onChange={(event) => setSelectedModelId(event.target.value)}
-          onFocus={loadModels}
-          className="hacker-chat-model-select"
-          title="Select AI model"
+          onChange={setSelectedModelId}
           disabled={isLoading || isSending}
-        >
-          {models.length === 0 && <option value="">Loading models...</option>}
-          {models.map((model) => (
-            <option key={model.modelId} value={model.modelId}>
-              {model.name} {model.isFree ? '(Free)' : ''}
-            </option>
-          ))}
-        </select>
+          accentColor={accentColor}
+          triggerClassName="hacker-chat-model-select"
+        />
         <span className="hacker-chat-toolbar-status">{selectedModelLabel}</span>
 
         <button
@@ -272,6 +267,7 @@ export function HackerChatPanel({
       <HackerChatInput
         disabled={isLoading || Boolean(error)}
         isSending={isSending}
+        previousMessages={userMessages}
         onSend={(message) => sendMessage(message, selectedModelId)}
       />
 

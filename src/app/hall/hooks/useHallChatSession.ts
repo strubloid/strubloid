@@ -30,7 +30,7 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
   const [useAiBrain, setUseAiBrain] = useState(false);
   const [useRandomChats, setUseRandomChats] = useState(false);
   const [brainProjectId, setBrainProjectId] = useState<string | null>(null);
-  const [selectedModelId, setSelectedModelId] = useState('big-pickle');
+  const [selectedModelId, setSelectedModelIdState] = useState('big-pickle');
   const [devMode, setDevMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +55,7 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
       setUseAiBrain(data.useAiBrain ?? false);
       setUseRandomChats(data.useRandomChats ?? false);
       setBrainProjectId(data.brainProjectId ?? null);
-      setSelectedModelId(data.selectedModelId || 'big-pickle');
+      setSelectedModelIdState(data.selectedModelId || 'big-pickle');
       onChatUpdatedRef.current?.(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load chat';
@@ -109,6 +109,24 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
       window.dispatchEvent(new CustomEvent('hallway-refresh'));
     },
     [chat]
+  );
+
+  const setSelectedModelId = useCallback(
+    async (modelId: string) => {
+      console.log('[DEBUG setSelectedModelId] called with:', modelId, 'current chat?.id:', chat?.id);
+      setSelectedModelIdState(modelId);
+      if (!chat) {
+        console.log('[DEBUG setSelectedModelId] NO chat, skipping patchChat');
+        return;
+      }
+      try {
+        await patchChat({ selectedModelId: modelId });
+        console.log('[DEBUG setSelectedModelId] patchChat succeeded');
+      } catch (e) {
+        console.error('[DEBUG setSelectedModelId] patchChat failed:', e);
+      }
+    },
+    [patchChat, chat]
   );
 
   const toggleBrain = useCallback(async () => {

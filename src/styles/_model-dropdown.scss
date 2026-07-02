@@ -1,0 +1,178 @@
+/* ── Model Dropdown — custom styled select using chat accent color ── */
+/* Trigger button: inherits .modelSelect / .hacker-chat-model-select from parent  */
+/* Dropdown list: portal-rendered to body, uses --dropdown-accent CSS var        */
+
+.model-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+// ── Trigger button ──────────────────────────────────────────────────────────
+.model-dropdown-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.model-dropdown-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--dropdown-accent, #9ad933);
+}
+
+.model-dropdown-free {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dropdown-accent, #9ad933) 16%, transparent);
+  color: var(--dropdown-accent, #9ad933);
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--dropdown-accent, #9ad933) 30%, transparent);
+}
+
+.model-dropdown-placeholder {
+  color: rgba(255, 255, 255, 0.38);
+  font-style: italic;
+}
+
+.model-dropdown-chevron {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: transform 150ms ease, opacity 150ms ease;
+
+  .model-dropdown[aria-expanded='true'] & {
+    transform: rotate(180deg);
+    opacity: 1;
+  }
+}
+
+// ── Dropdown list (portal-rendered to body) ─────────────────────────────────
+.model-dropdown-list {
+  position: fixed;
+  z-index: 9999;
+  min-width: 220px;
+  max-width: 340px;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dropdown-accent, #9ad933) 30%, transparent);
+  background: rgba(14, 16, 10, 0.97);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    0 3px 10px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  // ── Accent glow line at the top ──
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--dropdown-accent, #9ad933) 70%, transparent),
+      transparent
+    );
+    border-radius: 1px;
+  }
+
+  // ── Scrollbar ──
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--dropdown-accent, #9ad933) 25%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--dropdown-accent, #9ad933) 25%, transparent);
+    border-radius: 999px;
+  }
+}
+
+// ── Dropdown item ────────────────────────────────────────────────────────────
+.model-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background 90ms ease,
+    border-color 90ms ease;
+  border: 1px solid transparent;
+
+  .model-dropdown-item-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(236, 244, 222, 0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .model-dropdown-item-free {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dropdown-accent, #9ad933) 14%, transparent);
+    color: var(--dropdown-accent, #9ad933);
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--dropdown-accent, #9ad933) 28%, transparent);
+  }
+
+  .model-dropdown-item-check {
+    display: flex;
+    align-items: center;
+    color: var(--dropdown-accent, #9ad933);
+    flex-shrink: 0;
+  }
+
+  // Highlighted (keyboard hover)
+  &.highlighted {
+    background: color-mix(in srgb, var(--dropdown-accent, #9ad933) 10%, transparent);
+    border-color: color-mix(in srgb, var(--dropdown-accent, #9ad933) 18%, transparent);
+
+    .model-dropdown-item-name {
+      color: rgba(236, 244, 222, 1);
+    }
+  }
+
+  // Selected
+  &.selected {
+    background: color-mix(in srgb, var(--dropdown-accent, #9ad933) 13%, transparent);
+    border-color: color-mix(in srgb, var(--dropdown-accent, #9ad933) 26%, transparent);
+  }
+}
