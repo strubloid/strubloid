@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSidebar } from '@/components/LayoutShell/LayoutShell';
+import { useShortcutKey } from '@/hooks/useShortcutKey';
 import styles from './HeaderBar.module.scss';
 
 interface AiModel {
@@ -44,6 +45,7 @@ export function HeaderBar({
   const [models, setModels] = useState<AiModel[]>([]);
   const [mobileControlsExpanded, setMobileControlsExpanded] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
+  const shortcutKey = useShortcutKey();
 
   // Load models for the model selector
   useEffect(() => {
@@ -138,19 +140,8 @@ export function HeaderBar({
           placeholder="Search everything..."
           aria-label="Global search"
         />
-        <span className={styles.searchKey}>⌘K</span>
+        <span className={styles.searchKey}>{shortcutKey} + K</span>
       </form>
-
-      <button
-        className={styles.commandButton}
-        onClick={() => onOpenCommandDeck?.(globalSearch.trim())}
-        title="Open command deck (Ctrl/Cmd+K)"
-        aria-label="Open command deck"
-      >
-        <span className={styles.commandMark}>⌘</span>
-        <span className={styles.commandLabel}>Command</span>
-        <span className={styles.commandKey}>K</span>
-      </button>
 
       {/* Controls */}
       <div className={`${styles.controls} ${mobileControlsExpanded ? styles.expanded : ''}`}>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ConfirmDialog } from './ConfirmDialog';
 import { useSidebar } from '@/components/LayoutShell/LayoutShell';
+import { useShortcutKey } from '@/hooks/useShortcutKey';
 
 interface ChatPreview {
   id: string;
@@ -40,6 +41,7 @@ export function Sidebar({
   const router = useRouter();
   const ctx = useSidebar();
   const isEmbedded = externalMode !== undefined;
+  const shortcutKey = useShortcutKey();
 
   // Use provided props or fall back to context
   const mode = isEmbedded ? externalMode : ctx.mode;
@@ -374,7 +376,7 @@ export function Sidebar({
                 aria-label="Search chats and projects"
                 className="min-w-0 flex-1 border-0 bg-transparent text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-dim)]/80"
               />
-              <kbd className="flex-shrink-0 rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-[var(--color-text-dim)]">⌘K</kbd>
+              <kbd className="flex-shrink-0 rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-[var(--color-text-dim)]">{shortcutKey}K</kbd>
             </div>
           )}
 
