@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { ZenAIClient } from '@/ais/zen/ZenAIClient';
 import { loadZenConfig } from '@/ais/zen/ZenConfig';
 import { loadNvidiaConfig } from '@/ais/nvidia/NvidiaConfig';
+import { loadGoOCConfig } from '@/ais/go-oc/GoOCConfig';
 import { cachedConfig } from '@/lib/configCache';
 
 /** Minimal model shape needed for dispatching. */
@@ -45,6 +46,11 @@ export async function getClientForModel(
 
   if (source === 'nvidia') {
     const config = await cachedConfig('nvidia_config', loadNvidiaConfig);
+    return { client: new ZenAIClient(config), model };
+  }
+
+  if (source === 'go-oc') {
+    const config = await cachedConfig('go_oc_config', loadGoOCConfig);
     return { client: new ZenAIClient(config), model };
   }
 

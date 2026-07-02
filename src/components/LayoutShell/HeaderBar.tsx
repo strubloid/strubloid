@@ -61,6 +61,20 @@ export function HeaderBar({
       .catch(() => {});
   }, []);
 
+  // Reload models when a provider refresh completes in Settings
+  // (same cache-invalidation pattern as ChatComposer).
+  useEffect(() => {
+    function onModelsRefreshed() {
+      try { sessionStorage.removeItem('strubloid_models'); } catch { /* ignore */ }
+      fetch('/api/ai/models')
+        .then((r) => r.json())
+        .then((data) => { if (data.models) setModels(data.models); })
+        .catch(() => {});
+    }
+    window.addEventListener('models-refreshed', onModelsRefreshed);
+    return () => window.removeEventListener('models-refreshed', onModelsRefreshed);
+  }, []);
+
   // Only show model/toggle controls on chat pages
   const isChatPage = pathname.startsWith('/chat');
 

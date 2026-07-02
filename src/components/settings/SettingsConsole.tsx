@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PageSkeleton } from '@/components/LoadingSkeleton';
 
-type SettingsTab = 'zen' | 'nvidia' | 'chat';
+type SettingsTab = 'zen' | 'nvidia' | 'go-oc' | 'chat';
 
 const TABS: { key: SettingsTab; label: string }[] = [
   { key: 'chat', label: 'Chat' },
   { key: 'zen', label: 'Zen (OpenCode)' },
+  { key: 'go-oc', label: 'Go (OpenCode)' },
   { key: 'nvidia', label: 'NVIDIA NIM' }
 ];
 
@@ -63,6 +64,18 @@ const PROVIDER_INFO: Record<
     apiKeyHelpText: 'Get yours from build.nvidia.com',
     defaultApiUrl: 'https://integrate.api.nvidia.com/v1',
     defaultModel: 'meta/llama-3.3-70b-instruct'
+  },
+  'go-oc': {
+    label: 'Go (OpenCode)',
+    configKey: 'go_oc_api_key',
+    configBaseUrlKey: 'go_oc_api_base_url',
+    configDefaultModelKey: 'go_oc_default_model',
+    apiKeyLabel: 'OpenCode Go API Key',
+    apiKeyPlaceholder: 'go-...',
+    apiKeyHelpUrl: 'https://opencode.ai/go',
+    apiKeyHelpText: 'Subscribe at opencode.ai/go, then get your key from the workspace',
+    defaultApiUrl: 'https://opencode.ai/zen/go',
+    defaultModel: 'opencode-go/minimax-m3'
   }
 };
 
@@ -223,7 +236,12 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
   async function saveChatDefaultModel() {
     const model = allModels.find((m) => m.modelId === defaultModel);
     if (!model) return;
-    const configKey = model.modelSource === 'nvidia' ? 'nvidia_default_model' : 'zen_default_model';
+    const configKey =
+      model.modelSource === 'nvidia'
+        ? 'nvidia_default_model'
+        : model.modelSource === 'go-oc'
+          ? 'go_oc_default_model'
+          : 'zen_default_model';
     await saveConfig(configKey, defaultModel);
   }
 
@@ -246,6 +264,15 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
       });
       const data = await res.json();
       if (data.models) setAllModels(data.models);
+
+      // Also invalidate the ChatComposer's sessionStorage cache so new models
+      // appear in the chat model selector without a page reload.
+      try {
+        sessionStorage.removeItem('strubloid_models');
+      } catch {
+        /* ignore */
+      }
+      window.dispatchEvent(new CustomEvent('models-refreshed'));
 
       const r = data.results?.[activeTab];
       if (r) {
@@ -687,8 +714,13 @@ export function SettingsConsole({ embedded = false }: { embedded?: boolean }) {
                       {chatModels.length === 0 && <option value="">No models available</option>}
                       {chatModels.map((m) => (
                         <option key={m.modelId} value={m.modelId}>
-                          {m.name} ({m.modelSource === 'zen' ? 'Zen' : 'NVIDIA'}){' '}
-                          {m.isFree ? '(Free)' : ''}
+                          {m.name} (
+                          {m.modelSource === 'zen'
+                            ? 'Zen'
+                            : m.modelSource === 'nvidia'
+                              ? 'NVIDIA'
+                              : 'Go'}
+                          ) {m.isFree ? '(Free)' : ''}
                         </option>
                       ))}
                     </select>

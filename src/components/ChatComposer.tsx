@@ -87,6 +87,20 @@ export function ChatComposer({
     loadModels();
   }, []);
 
+  // Clear cache and reload when a provider refresh completes in Settings.
+  // This ensures newly-fetched models (e.g. a new provider) appear immediately
+  // in the chat selector without a full page reload.
+  useEffect(() => {
+    function onModelsRefreshed() {
+      try { sessionStorage.removeItem('strubloid_models'); } catch { /* ignore */ }
+      setModelsLoaded(false);
+      setModels([]);
+      loadModels();
+    }
+    window.addEventListener('models-refreshed', onModelsRefreshed);
+    return () => window.removeEventListener('models-refreshed', onModelsRefreshed);
+  }, []);
+
   useEffect(() => {
     if (!isRandomChat) return;
 

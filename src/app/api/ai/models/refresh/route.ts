@@ -23,9 +23,17 @@ function isNvidiaModelFree(modelId: string): boolean {
   return false;
 }
 
+/** Classify an OpenCode Go model as free or paid.
+ *  Go is a subscription tier — all models require an active subscription. */
+function isGoOCModelFree(_modelId: string): boolean {
+  return false;
+}
+
 /** Generate a human-readable model name from a model ID. */
 function makeModelName(modelId: string): string {
-  const segments = modelId.split(/[/-]/);
+  // Strip the opencode-go/ prefix for Go models so the name is clean
+  const raw = modelId.startsWith('opencode-go/') ? modelId.slice('opencode-go/'.length) : modelId;
+  const segments = raw.split(/[/-]/);
   return segments
     .map((seg, i) => {
       // Preserve well-known casing
@@ -93,6 +101,27 @@ async function fetchNvidiaModels(): Promise<{ models: RawModel[]; source: string
   return { models: data.data || [], source: 'nvidia' };
 }
 
+async function fetchGoOCModels(): Promise<{ models: RawModel[]; source: string }> {
+  const { loadGoOCConfig } = await import('@/ais/go-oc/GoOCConfig');
+  const config = await loadGoOCConfig();
+  if (!config?.apiKey) {
+    throw new Error('OpenCode Go API key is not configured');
+  }
+
+  const baseUrl = config.apiBaseUrl || 'https://opencode.ai/zen/go';
+  const res = await fetch(`${baseUrl}/v1/models`, {
+    headers: { Authorization: `Bearer ${config.apiKey}` },
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) {
+    throw new Error(`OpenCode Go API returned ${res.status} ${res.statusText}`);
+  }
+
+  const data = await res.json();
+  return { models: data.data || [], source: 'go-oc' };
+}
+
 // ============================================================
 // Upsert logic
 // ============================================================
@@ -128,11 +157,13 @@ async function upsertModels(
 
     if (existing) {
       // Always re-classify on refresh — the API is the source of truth
-      // for what's free vs paid. isEnabled and pricing are preserved.
+      // for what's free vs paid. isEnabled is preserved for existing models
+      // but re-enabled here so a refresh can revive disabled models.
       const updates: Record<string, unknown> = {
         name,
         isFree,
         modelSource: source,
+        isEnabled: true,
       };
       if (apiModel.owned_by && !existing.description) {
         updates.description = `Model by ${apiModel.owned_by}`;
@@ -171,8 +202,8 @@ async function upsertModels(
 export async function POST(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const provider = searchParams.get('provider'); // 'zen' | 'nvidia' | null (all)
-    const providersToRefresh: string[] = provider ? [provider] : ['zen', 'nvidia'];
+    const provider = searchParams.get('provider'); // 'zen' | 'nvidia' | 'go-oc' | null (all)
+    const providersToRefresh: string[] = provider ? [provider] : ['zen', 'nvidia', 'go-oc'];
 
     const results: Record<string, RefreshResult> = {};
     const errors: Record<string, string> = {};
@@ -185,6 +216,8 @@ export async function POST(request: NextRequest) {
           fetched = await fetchZenModels();
         } else if (p === 'nvidia') {
           fetched = await fetchNvidiaModels();
+        } else if (p === 'go-oc') {
+          fetched = await fetchGoOCModels();
         } else {
           continue;
         }
@@ -231,6 +264,12 @@ export async function POST(request: NextRequest) {
               ELSE 0
             END`,
             fetched.source,
+          );
+        } else if (p === 'go-oc') {
+          // Go is a subscription tier — all models are paid
+          fixed = await db.$executeRawUnsafe(
+            `UPDATE AiModel SET isFree = 0 WHERE modelSource = ? AND isFree <> 0`,
+            'go-oc',
           );
         }
         results[p].updated += fixed;

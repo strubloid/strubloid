@@ -97,6 +97,19 @@ export function HackerChatPanel({
     void Promise.resolve().then(() => loadModels());
   }, [loadModels]);
 
+  // Reload models when a provider refresh completes in Settings
+  // (same cache-invalidation pattern as ChatComposer).
+  useEffect(() => {
+    function onModelsRefreshed() {
+      try { sessionStorage.removeItem('strubloid_models'); } catch { /* ignore */ }
+      setModelsLoaded(false);
+      setModels([]);
+      void loadModels();
+    }
+    window.addEventListener('models-refreshed', onModelsRefreshed);
+    return () => window.removeEventListener('models-refreshed', onModelsRefreshed);
+  }, [loadModels]);
+
   useEffect(() => {
     if (models.length === 0) return;
     if (!selectedModelId || !models.some((model) => model.modelId === selectedModelId)) {
