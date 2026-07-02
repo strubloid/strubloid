@@ -37,6 +37,13 @@ type SelectedHallProject = {
   chatCount: number;
 };
 
+type OpenHackerChatDetail = {
+  chatId: string;
+  title?: string;
+  projectId?: string | null;
+  isRandom?: boolean;
+};
+
 interface ApiMessage {
   content: string;
   role: string;
@@ -594,6 +601,58 @@ export function Hallway() {
       projectName
     });
   }, []);
+
+  const openHackerChatById = useCallback(
+    async (detail: OpenHackerChatDetail) => {
+      if (!detail.chatId) return;
+
+      setSelectedProject(null);
+      setProjectCreator((current) => ({ ...current, open: false, error: undefined }));
+
+      const knownRandomChat = data.randomChats.find((chat) => chat.id === detail.chatId);
+      const knownProjectIndex = data.projects.findIndex(
+        (project) => project.id === detail.projectId || project.chats.some((chat) => chat.id === detail.chatId)
+      );
+      const knownProject = knownProjectIndex >= 0 ? data.projects[knownProjectIndex] : undefined;
+      const knownProjectChat = knownProject?.chats.find((chat) => chat.id === detail.chatId);
+
+      let chat: ApiChat | undefined = knownRandomChat ?? knownProjectChat;
+      if (!chat) {
+        const res = await fetch(`/api/chats/${detail.chatId}`);
+        if (!res.ok) throw new Error('Failed to load chat for hacker mode');
+        chat = (await res.json()) as ApiChat;
+      }
+      if (!chat) throw new Error('Failed to resolve chat for hacker mode');
+
+      const projectId = chat.projectId ?? detail.projectId ?? knownProject?.id ?? undefined;
+      const projectIndex = data.projects.findIndex((project) => project.id === projectId);
+      const project = projectIndex >= 0 ? data.projects[projectIndex] : knownProject;
+      const accentColor = project ? projectColor(project, projectIndex >= 0 ? projectIndex : knownProjectIndex) : '#9ad933';
+
+      setSelectedChat({
+        id: chat.id,
+        type: projectId && !chat.isRandom ? 'project' : 'random',
+        projectId,
+        title: chat.title || detail.title || 'Chat stream',
+        accentColor,
+        projectName: project?.name
+      });
+    },
+    [data.projects, data.randomChats]
+  );
+
+  useEffect(() => {
+    const openFromCommandDeck = (event: Event) => {
+      const detail = (event as CustomEvent<OpenHackerChatDetail>).detail;
+      if (!detail?.chatId) return;
+      void openHackerChatById(detail).catch((error) => {
+        console.error('[Hallway] Failed to open command search chat in hacker mode', error);
+      });
+    };
+
+    window.addEventListener('strubloid-open-hacker-chat', openFromCommandDeck);
+    return () => window.removeEventListener('strubloid-open-hacker-chat', openFromCommandDeck);
+  }, [openHackerChatById]);
 
   const createChatFromHall = useCallback(
     async (projectId?: string, accentColor = '#9ad933', projectName?: string) => {

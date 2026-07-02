@@ -124,4 +124,38 @@ describe('CommandDeck global search', () => {
     expect(onClose).toHaveBeenCalledOnce();
     expect(push).toHaveBeenCalledWith('/projects/project-1');
   });
+
+  it('opens chat search results inline when hacker mode is active', async () => {
+    mockSearch([
+      {
+        id: 'message-1',
+        type: 'message',
+        title: 'Random chat',
+        snippet: 'fátima likes green',
+        href: '/chat/chat-1',
+        score: 100,
+        metadata: { chatId: 'chat-1', isRandom: true },
+      },
+    ]);
+    const onClose = vi.fn();
+    const eventSpy = vi.fn();
+    window.addEventListener('strubloid-open-hacker-chat', eventSpy);
+
+    render(<CommandDeck open onClose={onClose} isHackerMode />);
+    const user = userEvent.setup();
+    await user.type(screen.getByPlaceholderText(/search everything/i), 'fátima');
+    await screen.findByText('fátima likes green');
+    await user.keyboard('{Enter}');
+
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(push).not.toHaveBeenCalledWith('/chat/chat-1');
+    expect(eventSpy).toHaveBeenCalledOnce();
+    expect((eventSpy.mock.calls[0][0] as CustomEvent).detail).toMatchObject({
+      chatId: 'chat-1',
+      title: 'Random chat',
+      isRandom: true,
+    });
+
+    window.removeEventListener('strubloid-open-hacker-chat', eventSpy);
+  });
 });

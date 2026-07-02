@@ -169,6 +169,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         <CommandDeck
           open={commandDeckOpen}
           initialQuery={commandDeckQuery}
+          isHackerMode={isHackerMode}
           onClose={() => setCommandDeckOpen(false)}
         />
       </div>

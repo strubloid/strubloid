@@ -15,9 +15,10 @@ interface CommandDeckProps {
   open: boolean;
   onClose: () => void;
   initialQuery?: string;
+  isHackerMode?: boolean;
 }
 
-export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckProps) {
+export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = false }: CommandDeckProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResult[]>([]);
@@ -175,6 +176,22 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
     }
     onClose();
     if (item.kind === 'result') {
+      if (isHackerMode && (item.result.type === 'chat' || item.result.type === 'message')) {
+        const chatId = getResultChatId(item.result);
+        if (chatId) {
+          window.dispatchEvent(
+            new CustomEvent('strubloid-open-hacker-chat', {
+              detail: {
+                chatId,
+                title: item.result.title,
+                projectId: item.result.metadata?.projectId,
+                isRandom: item.result.metadata?.isRandom,
+              },
+            })
+          );
+          return;
+        }
+      }
       router.push(item.result.href);
     }
   }
@@ -331,4 +348,10 @@ function resultIcon(type: GlobalSearchResult['type']): string {
   if (type === 'memory') return '🧠';
   if (type === 'model') return '⚙';
   return '✦';
+}
+
+function getResultChatId(result: GlobalSearchResult): string | null {
+  if (result.type === 'chat') return result.id;
+  if (result.type === 'message' && typeof result.metadata?.chatId === 'string') return result.metadata.chatId;
+  return null;
 }
