@@ -2,26 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { normalizeSearchText } from '@/lib/search/search-normalize';
+import type { GlobalSearchResult } from '@/lib/search/search.types';
 import styles from './CommandDeck.module.scss';
-
-interface Project {
-  id: string;
-  name: string;
-  color: string;
-  chatCount: number;
-  isStarred: boolean;
-}
-
-interface ChatResult {
-  id: string;
-  title: string;
-  updatedAt: string;
-}
 
 type ResultItem =
   | { kind: 'action'; icon: string; name: string; desc: string; run: () => void }
-  | { kind: 'project'; id: string; name: string; color: string; chatCount: number }
-  | { kind: 'chat'; id: string; title: string; updatedAt: string }
+  | { kind: 'result'; result: GlobalSearchResult }
   | { kind: 'separator'; label: string };
 
 interface CommandDeckProps {
@@ -33,8 +20,8 @@ interface CommandDeckProps {
 export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [chatResults, setChatResults] = useState<ChatResult[]>([]);
+  const [searchResults, setSearchResults] = useState<GlobalSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,15 +48,11 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
   useEffect(() => {
     if (!open) {
       setQuery('');
-      setChatResults([]);
+      setSearchResults([]);
       setSelectedIndex(0);
       return;
     }
     setQuery(initialQuery);
-    fetch('/api/projects?limit=8')
-      .then((res) => res.json())
-      .then((data) => setProjects(data.projects ?? []))
-      .catch(() => setProjects([]));
   }, [open, initialQuery]);
 
   // Focus input when opening
@@ -80,10 +63,11 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
     }
   }, [open]);
 
-  // ── 300ms debounced search for chats ──
+  // ── 300ms debounced search for global records ──
   useEffect(() => {
     if (!open || !query.trim()) {
-      setChatResults([]);
+      setSearchResults([]);
+      setIsSearching(false);
       return;
     }
 
@@ -91,14 +75,24 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
       clearTimeout(debounceTimerRef.current);
     }
 
+    let cancelled = false;
+    setIsSearching(true);
     debounceTimerRef.current = setTimeout(() => {
       fetch(`/api/search?q=${encodeURIComponent(query.trim())}&limit=12`)
         .then((res) => res.json())
-        .then((data) => setChatResults(data.chats ?? []))
-        .catch(() => setChatResults([]));
+        .then((data) => {
+          if (!cancelled) setSearchResults(data.results ?? []);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchResults([]);
+        })
+        .finally(() => {
+          if (!cancelled) setIsSearching(false);
+        });
     }, 300);
 
     return () => {
+      cancelled = true;
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
@@ -108,7 +102,7 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
   // ── Reset selection when results change ──
   useEffect(() => {
     setSelectedIndex(0);
-  }, [query, projects, chatResults]);
+  }, [query, searchResults]);
 
   // ── Commands ──
   const commands = useMemo(() => [
@@ -138,11 +132,11 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
   // ── Build flat results list ──
   const results: ResultItem[] = useMemo(() => {
     const list: ResultItem[] = [];
-    const q = query.toLowerCase().trim();
+    const q = normalizeSearchText(query);
 
     // Filtered commands
     const matchedCommands = commands.filter((cmd) =>
-      `${cmd.name} ${cmd.desc}`.toLowerCase().includes(q)
+      normalizeSearchText(`${cmd.name} ${cmd.desc}`).includes(q)
     );
     if (matchedCommands.length > 0) {
       list.push({ kind: 'separator', label: 'Actions' });
@@ -151,27 +145,25 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
       }
     }
 
-    // Filtered projects
-    const matchedProjects = projects.filter((p) =>
-      p.name.toLowerCase().includes(q)
-    );
-    if (matchedProjects.length > 0) {
-      list.push({ kind: 'separator', label: 'Project Brains' });
-      for (const p of matchedProjects) {
-        list.push({ kind: 'project', id: p.id, name: p.name, color: p.color, chatCount: p.chatCount });
-      }
+    const sectionLabels: Record<GlobalSearchResult['type'], string> = {
+      project: 'Projects',
+      chat: 'Chats',
+      message: 'Chats',
+      memory: 'Memory',
+      model: 'Models & Routing',
+    };
+    const grouped = new Map<string, GlobalSearchResult[]>();
+    for (const result of searchResults) {
+      const label = sectionLabels[result.type];
+      grouped.set(label, [...(grouped.get(label) ?? []), result]);
     }
-
-    // Chat results (already server-filtered)
-    if (q && chatResults.length > 0) {
-      list.push({ kind: 'separator', label: 'Chat Matches' });
-      for (const chat of chatResults) {
-        list.push({ kind: 'chat', id: chat.id, title: chat.title, updatedAt: chat.updatedAt });
-      }
+    for (const [label, items] of grouped) {
+      list.push({ kind: 'separator', label });
+      for (const result of items) list.push({ kind: 'result', result });
     }
 
     return list;
-  }, [query, commands, projects, chatResults]);
+  }, [query, commands, searchResults]);
 
   // ── Navigate to an item ──
   function activateItem(item: ResultItem) {
@@ -182,10 +174,8 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
       return;
     }
     onClose();
-    if (item.kind === 'project') {
-      router.push(`/projects/${item.id}`);
-    } else if (item.kind === 'chat') {
-      router.push(`/chat/${item.id}`);
+    if (item.kind === 'result') {
+      router.push(item.result.href);
     }
   }
 
@@ -259,10 +249,16 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
         </div>
 
         <div className={styles.results} ref={resultsRef}>
-          {results.length === 0 && query.trim() && (
+          {results.length === 0 && query.trim() && isSearching && (
+            <div className={styles.empty}>
+              <div className={styles.emptyCode}>[ searching ]</div>
+              <p className={styles.emptyDesc}>Scanning commands, projects, chats, memory, and routing...</p>
+            </div>
+          )}
+          {results.length === 0 && query.trim() && !isSearching && (
             <div className={styles.empty}>
               <div className={styles.emptyCode}>[ no results ]</div>
-              <p className={styles.emptyDesc}>Nothing matches &ldquo;{query}&rdquo; across commands, projects, or chat history.</p>
+              <p className={styles.emptyDesc}>Nothing matches &ldquo;{query}&rdquo; across commands, projects, chats, memory, or routing.</p>
             </div>
           )}
           {results.length === 0 && !query.trim() && (
@@ -285,7 +281,7 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
 
             return (
               <button
-                key={`${item.kind}-${item.kind === 'action' ? item.name : item.id}`}
+                key={`${item.kind}-${item.kind === 'action' ? item.name : item.result.id}`}
                 className={`${styles.item} ${isActive ? styles.active : ''}`}
                 onClick={() => activateItem(item)}
                 onMouseEnter={() => setSelectedIndex(selIdx)}
@@ -301,22 +297,22 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
                     <span className={styles.kbd}>⏎</span>
                   </>
                 )}
-                {item.kind === 'project' && (
+                {item.kind === 'result' && (
                   <>
-                    <span className={styles.projectDot} style={{ color: item.color, backgroundColor: item.color }} />
+                    {item.result.type === 'project' ? (
+                      <span
+                        className={styles.projectDot}
+                        style={{
+                          color: String(item.result.metadata?.color ?? '#9ad933'),
+                          backgroundColor: String(item.result.metadata?.color ?? '#9ad933'),
+                        }}
+                      />
+                    ) : (
+                      <span className={styles.iconSpan}>{resultIcon(item.result.type)}</span>
+                    )}
                     <span className={styles.itemBody}>
-                      <span className={styles.itemName}>{item.name}</span>
-                      <span className={styles.itemDesc}>{item.chatCount} chat{item.chatCount === 1 ? '' : 's'} in this memory container</span>
-                    </span>
-                    <span className={styles.kbd}>⏎</span>
-                  </>
-                )}
-                {item.kind === 'chat' && (
-                  <>
-                    <span className={styles.iconSpan}>⌕</span>
-                    <span className={styles.itemBody}>
-                      <span className={styles.itemName}>{item.title}</span>
-                      <span className={styles.itemDesc}>Chat match · open thread</span>
+                      <span className={styles.itemName}>{item.result.title}</span>
+                      <span className={styles.itemDesc}>{item.result.snippet ?? item.result.subtitle}</span>
                     </span>
                     <span className={styles.kbd}>⏎</span>
                   </>
@@ -328,4 +324,11 @@ export function CommandDeck({ open, onClose, initialQuery = '' }: CommandDeckPro
       </div>
     </div>
   );
+}
+
+function resultIcon(type: GlobalSearchResult['type']): string {
+  if (type === 'chat' || type === 'message') return '⌕';
+  if (type === 'memory') return '🧠';
+  if (type === 'model') return '⚙';
+  return '✦';
 }
