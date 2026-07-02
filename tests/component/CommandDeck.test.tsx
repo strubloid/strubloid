@@ -15,6 +15,12 @@ function mockSearch(results: unknown[]) {
   } as Response);
 }
 
+function byTextContent(expected: string) {
+  return (_content: string, element: Element | null) =>
+    element?.textContent === expected &&
+    !Array.from(element.children).some((child) => child.textContent === expected);
+}
+
 describe('CommandDeck global search', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,19 +38,44 @@ describe('CommandDeck global search', () => {
 
     render(<CommandDeck open onClose={vi.fn()} />);
     await userEvent.setup().type(
-      screen.getByPlaceholderText(/search everything/i),
+      screen.getByPlaceholderText(/search actions/i),
       'zzzz',
     );
 
     expect(screen.getByText('[ searching ]')).toBeInTheDocument();
-    expect(screen.queryByText('[ no results ]')).not.toBeInTheDocument();
+    expect(screen.queryByText('No signal found.')).not.toBeInTheDocument();
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 320));
       resolveFetch({ json: async () => ({ results: [] }) } as Response);
     });
 
-    expect(screen.getByText('[ no results ]')).toBeInTheDocument();
+    expect(screen.getByText('No signal found.')).toBeInTheDocument();
+  });
+
+  it('shows simplified default actions and hides secondary memory cleanup until searched', () => {
+    render(<CommandDeck open onClose={vi.fn()} />);
+
+    expect(screen.getByText('New random capture')).toBeInTheDocument();
+    expect(screen.getByText('Open brain registry')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.queryByText('Open systems console')).not.toBeInTheDocument();
+    expect(screen.queryByText('Clean random memory')).not.toBeInTheDocument();
+    expect(screen.getByText('capture.new')).toBeInTheDocument();
+    expect(screen.getByText('brain.open')).toBeInTheDocument();
+    expect(screen.getByText('settings.open')).toBeInTheDocument();
+  });
+
+  it('uses the hacker-safe settings handler for Settings', async () => {
+    const onClose = vi.fn();
+    const onOpenSettings = vi.fn();
+    render(<CommandDeck open onClose={onClose} isHackerMode onOpenSettings={onOpenSettings} />);
+
+    await userEvent.setup().click(screen.getByText('Settings'));
+
+    expect(onOpenSettings).toHaveBeenCalledOnce();
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(push).not.toHaveBeenCalledWith('/settings');
   });
 
   it('renders grouped backend project, chat, memory, and model results', async () => {
@@ -88,18 +119,18 @@ describe('CommandDeck global search', () => {
 
     render(<CommandDeck open onClose={vi.fn()} />);
     await userEvent.setup().type(
-      screen.getByPlaceholderText(/search everything/i),
+      screen.getByPlaceholderText(/search actions/i),
       'fátima',
     );
 
     await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
 
-    expect(await screen.findByText('Projects')).toBeInTheDocument();
-    expect(screen.getByText('Chats')).toBeInTheDocument();
+    expect(await screen.findByText('Project brains')).toBeInTheDocument();
+    expect(screen.getByText('Random chats')).toBeInTheDocument();
     expect(screen.getByText('Memory')).toBeInTheDocument();
-    expect(screen.getByText('Models & Routing')).toBeInTheDocument();
-    expect(screen.getByText('Fátima research project')).toBeInTheDocument();
-    expect(screen.getByText('fátima likes green')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText(byTextContent('Fátima research project'))).toBeInTheDocument();
+    expect(screen.getByText(byTextContent('fátima likes green'))).toBeInTheDocument();
     expect(screen.getByText('Compacted random memory')).toBeInTheDocument();
   });
 
@@ -117,8 +148,8 @@ describe('CommandDeck global search', () => {
 
     render(<CommandDeck open onClose={onClose} />);
     const user = userEvent.setup();
-    await user.type(screen.getByPlaceholderText(/search everything/i), 'fátima');
-    await screen.findByText('Fátima research project');
+    await user.type(screen.getByPlaceholderText(/search actions/i), 'fátima');
+    await screen.findByText(byTextContent('Fátima research project'));
     await user.keyboard('{Enter}');
 
     expect(onClose).toHaveBeenCalledOnce();
@@ -143,8 +174,8 @@ describe('CommandDeck global search', () => {
 
     render(<CommandDeck open onClose={onClose} isHackerMode />);
     const user = userEvent.setup();
-    await user.type(screen.getByPlaceholderText(/search everything/i), 'fátima');
-    await screen.findByText('fátima likes green');
+    await user.type(screen.getByPlaceholderText(/search actions/i), 'fátima');
+    await screen.findByText(byTextContent('fátima likes green'));
     await user.keyboard('{Enter}');
 
     expect(onClose).toHaveBeenCalledOnce();

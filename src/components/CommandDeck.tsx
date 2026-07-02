@@ -6,19 +6,34 @@ import { normalizeSearchText } from '@/lib/search/search-normalize';
 import type { GlobalSearchResult } from '@/lib/search/search.types';
 import styles from './CommandDeck.module.scss';
 
-type ResultItem =
-  | { kind: 'action'; icon: string; name: string; desc: string; run: () => void }
-  | { kind: 'result'; result: GlobalSearchResult }
-  | { kind: 'separator'; label: string };
+type CommandAction = {
+  kind: 'action';
+  icon: string;
+  name: string;
+  desc: string;
+  command: string;
+  keywords: string[];
+  defaultVisible: boolean;
+  run: () => void;
+};
+
+type ResultItem = CommandAction | { kind: 'result'; result: GlobalSearchResult } | { kind: 'separator'; label: string };
 
 interface CommandDeckProps {
   open: boolean;
   onClose: () => void;
   initialQuery?: string;
   isHackerMode?: boolean;
+  onOpenSettings?: () => void;
 }
 
-export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = false }: CommandDeckProps) {
+export function CommandDeck({
+  open,
+  onClose,
+  initialQuery = '',
+  isHackerMode = false,
+  onOpenSettings,
+}: CommandDeckProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResult[]>([]);
@@ -26,7 +41,6 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
   const [isCreating, setIsCreating] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -39,10 +53,14 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
         if (open) onClose();
         else window.dispatchEvent(new CustomEvent('strubloid-open-command-deck'));
       }
-      if (event.key === 'Escape' && open) onClose();
+      if (event.key === 'Escape' && open) {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }
     }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [open, onClose]);
 
   // ── Open / close lifecycle ──────────
@@ -58,10 +76,7 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
 
   // Focus input when opening
   useEffect(() => {
-    if (open) {
-      // small rAF to let the DOM paint first
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
+    if (open) requestAnimationFrame(() => inputRef.current?.focus());
   }, [open]);
 
   // ── 300ms debounced search for global records ──
@@ -72,9 +87,7 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
       return;
     }
 
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
     let cancelled = false;
     setIsSearching(true);
@@ -94,9 +107,7 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
 
     return () => {
       cancelled = true;
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, [open, query]);
 
@@ -105,13 +116,17 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
     setSelectedIndex(0);
   }, [query, searchResults]);
 
-  // ── Commands ──
-  const commands = useMemo(() => [
-    { icon: '✦', name: 'New random capture', desc: 'Start a fast inbox-style chat outside any project.', hotkey: 'N', run: createRandomChat },
-    { icon: '🧠', name: 'Open project brain registry', desc: 'See all memory containers and their latest signals.', hotkey: 'P', run: () => router.push('/projects') },
-    { icon: '⚙', name: 'Open systems console', desc: 'Tune providers, model routing, and memory hygiene.', hotkey: 'S', run: () => router.push('/settings') },
-    { icon: '📋', name: 'Clean random memory', desc: 'Jump to the Randoms cleanup controls.', hotkey: 'R', run: () => router.push('/settings') },
-  ], [router]);
+  const openSettings = useCallback(() => {
+    if (onOpenSettings) {
+      onOpenSettings();
+      return;
+    }
+    router.push('/settings');
+  }, [onOpenSettings, router]);
+
+  const openBrainRegistry = useCallback(() => {
+    router.push('/projects');
+  }, [router]);
 
   async function createRandomChat() {
     setIsCreating(true);
@@ -124,38 +139,86 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
       const chat = await res.json();
       window.dispatchEvent(new CustomEvent('sidebar-refresh'));
       onClose();
+
+      if (isHackerMode) {
+        window.dispatchEvent(
+          new CustomEvent('strubloid-open-hacker-chat', {
+            detail: { chatId: chat.id, title: chat.title, isRandom: true },
+          })
+        );
+        return;
+      }
+
       router.push(`/chat/${chat.id}`);
     } finally {
       setIsCreating(false);
     }
   }
 
+  // ── Commands ──
+  const commands: CommandAction[] = useMemo(
+    () => [
+      {
+        kind: 'action',
+        icon: '✦',
+        name: 'New random capture',
+        desc: 'Start a fast inbox-style chat outside any project.',
+        command: 'capture.new',
+        keywords: ['new', 'random', 'capture', 'chat', 'inbox'],
+        defaultVisible: true,
+        run: createRandomChat,
+      },
+      {
+        kind: 'action',
+        icon: '🧠',
+        name: 'Open brain registry',
+        desc: 'Browse project brains, memory containers, and latest signals.',
+        command: 'brain.open',
+        keywords: ['brain', 'registry', 'project', 'projects', 'memory'],
+        defaultVisible: true,
+        run: openBrainRegistry,
+      },
+      {
+        kind: 'action',
+        icon: '⚙',
+        name: 'Settings',
+        desc: 'Open Strubloid settings, providers, model routing, memory, and project preferences.',
+        command: 'settings.open',
+        keywords: ['settings', 'sys', 'system', 'providers', 'models', 'routing', 'preferences'],
+        defaultVisible: true,
+        run: openSettings,
+      },
+      {
+        kind: 'action',
+        icon: '📋',
+        name: 'Clean random memory',
+        desc: 'Review and compact random chat memory.',
+        command: 'memory.clean',
+        keywords: ['clean', 'compact', 'random', 'memory', 'summaries'],
+        defaultVisible: false,
+        run: openSettings,
+      },
+    ],
+    [openBrainRegistry, openSettings, isHackerMode]
+  );
+
   // ── Build flat results list ──
   const results: ResultItem[] = useMemo(() => {
     const list: ResultItem[] = [];
     const q = normalizeSearchText(query);
 
-    // Filtered commands
-    const matchedCommands = commands.filter((cmd) =>
-      normalizeSearchText(`${cmd.name} ${cmd.desc}`).includes(q)
-    );
+    const matchedCommands = q
+      ? commands.filter((cmd) => normalizeSearchText(`${cmd.name} ${cmd.desc} ${cmd.command} ${cmd.keywords.join(' ')}`).includes(q))
+      : commands.filter((cmd) => cmd.defaultVisible);
+
     if (matchedCommands.length > 0) {
       list.push({ kind: 'separator', label: 'Actions' });
-      for (const cmd of matchedCommands) {
-        list.push({ ...cmd, kind: 'action' });
-      }
+      for (const cmd of matchedCommands) list.push(cmd);
     }
 
-    const sectionLabels: Record<GlobalSearchResult['type'], string> = {
-      project: 'Projects',
-      chat: 'Chats',
-      message: 'Chats',
-      memory: 'Memory',
-      model: 'Models & Routing',
-    };
     const grouped = new Map<string, GlobalSearchResult[]>();
     for (const result of searchResults) {
-      const label = sectionLabels[result.type];
+      const label = resultSectionLabel(result);
       grouped.set(label, [...(grouped.get(label) ?? []), result]);
     }
     for (const [label, items] of grouped) {
@@ -197,12 +260,10 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
   }
 
   // ── Keyboard handlers ──
-  const selectableCount = useMemo(
-    () => results.filter((r) => r.kind !== 'separator').length,
-    [results]
-  );
+  const selectableCount = useMemo(() => results.filter((r) => r.kind !== 'separator').length, [results]);
 
   function handleInputKeyDown(e: React.KeyboardEvent) {
+    e.stopPropagation();
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.min(prev + 1, selectableCount - 1));
@@ -215,21 +276,17 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
       e.preventDefault();
       const selectable = results.filter((r) => r.kind !== 'separator');
       const idx = Math.min(selectedIndex, selectable.length - 1);
-      if (idx >= 0 && selectable[idx]) {
-        activateItem(selectable[idx]);
-      }
+      if (idx >= 0 && selectable[idx]) activateItem(selectable[idx]);
     }
   }
 
   function scrollIntoView() {
-    // small rAF to let the DOM update the highlight first
     requestAnimationFrame(() => {
       const active = resultsRef.current?.querySelector(`.${styles.active}`);
       active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
   }
 
-  // ── Map flat index to selectable index ──
   function selectableIndexOf(flatIndex: number): number {
     let count = 0;
     for (let i = 0; i <= flatIndex; i++) {
@@ -240,50 +297,65 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
 
   if (!open) return null;
 
+  const hasTypedQuery = Boolean(query.trim());
+  const hasOnlyDefaultActions = !hasTypedQuery;
+
   return (
-    <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Strubloid command deck" onMouseDown={onClose}>
-      <div className={styles.deck} onMouseDown={(event) => event.stopPropagation()}>
+    <div
+      className={`${styles.overlay} ${isHackerMode ? styles.hackerOverlay : styles.normalOverlay}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Strubloid command deck"
+      onMouseDown={onClose}
+    >
+      <div className={styles.deck} data-mode={isHackerMode ? 'hacker' : 'normal'} onMouseDown={(event) => event.stopPropagation()}>
         <header className={styles.header}>
           <div>
-            <div className={styles.eyebrow}>cmd deck / cognitive operating layer</div>
+            <div className={styles.eyebrow}>CMD DECK / COGNITIVE OPERATING LAYER</div>
             <h2 className={styles.title}>Operate Strubloid without hunting through pages.</h2>
-            <p className={styles.copy}>
-              Search project brains, start a random capture, jump into model routing, or inspect memory systems from one command surface.
-            </p>
+            <p className={styles.copy}>Search chats, project brains, memory, settings, and actions from one command surface.</p>
           </div>
-          <button className={styles.close} onClick={onClose} aria-label="Close command deck">×</button>
+          <div className={styles.statusCluster} aria-hidden="true">
+            <span>READY</span>
+            <span>{isHackerMode ? 'HACKER' : 'LOCAL'}</span>
+          </div>
+          <button className={styles.close} onClick={onClose} aria-label="Close command deck">
+            ×
+          </button>
         </header>
 
         <div className={styles.search}>
-          <input
-            ref={inputRef}
-            className={styles.input}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={handleInputKeyDown}
-            placeholder="Search everything — commands, projects, chats..."
-          />
+          <div className={styles.promptWrap}>
+            <span className={styles.promptPrefix}>{hasTypedQuery ? '>' : '/'}</span>
+            <input
+              ref={inputRef}
+              className={styles.input}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={handleInputKeyDown}
+              placeholder="search actions, projects, chats, memory..."
+            />
+          </div>
+          <div className={styles.searchMeta}>
+            <span>{isSearching ? 'SCANNING SIGNALS' : hasTypedQuery ? 'FILTER ACTIVE' : 'DEFAULT ACTIONS'}</span>
+            <span>Actions · Random chats · Project chats · Project brains · Memory · Settings</span>
+          </div>
         </div>
 
         <div className={styles.results} ref={resultsRef}>
-          {results.length === 0 && query.trim() && isSearching && (
+          {results.length === 0 && hasTypedQuery && isSearching && (
             <div className={styles.empty}>
               <div className={styles.emptyCode}>[ searching ]</div>
               <p className={styles.emptyDesc}>Scanning commands, projects, chats, memory, and routing...</p>
             </div>
           )}
-          {results.length === 0 && query.trim() && !isSearching && (
+          {results.length === 0 && hasTypedQuery && !isSearching && (
             <div className={styles.empty}>
-              <div className={styles.emptyCode}>[ no results ]</div>
-              <p className={styles.emptyDesc}>Nothing matches &ldquo;{query}&rdquo; across commands, projects, chats, memory, or routing.</p>
+              <div className={styles.emptyCode}>No signal found.</div>
+              <p className={styles.emptyDesc}>Try a project name, chat title, memory keyword, or command.</p>
             </div>
           )}
-          {results.length === 0 && !query.trim() && (
-            <div className={styles.empty}>
-              <div className={styles.emptyCode}>[ type to search ]</div>
-              <p className={styles.emptyDesc}>Start typing to filter commands, project brains, and chat history.</p>
-            </div>
-          )}
+          {hasOnlyDefaultActions && <div className={styles.defaultHint}>Default command surface · type to search every indexed signal.</div>}
           {results.map((item, flatIdx) => {
             if (item.kind === 'separator') {
               return (
@@ -298,8 +370,9 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
 
             return (
               <button
-                key={`${item.kind}-${item.kind === 'action' ? item.name : item.result.id}`}
+                key={`${item.kind}-${item.kind === 'action' ? item.command : item.result.id}`}
                 className={`${styles.item} ${isActive ? styles.active : ''}`}
+                data-selected={isActive}
                 onClick={() => activateItem(item)}
                 onMouseEnter={() => setSelectedIndex(selIdx)}
                 disabled={isCreating && item.kind === 'action' && item.name === 'New random capture'}
@@ -308,9 +381,10 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
                   <>
                     <span className={styles.iconSpan}>{item.icon}</span>
                     <span className={styles.itemBody}>
-                      <span className={styles.itemName}>{item.name}</span>
+                      <span className={styles.itemName}><Highlight value={item.name} query={query} /></span>
                       <span className={styles.itemDesc}>{item.desc}</span>
                     </span>
+                    <span className={styles.badge}>{item.command}</span>
                     <span className={styles.kbd}>⏎</span>
                   </>
                 )}
@@ -325,12 +399,13 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
                         }}
                       />
                     ) : (
-                      <span className={styles.iconSpan}>{resultIcon(item.result.type)}</span>
+                      <span className={styles.iconSpan}>{resultIcon(item.result)}</span>
                     )}
                     <span className={styles.itemBody}>
-                      <span className={styles.itemName}>{item.result.title}</span>
-                      <span className={styles.itemDesc}>{item.result.snippet ?? item.result.subtitle}</span>
+                      <span className={styles.itemName}><Highlight value={item.result.title} query={query} /></span>
+                      <span className={styles.itemDesc}><Highlight value={item.result.snippet ?? item.result.subtitle ?? ''} query={query} /></span>
                     </span>
+                    <span className={styles.badge}>{resultBadge(item.result)}</span>
                     <span className={styles.kbd}>⏎</span>
                   </>
                 )}
@@ -343,11 +418,47 @@ export function CommandDeck({ open, onClose, initialQuery = '', isHackerMode = f
   );
 }
 
-function resultIcon(type: GlobalSearchResult['type']): string {
-  if (type === 'chat' || type === 'message') return '⌕';
-  if (type === 'memory') return '🧠';
-  if (type === 'model') return '⚙';
+function Highlight({ value, query }: { value: string; query: string }) {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return <>{value}</>;
+
+  const normalizedValue = normalizeSearchText(value);
+  const index = normalizedValue.indexOf(normalizedQuery);
+  if (index < 0) return <>{value}</>;
+
+  const before = value.slice(0, index);
+  const match = value.slice(index, index + query.trim().length);
+  const after = value.slice(index + query.trim().length);
+  return (
+    <>
+      {before}<mark className={styles.match}>{match}</mark>{after}
+    </>
+  );
+}
+
+function resultSectionLabel(result: GlobalSearchResult): string {
+  if (result.type === 'project') return 'Project brains';
+  if (result.type === 'memory') return 'Memory';
+  if (result.type === 'model') return 'Settings';
+  if (result.type === 'chat' || result.type === 'message') {
+    return result.metadata?.isRandom === false ? 'Project chats' : 'Random chats';
+  }
+  return 'Results';
+}
+
+function resultIcon(result: GlobalSearchResult): string {
+  if (result.type === 'chat' || result.type === 'message') return result.metadata?.isRandom === false ? '◆' : '⌕';
+  if (result.type === 'memory') return '🧠';
+  if (result.type === 'model') return '⚙';
   return '✦';
+}
+
+function resultBadge(result: GlobalSearchResult): string {
+  if (result.type === 'project') return 'PROJECT';
+  if (result.type === 'memory') return 'MEMORY';
+  if (result.type === 'model') return 'SYS';
+  if (result.type === 'chat' || result.type === 'message') return result.metadata?.isRandom === false ? 'PROJECT' : 'LOCAL';
+  return 'SIGNAL';
 }
 
 function getResultChatId(result: GlobalSearchResult): string | null {

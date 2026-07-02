@@ -251,6 +251,14 @@ export function Sidebar({
     }
   }
 
+  function openCommandDeck() {
+    window.dispatchEvent(
+      new CustomEvent('strubloid-open-command-deck', {
+        detail: { query: searchQuery.trim() }
+      })
+    );
+  }
+
   function isActiveChat(chatId: string) {
     return pathname === `/chat/${chatId}`;
   }
@@ -376,7 +384,15 @@ export function Sidebar({
                 aria-label="Search chats and projects"
                 className="min-w-0 flex-1 border-0 bg-transparent text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-dim)]/80"
               />
-              <kbd className="flex-shrink-0 rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-[var(--color-text-dim)]">{shortcutKey}K</kbd>
+              <button
+                type="button"
+                className="flex-shrink-0 rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent)]/40 hover:text-[var(--color-accent)] focus-visible:border-[var(--color-accent)]/40 focus-visible:text-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/10"
+                onClick={openCommandDeck}
+                aria-label="Open command deck"
+                title="Open command deck"
+              >
+                {shortcutKey}K
+              </button>
             </div>
           )}
 

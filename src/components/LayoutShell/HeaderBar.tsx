@@ -47,6 +47,10 @@ export function HeaderBar({
   const [globalSearch, setGlobalSearch] = useState('');
   const shortcutKey = useShortcutKey();
 
+  function openCommandDeck() {
+    onOpenCommandDeck?.(globalSearch.trim());
+  }
+
   // Load models for the model selector
   useEffect(() => {
     fetch('/api/ai/models')
@@ -130,7 +134,7 @@ export function HeaderBar({
         className={styles.globalSearch}
         onSubmit={(event) => {
           event.preventDefault();
-          onOpenCommandDeck?.(globalSearch.trim());
+          openCommandDeck();
         }}
       >
         <span className={styles.searchGlyph}>⌕</span>
@@ -140,7 +144,15 @@ export function HeaderBar({
           placeholder="Search everything..."
           aria-label="Global search"
         />
-        <span className={styles.searchKey}>{shortcutKey} + K</span>
+        <button
+          type="button"
+          className={styles.searchKey}
+          onClick={openCommandDeck}
+          aria-label="Open command deck"
+          title="Open command deck"
+        >
+          {shortcutKey} + K
+        </button>
       </form>
 
       {/* Controls */}
