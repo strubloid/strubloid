@@ -104,7 +104,6 @@ export function ModelDropdown({
 
   const handleSelect = useCallback(
     (modelId: string) => {
-      console.log('[DEBUG ModelDropdown handleSelect] modelId:', modelId);
       onChange(modelId);
       close();
     },

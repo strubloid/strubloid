@@ -113,17 +113,12 @@ export function useHallChatSession({ chatId, onChatUpdated }: UseHallChatSession
 
   const setSelectedModelId = useCallback(
     async (modelId: string) => {
-      console.log('[DEBUG setSelectedModelId] called with:', modelId, 'current chat?.id:', chat?.id);
       setSelectedModelIdState(modelId);
-      if (!chat) {
-        console.log('[DEBUG setSelectedModelId] NO chat, skipping patchChat');
-        return;
-      }
+      if (!chat) return;
       try {
         await patchChat({ selectedModelId: modelId });
-        console.log('[DEBUG setSelectedModelId] patchChat succeeded');
-      } catch (e) {
-        console.error('[DEBUG setSelectedModelId] patchChat failed:', e);
+      } catch {
+        // Keep local state even if DB write fails.
       }
     },
     [patchChat, chat]
